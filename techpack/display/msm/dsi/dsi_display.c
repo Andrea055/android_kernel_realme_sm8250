@@ -87,6 +87,9 @@ static struct dsi_display *secondary_display;
 int backlight_min = 0;
 module_param(backlight_min, int, 0644);
 
+int backlight_scale = MAX_BL_SCALE_LEVEL;
+module_param(backlight_scale, int, 0644);
+
 static char dsi_display_primary[MAX_CMDLINE_PARAM_LEN];
 static char dsi_display_secondary[MAX_CMDLINE_PARAM_LEN];
 static struct dsi_display_boot_param boot_displays[MAX_DSI_ACTIVE_DISPLAY] = {
