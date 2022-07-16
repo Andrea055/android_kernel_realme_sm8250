@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2010-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 #ifndef __KGSL_PWRCTRL_H
 #define __KGSL_PWRCTRL_H
@@ -52,9 +51,9 @@
 /*
  * The effective duration of qos request in usecs at queue time.
  * After timeout, qos request is cancelled automatically.
- * Kept 80ms default, inline with default GPU idle time.
+ * Kept 58ms default, inline with default GPU idle time.
  */
-#define KGSL_L2PC_QUEUE_TIMEOUT	(80 * 1000)
+#define KGSL_L2PC_QUEUE_TIMEOUT	(58 * 1000)
 
 /*
  * The effective duration of qos request in usecs at wakeup time.
