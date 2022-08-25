@@ -957,6 +957,7 @@ ssize_t cpu_show_spectre_v1(struct device *dev, struct device_attribute *attr,
 }
 
 static const char *get_bhb_affected_string(enum mitigation_state bhb_state)
+
 {
 	switch (bhb_state) {
 	case SPECTRE_UNAFFECTED:
@@ -991,6 +992,13 @@ ssize_t cpu_show_spectre_v2(struct device *dev, struct device_attribute *attr,
 		return sprintf(buf, "Mitigation: %s%s\n", v2_str, bhb_str);
 
 	return sprintf(buf, "Vulnerable\n");
+}
+
+static enum mitigation_state spectre_bhb_state;
+
+enum mitigation_state arm64_get_spectre_bhb_state(void)
+{
+	return spectre_bhb_state;
 }
 
 ssize_t cpu_show_spec_store_bypass(struct device *dev,
