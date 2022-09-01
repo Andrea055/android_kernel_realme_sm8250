@@ -174,22 +174,6 @@
 	};
 };
 
-//#ifdef OPLUS_FEATURE_THERMAL_HORAE
-/{
-	shell_front {
-		compatible = "oplus,shell-temp";
-	};
-
-	shell_frame {
-		compatible = "oplus,shell-temp";
-	};
-
-	shell_back {
-		compatible = "oplus,shell-temp";
-	};
-};
-//#endif
-
 &thermal_zones {
 	aoss0-usr {
 		polling-delay-passive = <0>;
@@ -867,6 +851,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_10_config: cpufreq-10-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu10_config: cpu10-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -875,6 +865,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_10_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu10_cdev {
 				trip = <&cpu10_config>;
 				cooling-device = <&cpu4_isolate 1 1>;
@@ -889,6 +884,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_11_config: cpufreq-11-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu11_config: cpu11-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -897,6 +898,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_11_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu11_cdev {
 				trip = <&cpu11_config>;
 				cooling-device = <&cpu5_isolate 1 1>;
@@ -911,6 +917,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_12_config: cpufreq-12-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu12_config: cpu12-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -919,6 +931,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_12_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu12_cdev {
 				trip = <&cpu12_config>;
 				cooling-device = <&cpu6_isolate 1 1>;
@@ -933,6 +950,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_13_config: cpufreq-13-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu13_config: cpu13-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -941,6 +964,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_13_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu13_cdev {
 				trip = <&cpu13_config>;
 				cooling-device = <&cpu7_isolate 1 1>;
@@ -955,6 +983,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_14_config: cpufreq-14-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu14_config: cpu14-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -963,6 +997,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_14_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu14_cdev {
 				trip = <&cpu14_config>;
 				cooling-device = <&cpu4_isolate 1 1>;
@@ -977,6 +1016,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_15_config: cpufreq-15-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu15_config: cpu15-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -985,6 +1030,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_15_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu15_cdev {
 				trip = <&cpu15_config>;
 				cooling-device = <&cpu5_isolate 1 1>;
@@ -999,6 +1049,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_16_config: cpufreq-16-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu16_config: cpu16-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -1007,6 +1063,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_16_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu16_cdev {
 				trip = <&cpu16_config>;
 				cooling-device = <&cpu6_isolate 1 1>;
@@ -1021,6 +1082,12 @@
 		thermal-governor = "step_wise";
 		wake-capable-sensor;
 		trips {
+			cpufreq_17_config: cpufreq-17-config {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
 			cpu17_config: cpu17-config {
 				temperature = <110000>;
 				hysteresis = <10000>;
@@ -1029,6 +1096,11 @@
 		};
 
 		cooling-maps {
+			cpufreq_cdev {
+				trip = <&cpufreq_17_config>;
+				cooling-device = <&cpu7_notify 1 1>;
+			};
+
 			cpu17_cdev {
 				trip = <&cpu17_config>;
 				cooling-device = <&cpu7_isolate 1 1>;
@@ -1344,7 +1416,7 @@
 		};
 	};
 
-	modem-lte-sub6-pa1 {
+	modem1_pa0 {//place close to RF PA0
 		polling-delay-passive = <0>;
 		polling-delay = <0>;
 		thermal-governor = "user_space";
@@ -1360,7 +1432,7 @@
 		};
 	};
 
-	modem-lte-sub6-pa2 {
+	modem1_pa1 {//place close to RF PA1
 		polling-delay-passive = <0>;
 		polling-delay = <0>;
 		thermal-governor = "user_space";
@@ -1440,7 +1512,7 @@
 		};
 	};
 
-	modem-skin-usr {
+	modem1_xo {//place close to modem1 hot place
 		polling-delay-passive = <0>;
 		polling-delay = <0>;
 		thermal-governor = "user_space";
@@ -1456,7 +1528,7 @@
 		};
 	};
 
-	modem-wifi-usr {
+	modem1_wifi {//place close to wifi module
 		polling-delay-passive = <0>;
 		polling-delay = <0>;
 		thermal-governor = "user_space";
@@ -1472,7 +1544,7 @@
 		};
 	};
 
-	modem-ambient-usr {
+	modem1_quiet {//place close to modem1 quiet place
 		polling-delay-passive = <0>;
 		polling-delay = <0>;
 		thermal-governor = "user_space";

@@ -14,8 +14,8 @@
 		clock-names = "iface_clk";
 		clock-rate = <0>;
 		memory-region = <&dfps_data_memory>;
-		/delete-property/ qcom,dsi-pll-ssc-en;
-		/delete-property/ qcom,dsi-pll-ssc-mode;
+		qcom,dsi-pll-ssc-en;
+		qcom,dsi-pll-ssc-mode = "down-spread";
 	};
 
 	mdss_dsi1_pll: qcom,mdss_dsi_pll@ae96900 {

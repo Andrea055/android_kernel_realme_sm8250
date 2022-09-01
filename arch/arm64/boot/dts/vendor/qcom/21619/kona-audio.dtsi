@@ -75,11 +75,8 @@
 		qcom,tdm-audio-intf = <1>;
 		qcom,wcn-bt = <0>;
 		qcom,ext-disp-audio-rx = <0>;
-		/* #ifdef OPLUS_FEATURE_AEC */
-		qcom,afe-rxtx-lb = <1>;
-		/* #else */
-		/* qcom,afe-rxtx-lb = <0>; */
-		/* #endif OPLUS_FEATURE_AEC */
+		qcom,afe-rxtx-lb = <0>;
+
 		clock-names = "lpass_audio_hw_vote";
 		clocks = <&lpass_audio_hw_vote 0>;
 
@@ -111,6 +108,7 @@
 				<&dai_pri_tdm_rx_0>, <&dai_pri_tdm_tx_0>,
 				<&dai_sec_tdm_rx_0>, <&dai_sec_tdm_tx_0>,
 				<&dai_tert_tdm_rx_0>, <&dai_tert_tdm_tx_0>,
+                <&dai_tert_tdm_rx_1>, <&dai_tert_tdm_tx_1>,
 				<&dai_quat_tdm_rx_0>, <&dai_quat_tdm_tx_0>,
 				<&dai_quin_tdm_rx_0>, <&dai_quin_tdm_tx_0>,
 				<&dai_sen_tdm_rx_0>, <&dai_sen_tdm_tx_0>,
@@ -145,6 +143,7 @@
 				"msm-dai-q6-tdm.36864", "msm-dai-q6-tdm.36865",
 				"msm-dai-q6-tdm.36880", "msm-dai-q6-tdm.36881",
 				"msm-dai-q6-tdm.36896", "msm-dai-q6-tdm.36897",
+                "msm-dai-q6-tdm.36898", "msm-dai-q6-tdm.36899",
 				"msm-dai-q6-tdm.36912", "msm-dai-q6-tdm.36913",
 				"msm-dai-q6-tdm.36928", "msm-dai-q6-tdm.36929",
 				"msm-dai-q6-tdm.36944", "msm-dai-q6-tdm.36945",
@@ -177,49 +176,8 @@
 
 &qupv3_se15_i2c {
 	status = "ok";
-	/* #ifdef OPLUS_ARCH_EXTENDS */
 	fsa4480: fsa4480@42 {
 		compatible = "qcom,fsa4480-i2c";
 		reg = <0x42>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&fsa_hs_det>;
-		fsa4480,hs-det-gpio = <&tlmm 11 0x00>;
-	};
-	/* #endif OPLUS_ARCH_EXTENDS */
-        /* #ifdef OPLUS_ARCH_EXTENDS */
-	tfa98xx@34 {
-                compatible = "nxp,tfa98xx";
-                reg = <0x34>;
-                tfa9874_vdd-supply = <&pm8150_s4>;
-                tfa_min_range = <5000>;
-                tfa_max_range = <8000>;
-                status = "ok";
-        };
-	tfa98xx@35 {
-                compatible = "nxp,tfa98xx";
-                reg = <0x35>;
-                tfa9874_vdd-supply = <&pm8150_s4>;
-                tfa_min_range = <5000>;
-                tfa_max_range = <8000>;
-                status = "ok";
-        };
-	/* #endif OPLUS_ARCH_EXTENDS */
-};
-
-/* #ifdef OPLUS_ARCH_EXTENDS */
-&tlmm {
-	fsa_hs_det: fsa_hs_det  {
-		mux {
-			pins = "gpio11";
-			function = "gpio";
-		};
-
-		config {
-			pins = "gpio11";
-			drive-strength = <2>;
-			bias-disable;
-			output-high;
-		};
 	};
 };
-/* #endif OPLUS_ARCH_EXTENDS */
