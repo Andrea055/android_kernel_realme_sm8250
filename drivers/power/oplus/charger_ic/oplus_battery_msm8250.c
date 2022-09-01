@@ -17520,4 +17520,3 @@ module_platform_driver(smb5_driver);
 MODULE_DESCRIPTION("QPNP SMB5 Charger Driver");
 MODULE_LICENSE("GPL v2");
 
-

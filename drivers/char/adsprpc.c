@@ -416,8 +416,6 @@ struct fastrpc_mmap {
 	bool is_filemap; /*flag to indicate map used in process init*/
 	int secure;
 	uintptr_t attr;
-	bool is_filemap;
-	/* flag to indicate map used in process init */
 };
 
 enum fastrpc_perfkeys {

@@ -130,10 +130,6 @@ void wakeup_reasons_clear(int choose_flag)
 			desc->module_all_count = 0;
 		}
 	}
-	#ifdef OPLUS_FEATURE_POWERINFO_RPMH
-	/*SunFaliang@BSP.Power.Basic, 2020/07/08, add for modem wakeup statics.*/
-	rpmh_modem_sleepinfo_buffer_clear();
-	#endif /*OPLUS_FEATURE_POWERINFO_RPMH*/
 }
 
 void wakeup_reasons_print(int choose_flag, int datil)
