@@ -91,16 +91,5 @@ obj-$(CONFIG_AW8697_HAPTIC)     += aw8697_haptic/
 #endif
 
 obj-$(CONFIG_FPR_FPC)		+= fpr_FingerprintCard/
-
-#ifdef OPLUS_FEATURE_RF_CABLE_DETECT
-obj-$(CONFIG_OPLUS_RF_CABLE_MONITOR)	+= oplus_rf_cable_monitor.o
-obj-$(CONFIG_OPLUS_RF_CABLE_MONITOR) += op_ant_detect.o
-#endif /* OPLUS_FEATURE_RF_CABLE_DETECT */
-
-#ifdef OPLUS_FEATURE_SIM_DETECT
-obj-$(CONFIG_SIM_DETECT)	+= sim_detect.o
-#endif
-
-#ifdef OPLUS_FEATURE_SIM_DETECT
-obj-$(CONFIG_OEM_QMI)	+= oem_qmi_client.o
-#endif
+obj-y                           += qrc/
+obj-$(CONFIG_KINECTICS_XR_NORDIC) += kxrctrl/

@@ -1298,6 +1298,8 @@ static void __init_discard_policy(struct f2fs_sb_info *sbi,
 				struct discard_policy *dpolicy,
 				int discard_type, unsigned int granularity)
 {
+	struct discard_cmd_control *dcc = SM_I(sbi)->dcc_info;
+
 	/* common policy */
 	dpolicy->type = discard_type;
 	dpolicy->sync = true;
@@ -1322,7 +1324,9 @@ static void __init_discard_policy(struct f2fs_sb_info *sbi,
 		dpolicy->ordered = true;
 		if (utilization(sbi) > DEF_DISCARD_URGENT_UTIL) {
 			dpolicy->granularity = 1;
-			dpolicy->max_interval = DEF_MIN_DISCARD_ISSUE_TIME;
+			if (atomic_read(&dcc->discard_cmd_cnt))
+				dpolicy->max_interval =
+					DEF_MIN_DISCARD_ISSUE_TIME;
 		}
 	} else if (discard_type == DPOLICY_FORCE) {
 #ifdef CONFIG_OPLUS_FEATURE_OF2FS
@@ -2003,14 +2007,15 @@ static int issue_discard_thread(void *data)
 	set_freezable();
 
 	do {
-#ifdef CONFIG_OPLUS_FEATURE_OF2FS
-		/* 
-		 * 2020-1-14, add for oDiscard decoupling
-		 */
-		if (sbi->dpolicy_expect == DPOLICY_BG)
-#endif
+		if (sbi->gc_mode == GC_URGENT ||
+			!f2fs_available_free_memory(sbi, DISCARD_CACHE))
+			__init_discard_policy(sbi, &dpolicy, DPOLICY_FORCE, 1);
+		else
 			__init_discard_policy(sbi, &dpolicy, DPOLICY_BG,
-					dcc->discard_granularity);
+						dcc->discard_granularity);
+
+		if (!atomic_read(&dcc->discard_cmd_cnt))
+			wait_ms = dpolicy.max_interval;
 
 		wait_event_interruptible_timeout(*q,
 				kthread_should_stop() || freezing(current) ||
@@ -2076,26 +2081,6 @@ static int issue_discard_thread(void *data)
 		}
 #endif
 
-		if (sbi->gc_mode == GC_URGENT)
-#ifdef CONFIG_OPLUS_FEATURE_OF2FS
-		{
-			/*
-			 * 2020-1-14, add for oDiscard decoupling
-			 */
-			if (sbi->dc_opt_enable)
-				dpolicy_curr = DPOLICY_FORCE;
-#endif
-			__init_discard_policy(sbi, &dpolicy, DPOLICY_FORCE, 1);
-#ifdef CONFIG_OPLUS_FEATURE_OF2FS
-                } else {
-			/*
-			 * 2020-1-14, add for oDiscard decoupling
-			 */
-			check_dpolicy_expect(sbi, &dpolicy_curr);
-			__init_discard_policy(sbi, &dpolicy, dpolicy_curr,
-					      dcc->discard_granularity);
-		}
-#endif
 		sb_start_intwrite(sbi->sb);
 
 		issued = __issue_discard_cmd(sbi, &dpolicy);
@@ -3072,63 +3057,7 @@ static void change_curseg(struct f2fs_sb_info *sbi, int type)
 	memcpy(curseg->sum_blk, sum_node, SUM_ENTRY_SIZE);
 	f2fs_put_page(sum_page, 1);
 }
-#ifdef CONFIG_OPLUS_FEATURE_OF2FS
-static void change_curseg(struct f2fs_sb_info *sbi, int type, bool flush_summary)
-{
-	__change_curseg(sbi, CURSEG_I(sbi, type), type, flush_summary);
-}
 
-
-static inline void __restore_virtual_curseg_status(struct f2fs_sb_info *sbi,
-						int type, bool recover)
-{
-	struct curseg_info *curseg = CURSEG_I(sbi, type);
-
-	mutex_lock(&curseg->curseg_mutex);
-	down_write(&SIT_I(sbi)->sentry_lock);
-	if (curseg->inited && !get_valid_blocks(sbi, curseg->segno, false)) {
-		if (recover)
-			__set_test_and_free(sbi, curseg->segno);
-		else
-			__set_test_and_inuse(sbi, curseg->segno);
-	}
-	up_write(&SIT_I(sbi)->sentry_lock);
-	mutex_unlock(&curseg->curseg_mutex);
-}
-
-void restore_virtual_curseg_status(struct f2fs_sb_info *sbi, bool recover)
-{
-	if (sbi->atgc_enabled)
-		__restore_virtual_curseg_status(sbi, CURSEG_FRAGMENT_DATA,
-						recover);
-}
-
-static inline void __store_virtual_curseg_summary(struct f2fs_sb_info *sbi,
-						int type)
-{
-	struct curseg_info *curseg = CURSEG_I(sbi, type);
-
-	mutex_lock(&curseg->curseg_mutex);
-	down_write(&SIT_I(sbi)->sentry_lock);
-	if (curseg->inited)
-		write_sum_page(sbi, curseg->sum_blk,
-					GET_SUM_BLOCK(sbi, curseg->segno));
-
-	up_write(&SIT_I(sbi)->sentry_lock);
-	mutex_unlock(&curseg->curseg_mutex);
-}
-
-void store_virtual_curseg_summary(struct f2fs_sb_info *sbi)
-{
-	if (sbi->atgc_enabled)
-		__store_virtual_curseg_summary(sbi, CURSEG_FRAGMENT_DATA);
-}
-#endif
-#ifdef CONFIG_OPLUS_FEATURE_OF2FS
-static int __get_ssr_segment(struct f2fs_sb_info *sbi, struct curseg_info *curseg,
-			int type, int alloc_mode, unsigned long long age)
-{
-#else
 static int get_ssr_segment(struct f2fs_sb_info *sbi, int type)
 {
 	struct curseg_info *curseg = CURSEG_I(sbi, type);
