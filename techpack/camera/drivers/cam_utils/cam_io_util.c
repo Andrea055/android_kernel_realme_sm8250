@@ -4,7 +4,6 @@
  * All rights reserved.
  */
 
-
 #include <linux/delay.h>
 #include <linux/io.h>
 #include <linux/err.h>

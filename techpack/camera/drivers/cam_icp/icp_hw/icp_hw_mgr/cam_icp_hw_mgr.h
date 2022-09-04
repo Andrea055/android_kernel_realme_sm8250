@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
- * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #ifndef CAM_ICP_HW_MGR_H
@@ -212,9 +211,7 @@ struct cam_ctx_clk_info {
 	int32_t clk_rate[CAM_MAX_VOTE];
 	uint32_t num_paths;
 	struct cam_axi_per_path_bw_vote axi_path[CAM_ICP_MAX_PER_PATH_VOTES];
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	bool bw_included;
-#endif
 };
 /**
  * struct cam_icp_hw_ctx_data
@@ -259,9 +256,7 @@ struct cam_icp_hw_ctx_data {
 	struct cam_req_mgr_timer *watch_dog;
 	uint32_t watch_dog_reset_counter;
 	struct cam_icp_acquire_dev_info icp_dev_io_info;
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	uint64_t last_flush_req;
-#endif
 };
 
 /**

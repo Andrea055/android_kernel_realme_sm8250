@@ -263,7 +263,9 @@ bool is_support_panel_hbm_enter_send_hbm_on_cmd(const char *panel_name)
 
 	if ((!strcmp(panel_name, "SOFE03F")) || (!strcmp(panel_name, "S6E3HC3"))
 		|| (!strcmp(panel_name, "AMB655X")) || (!strcmp(panel_name, "AMB655XL08"))
-		|| (!strcmp(panel_name, "AMB655UV01") && (display->panel->oplus_priv.is_oplus_project))) {
+		|| (!strcmp(panel_name, "AMB655UV01") && (display->panel->oplus_priv.is_oplus_project))
+		|| (!strcmp(display->panel->name, "samsung ams662zs01 dsc cmd 21623"))
+		|| (!strcmp(panel_name, "AMS643YE01"))) {
 		return true;
 	} else {
 		return false;
@@ -3769,4 +3771,4 @@ static void __exit oplus_display_private_api_exit(void)
 module_init(oplus_display_private_api_init);
 module_exit(oplus_display_private_api_exit);
 MODULE_LICENSE("GPL v2");
-MODULE_AUTHOR("Hujie <hujie@oplus.com>");
+MODULE_AUTHOR("Hujie");

@@ -14,6 +14,7 @@
 #include "oplus_dsi_support.h"
 #include "oplus_display_private_api.h"
 
+extern unsigned int is_project(int project);
 extern bool oplus_dc_v2_on;
 static bool seed_mode_flag = false;
 
@@ -339,6 +340,12 @@ int dsi_panel_seed_mode(struct dsi_panel *panel, int mode) {
 		|| !strcmp(panel->oplus_priv.vendor_name, "AMB655XL08"))
 		&& (mode >= PANEL_LOADING_EFFECT_FLAG)) {
 		rc = dsi_panel_loading_effect_mode_unlock(panel, mode);
+	} else if (!strcmp(panel->oplus_priv.vendor_name, "s6e3fc3")
+                        && (is_project(20813) || is_project(20814))
+			&& (mode >= PANEL_LOADING_EFFECT_FLAG)) {
+		mode = mode - PANEL_LOADING_EFFECT_FLAG;
+		rc = dsi_panel_seed_mode_unlock(panel, mode);
+		seed_mode = mode;
 	} else if (panel->oplus_priv.is_oplus_project) {
 		rc = dsi_panel_loading_effect_mode_unlock(panel, mode);
 	} else if (is_support_panel_seed_mode_exceed(panel->oplus_priv.vendor_name, mode)) {

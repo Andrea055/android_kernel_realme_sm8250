@@ -2468,8 +2468,8 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
 	unsigned long anon, file;
 	unsigned long ap, fp;
 	enum lru_list lru;
-	unsigned long totalswap = total_swap_pages;
 #if defined(CONFIG_NANDSWAP)
+	unsigned long totalswap = total_swap_pages;
 	if (nandswap_si)
 		totalswap -= nandswap_si->pages;
 #endif

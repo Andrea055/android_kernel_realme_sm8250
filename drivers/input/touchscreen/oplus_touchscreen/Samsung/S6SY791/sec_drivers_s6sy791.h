@@ -296,6 +296,7 @@ struct chip_data_s6sy791 {
     int                             *in_suspend;
     int                             *fp_enable;
 	bool							auto_test_need_cal_support;
+	bool                            old_firmware_flag_check;
 #ifdef CONFIG_OPLUS_TP_APK
 
     bool lock_point_status;

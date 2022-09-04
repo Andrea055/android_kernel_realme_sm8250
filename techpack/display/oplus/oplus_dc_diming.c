@@ -51,6 +51,87 @@ extern int dsi_panel_seed_mode(struct dsi_panel *panel, int mode);
 
 extern void send_kevent_msg(int *msg);
 
+struct hbm_status
+{
+	bool hbm_aod_status; /*use for hbm aod cmd*/
+	bool hbm_status;     /*use for hbm cmd*/
+	bool hbm_pvt_status; /*use for hbm other cmds*/
+};
+
+struct hbm_status oplus_hbm_status = {0};
+
+int dsi_panel_tx_cmd_hbm_pre_check(struct dsi_panel *panel, enum dsi_cmd_set_type type, const char** prop_map)
+{
+	int ret = 0;
+
+	DSI_DEBUG("%s cmd=%s", __func__, prop_map[type]);
+	if (NULL == panel) {
+		return ret;
+	}
+	if ((panel->oplus_priv.is_oplus_project) &&
+		(!strcmp(panel->oplus_priv.vendor_name, "AMB655X"))) {
+		switch(type) {
+		case DSI_CMD_AOD_HBM_ON_PVT:
+		case DSI_CMD_AOD_HBM_ON:
+			if (oplus_hbm_status.hbm_pvt_status == 1) {
+				DSI_DEBUG("%s skip cmd=%s", __func__, prop_map[type]);
+				ret = 1;
+			}
+			break;
+		case DSI_CMD_AOD_HBM_OFF_PVT:
+		case DSI_CMD_AOD_HBM_OFF:
+			if (oplus_hbm_status.hbm_pvt_status == 0) {
+				DSI_DEBUG("%s skip cmd=%s", __func__, prop_map[type]);
+				ret = 1;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	return ret;
+}
+
+void dsi_panel_tx_cmd_hbm_post_check(struct dsi_panel *panel, enum dsi_cmd_set_type type)
+{
+	if (NULL == panel) {
+		return;
+	}
+
+	if ((panel->oplus_priv.is_oplus_project) &&
+		(!strcmp(panel->oplus_priv.vendor_name, "AMB655X"))) {
+		switch(type) {
+		case DSI_CMD_AOD_HBM_ON_PVT:
+		case DSI_CMD_AOD_HBM_ON:
+			if (oplus_hbm_status.hbm_pvt_status == 0) {
+				oplus_hbm_status.hbm_pvt_status = 1;
+			}
+			break;
+		case DSI_CMD_AOD_HBM_OFF_PVT:
+		case DSI_CMD_AOD_HBM_OFF:
+			if (oplus_hbm_status.hbm_pvt_status == 1) {
+				oplus_hbm_status.hbm_pvt_status = 0;
+			}
+			break;
+		case DSI_CMD_SET_NOLP:
+		case DSI_CMD_SET_OFF:
+		case DSI_CMD_SET_NOLP_PVT:
+			oplus_hbm_status.hbm_pvt_status = 0;
+			break;
+		default:
+			break;
+		}
+	}
+
+	DSI_DEBUG("%s [hbm_pvt,hbm,hbm_aod] = [%d %d %d]", __func__,
+		oplus_hbm_status.hbm_pvt_status, oplus_hbm_status.hbm_status, oplus_hbm_status.hbm_aod_status);
+
+	return;
+}
+
+
+
 static struct oplus_brightness_alpha brightness_seed_alpha_lut_dc[] = {
 	{0, 0xff},
 	{1, 0xfc},
@@ -467,6 +548,12 @@ static int sde_connector_update_hbm_enter(struct drm_connector *connector, struc
 		}
 #endif /* OPLUS_FEATURE_AOD_RAMLESS */
 
+		/* Add for driver control loading at FOD sence */
+		if ((dsi_display->panel->oplus_priv.is_oplus_project) &&
+			(!strcmp(dsi_display->panel->oplus_priv.vendor_name, "AMB655X"))) {
+			dsi_panel_seed_mode(dsi_display->panel, PANEL_LOADING_EFFECT_OFF);
+		}
+
 		if (OPLUS_DISPLAY_AOD_SCENE != get_oplus_display_scene() &&
 				dsi_display->panel->bl_config.bl_level) {              /* NO OPLUS_DISPLAY_AOD_SCENE */
 			if (strcmp(dsi_display->panel->oplus_priv.vendor_name, "AMB655X")) {
@@ -535,7 +622,8 @@ static int sde_connector_update_hbm_enter(struct drm_connector *connector, struc
 		} else {                    /* OPLUS_DISPLAY_AOD_SCENE */
 			if (!strcmp(dsi_display->panel->oplus_priv.vendor_name, "S6E3HC3") ||
 				((!strcmp(dsi_display->panel->oplus_priv.vendor_name, "AMB655X")) &&
-				(!dsi_display->panel->oplus_priv.aod_on_fod_off))) {
+				(!dsi_display->panel->oplus_priv.aod_on_fod_off)) ||
+				panel->oplus_priv.oplus_fp_hbm_config_flag) {
 					if (!strcmp(dsi_display->panel->oplus_priv.vendor_name, "AMB655X")) {
 						ret = fingerprint_wait_vsync(c_conn->encoder, dsi_display->panel);
 						if (!ret) {
@@ -634,7 +722,8 @@ static int sde_connector_update_hbm_exit(struct drm_connector *connector, struct
 			set_oplus_display_scene(OPLUS_DISPLAY_AOD_SCENE);
 		} else {
 			if ((!strcmp(dsi_display->panel->oplus_priv.vendor_name, "S6E3HC3")) ||
-				(!strcmp(dsi_display->panel->oplus_priv.vendor_name, "AMB670YF01"))) {
+				(!strcmp(dsi_display->panel->oplus_priv.vendor_name, "AMB670YF01")) ||
+				(!strcmp(panel->oplus_priv.vendor_name, "AMB655X") && (dsi_display->panel->oplus_priv.is_oplus_project))) {
 				if (!sde_crtc_get_fingerprint_mode(connector->state->crtc->state)) {
 					dsi_panel_seed_mode(dsi_display->panel, seed_mode);
 					dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_HBM_AOR_RESTORE);
@@ -650,7 +739,8 @@ static int sde_connector_update_hbm_exit(struct drm_connector *connector, struct
 			/* set nolp would exit hbm, restore when panel status on hbm */
 			if (panel->bl_config.bl_level > panel->bl_config.bl_normal_max_level) {
 				if (!strcmp(panel->oplus_priv.vendor_name, "AMS643YE01") ||
-					!strcmp(panel->oplus_priv.vendor_name, "AMS643YE01IN20057")) {
+					!strcmp(panel->oplus_priv.vendor_name, "AMS643YE01IN20057") ||
+					!strcmp(panel->oplus_priv.vendor_name, "s6e3fc3")) {
 					if (!strcmp(panel->name, "samsung ams643ye01 in 20127 amoled fhd+ panel")) {
 						rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_HBM_ENTER1_SWITCH);
 						oplus_dsi_display_enable_and_waiting_for_next_te_irq();
@@ -700,7 +790,8 @@ static int sde_connector_update_hbm_exit(struct drm_connector *connector, struct
 				oplus_panel_update_backlight_unlock(panel);
 			}
 			if (!strcmp(panel->oplus_priv.vendor_name, "AMS643YE01") ||
-				!strcmp(panel->oplus_priv.vendor_name, "AMS643YE01IN20057")) {
+				!strcmp(panel->oplus_priv.vendor_name, "AMS643YE01IN20057") ||
+				!strcmp(panel->oplus_priv.vendor_name, "s6e3fc3")) {
 				if(panel->bl_config.bl_level > panel->bl_config.brightness_normal_max_level) {
 					if (!strcmp(panel->name, "samsung ams643ye01 in 20127 amoled fhd+ panel")) {
 						rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_HBM_ENTER1_SWITCH);

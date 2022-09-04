@@ -8,7 +8,7 @@
 #include <linux/interrupt.h>
 #include <linux/regulator/consumer.h>
 #include "synaptics_tcm_oncell.h"
-#include "../../touchpanel_healthinfo.h"
+
 
 
 DECLARE_COMPLETION(response_complete);
@@ -2762,94 +2762,6 @@ static void syna_tcm_fingerprint_info(void *chip_data, struct fp_underscreen_inf
     return;
 }
 
-static void syna_tcm_get_health_info(void *chip_data, struct monitor_data *mon_data)
-{
-    struct syna_tcm_data *tcm_info = (struct syna_tcm_data *)chip_data;
-    struct health_info *health_info = (struct health_info *)tcm_info->report.buffer.buf;
-    int data_length = tcm_info->report.buffer.data_length;
-    struct health_info *health_local = &tcm_info->health_info;
-    int i = 0;
-
-    if (data_length < 20) {
-        TPD_INFO("%s: invalid health debug buf length\n", __func__);
-        return;
-    }
-
-    if (health_info->grip_count != 0 && health_local->grip_count != health_info->grip_count) {
-        mon_data->grip_report++;
-    }
-    if (health_info->baseline_err != 0 && health_local->baseline_err != health_info->baseline_err) {
-        switch(health_info->baseline_err) {
-        case BASE_NEGATIVE_FINGER:
-            mon_data->reserve1++;
-            break;
-        case BASE_MUTUAL_SELF_CAP:
-            mon_data->reserve2++;
-            break;
-        case BASE_ENERGY_RATIO:
-            mon_data->reserve3++;
-            break;
-        case BASE_RXABS_BASELINE:
-            mon_data->reserve4++;
-            break;
-        case BASE_TXABS_BASELINE:
-            mon_data->reserve5++;
-            break;
-        default:
-            break;
-        }
-    }
-    if (health_info->noise_state >= 2 && health_local->noise_state != health_info->noise_state) {
-        mon_data->noise_count++;
-    }
-    if (health_info->shield_mode != 0 && health_local->shield_mode != health_info->shield_mode) {
-        switch(health_info->shield_mode) {
-        case SHIELD_PALM:
-            mon_data->shield_palm++;
-            break;
-        case SHIELD_GRIP:
-            mon_data->shield_edge++;
-            break;
-        case SHIELD_METAL:
-            mon_data->shield_metal++;
-            break;
-        case SHIELD_MOISTURE:
-            mon_data->shield_water++;
-            break;
-        case SHIELD_ESD:
-            mon_data->shield_esd++;
-            break;
-        default:
-            break;
-        }
-    }
-    if (health_info->reset_reason != 0) {
-        switch(health_info->reset_reason) {
-        case RST_HARD:
-            mon_data->hard_rst++;
-            break;
-        case RST_INST:
-            mon_data->inst_rst++;
-            break;
-        case RST_PARITY:
-            mon_data->parity_rst++;
-            break;
-        case RST_WD:
-            mon_data->wd_rst++;
-            break;
-        case RST_OTHER:
-            mon_data->other_rst++;
-            break;
-        }
-    }
-    memcpy(health_local, health_info, sizeof(struct health_info));
-    if (tp_debug != 0) {
-        for (i = 0; i < data_length; i++) {
-            TPD_INFO("[0x%x], ", tcm_info->report.buffer.buf[i]);
-        }
-    }
-}
-
 static int syna_tcm_erase_flash(struct syna_tcm_data *tcm_info, unsigned int page_start, unsigned int page_count)
 {
     int ret = 0;
@@ -4690,7 +4602,6 @@ static struct oplus_touchpanel_operations syna_tcm_ops = {
     .reinit_device             = syna_tcm_reinit_device,
     .enable_fingerprint        = syna_tcm_enable_fingerprint,
     .screenon_fingerprint_info = syna_tcm_fingerprint_info,
-    .health_report             = syna_tcm_get_health_info,
     .set_touch_direction       = syna_set_touch_direction,
     .get_touch_direction       = syna_get_touch_direction,
     .freq_hop_trigger          = syna_freq_hop_trigger,
@@ -4783,11 +4694,8 @@ static int syna_tcm_probe(struct i2c_client *client, const struct i2c_device_id 
     struct syna_tcm_data *tcm_info = NULL;
     struct touchpanel_data *ts = NULL;
     struct device_hcd *device_hcd = NULL;
-	u64 time_counter = 0;
 
     TPD_INFO("%s: enter\n", __func__);
-
-	reset_healthinfo_time_counter(&time_counter);
 
     if (tp_register_times > 0) {
         TPD_INFO("TP driver have success loaded %d times, exit\n", tp_register_times);
@@ -4913,10 +4821,6 @@ static int syna_tcm_probe(struct i2c_client *client, const struct i2c_device_id 
         device_hcd->reset = syna_tcm_reset;
         device_hcd->report_touch = syna_device_report_touch;
     }
-
-	if (ts->health_monitor_v2_support) {
-		tp_healthinfo_report(&ts->monitor_data_v2, HEALTH_PROBE, &time_counter);
-	}
 
     g_tcm_info = tcm_info;
 

@@ -548,6 +548,9 @@ int dsi_panel_parse_oplus_config(struct dsi_panel *panel)
 		panel->oplus_priv.low_light_gamma_is_adjusted = false;
 	}
 
+	/*#ifdef OPLUS_BUG_STABILITY*/
+	panel->oplus_priv.oplus_fp_hbm_config_flag = utils->read_bool(utils->data, "oplus,fp-hbm-config-flag");
+	/*#ifdef OPLUS_BUG_STABILITY*/
 	return 0;
 }
 

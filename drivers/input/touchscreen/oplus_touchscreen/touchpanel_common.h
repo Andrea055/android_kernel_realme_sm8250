@@ -147,6 +147,12 @@ typedef enum {
 } health_ctl;
 
 typedef enum {
+	TP_RATE_START,
+	TP_RATE_CALC,
+	TP_RATE_CLEAR,
+} tp_rate;
+
+typedef enum {
     AREA_NOTOUCH,
     AREA_EDGE,
     AREA_CRITICAL,
@@ -174,6 +180,7 @@ typedef enum {
     MODE_FACE_DETECT,
     MODE_HEADSET,
     MODE_WIRELESS_CHARGE,
+    MODE_LIMIT_SWITCH,
 } work_mode;
 
 typedef enum {
@@ -313,6 +320,7 @@ struct panel_info {
     const char  *chip_name;                         /*chip name the panel is controlled by*/
     uint32_t TP_FW;                                 /*FW Version Read from IC*/
     tp_dev  tp_type;
+	int    report_rate_limit;                       /*chip report rate limit*/
     int    vid_len;                                 /*Length of tp name show in  test apk*/
     u32    project_id;
 	uint32_t    platform_support_project[21];
@@ -567,7 +575,7 @@ struct monitor_data_v2 {
     int blackscreen_test_failed_times;
 
     int gesture_waiting;
-    bool is_gesture_waiting_resume;
+	bool is_gesture_waiting_read;
     u64 gesture_received_time;
 
     struct list_head        gesture_values_list;
@@ -589,12 +597,15 @@ struct monitor_data_v2 {
 
     u32 smooth_level_chosen;
     u32 sensitive_level_chosen;
+	int rate_min;
+	int below_rate_counts;
 };
 
 struct monitor_data {
     unsigned long monitor_down;
     unsigned long monitor_up;
     health_ctl    ctl_type;
+	tp_rate       tp_rate_type;
 
     int bootup_test;
     int repeat_finger;
@@ -723,6 +734,7 @@ struct touchpanel_data {
     bool kernel_grip_support_special;                   /*only for findX Q*/
     bool new_set_irq_wake_support;                           /*if call enable_irq_wake, can not call disable_irq_nosync*/
     bool screenoff_fingerprint_info_support;            /*screen off fingerprint info coordinates need*/
+	bool report_rate_support;                           /*feature used to calculate report rate*/
 
     bool external_touch_status;                         /*shows external key status*/
     bool i2c_ready;                                     /*i2c resume status*/
@@ -759,6 +771,7 @@ struct touchpanel_data {
     int aging_test;
     uint32_t irq_flags_cover;                           /*cover irq setting flag*/
 
+	int irq_need_dev_resume_time;                       /*control setting of wait resume time*/
     int gesture_enable;                                 /*control state of black gesture*/
     bool double_tap_to_wake_enable;                     /*control state of dt2w*/
 #if GESTURE_RATE_MODE
@@ -796,6 +809,7 @@ struct touchpanel_data {
     bool ps_status;                                     /*save ps status, ps near = 1, ps far = 0*/
     bool resume_finished;                               /* whether tp resume finished */
     int noise_level;                                     /*save ps status, ps near = 1, ps far = 0*/
+	int high_frame_value;                               /*extremity touch enable or not*/
     int lcd_fps;                                         /*save lcd refresh*/
 
 #if defined(TPD_USE_EINT)
@@ -899,6 +913,20 @@ struct touchpanel_data {
     struct touch_algorithm_info *algo_info;
 #endif
 
+	int irq_num;/*Record the tp irq number*/
+	u64 curr_time;/*Record the interruption time to kernel*/
+	u64 irq_interval;/*Record the interruption time to calculate the reporting rate*/
+	u64 irq_handle_time;/*Record the interruption handle time*/
+
+	u8 limit_switch;
+	int dead_zone_l;                                    /*landscape dead zone*/
+	int dead_zone_p;                                    /*portrait dead zone*/
+	int corner_dead_zone_xl;
+	int corner_dead_zone_yl;
+	int corner_dead_zone_xp;
+	int corner_dead_zone_yp;
+	bool project_info;				/*different project using different parameter*/
+	bool oos_edge_limit_support;    /*oos system edge_limit support feature*/
 };
 
 #ifdef CONFIG_OPLUS_TP_APK

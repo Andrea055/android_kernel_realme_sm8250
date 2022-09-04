@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
- * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #include <linux/uaccess.h>
@@ -416,7 +415,6 @@ done:
 	return rc;
 }
 
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 static int cam_icp_remove_ctx_bw(struct cam_icp_hw_mgr *hw_mgr,
 	struct cam_icp_hw_ctx_data *ctx_data)
 {
@@ -526,20 +524,20 @@ static int cam_icp_remove_ctx_bw(struct cam_icp_hw_mgr *hw_mgr,
 				 * votes only.
 				 */
 				path_index =
-					ctx_data->clk_info.axi_path[i].transac_type -
-					CAM_AXI_TRANSACTION_READ;
+				ctx_data->clk_info.axi_path[i].transac_type -
+				CAM_AXI_TRANSACTION_READ;
 			} else {
 				path_index =
-					ctx_data->clk_info.axi_path[i].path_data_type -
-					CAM_AXI_PATH_DATA_IPE_START_OFFSET;
+				ctx_data->clk_info.axi_path[i].path_data_type -
+				CAM_AXI_PATH_DATA_IPE_START_OFFSET;
 			}
 
 			if (path_index >= CAM_ICP_MAX_PER_PATH_VOTES) {
-					CAM_WARN(CAM_PERF,
-					"Invalid path %d, start offset=%d, max=%d",
-					ctx_data->clk_info.axi_path[i].path_data_type,
-					CAM_AXI_PATH_DATA_IPE_START_OFFSET,
-					CAM_ICP_MAX_PER_PATH_VOTES);
+				CAM_WARN(CAM_PERF,
+				"Invalid path %d, start offset=%d, max=%d",
+				ctx_data->clk_info.axi_path[i].path_data_type,
+				CAM_AXI_PATH_DATA_IPE_START_OFFSET,
+				CAM_ICP_MAX_PER_PATH_VOTES);
 				continue;
 			}
 
@@ -657,7 +655,6 @@ static int cam_icp_remove_ctx_bw(struct cam_icp_hw_mgr *hw_mgr,
 	return rc;
 
 }
-#endif
 
 
 static int32_t cam_icp_ctx_timer(void *priv, void *data)
@@ -666,21 +663,6 @@ static int32_t cam_icp_ctx_timer(void *priv, void *data)
 	struct cam_icp_hw_ctx_data *ctx_data =
 		(struct cam_icp_hw_ctx_data *)task_data->data;
 
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
-	struct cam_icp_hw_mgr *hw_mgr = &icp_hw_mgr;
-	uint32_t id;
-	uint64_t temp;
-	struct cam_hw_intf *ipe0_dev_intf = NULL;
-	struct cam_hw_intf *ipe1_dev_intf = NULL;
-	struct cam_hw_intf *bps_dev_intf = NULL;
-	struct cam_hw_intf *dev_intf = NULL;
-	struct cam_icp_clk_info *clk_info;
-	struct cam_icp_cpas_vote clk_update;
-	int i = 0;
-	int device_share_ratio = 1;
-	uint64_t total_ab_bw = 0;
-#endif
-
 	if (!ctx_data) {
 		CAM_ERR(CAM_ICP, "ctx_data is NULL, failed to update clk");
 		return -EINVAL;
@@ -688,7 +670,6 @@ static int32_t cam_icp_ctx_timer(void *priv, void *data)
 
 	mutex_lock(&ctx_data->ctx_mutex);
 
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
 	CAM_DBG(CAM_PERF,
 		"ctx_id = %d ubw = %lld cbw = %lld curr_fc = %u bc = %u",
 		ctx_data->ctx_id,
@@ -697,14 +678,6 @@ static int32_t cam_icp_ctx_timer(void *priv, void *data)
 		ctx_data->clk_info.curr_fc,
 		ctx_data->clk_info.base_clk);
 
-	CAM_DBG(CAM_PERF,
-		"ctx_id = %d ubw = %lld cbw = %lld curr_fc = %u bc = %u",
-		ctx_data->ctx_id,
-		ctx_data->clk_info.uncompressed_bw,
-		ctx_data->clk_info.compressed_bw,
-		ctx_data->clk_info.curr_fc,
-		ctx_data->clk_info.base_clk);
-#endif
 	if ((ctx_data->state != CAM_ICP_CTX_STATE_ACQUIRED) ||
 		(ctx_data->watch_dog_reset_counter == 0)) {
 		CAM_DBG(CAM_PERF, "state %d, counter=%d",
@@ -718,202 +691,9 @@ static int32_t cam_icp_ctx_timer(void *priv, void *data)
 		mutex_unlock(&ctx_data->ctx_mutex);
 		return -EBUSY;
 	}
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
-	CAM_DBG(CAM_PERF,
-		"E :ctx_id = %d ubw = %lld cbw = %lld curr_fc = %u bc = %u",
-		ctx_data->ctx_id,
-		ctx_data->clk_info.uncompressed_bw,
-		ctx_data->clk_info.compressed_bw,
-		ctx_data->clk_info.curr_fc, ctx_data->clk_info.base_clk);
 
-	ipe0_dev_intf = hw_mgr->ipe0_dev_intf;
-	ipe1_dev_intf = hw_mgr->ipe1_dev_intf;
-	bps_dev_intf = hw_mgr->bps_dev_intf;
-
-	if ((!ipe0_dev_intf) || (!bps_dev_intf)) {
-		CAM_ERR(CAM_ICP, "dev intfs are wrong, failed to update clk");
-		mutex_unlock(&ctx_data->ctx_mutex);
-		return -EINVAL;
-	}
-
-	if (!ctx_data->icp_dev_acquire_info) {
-		CAM_WARN(CAM_ICP, "NULL acquire info");
-		mutex_unlock(&ctx_data->ctx_mutex);
-		return -EINVAL;
-	}
-
-	if (ctx_data->icp_dev_acquire_info->dev_type == CAM_ICP_RES_TYPE_BPS) {
-		dev_intf = bps_dev_intf;
-		clk_info = &hw_mgr->clk_info[ICP_CLK_HW_BPS];
-		id = CAM_ICP_BPS_CMD_VOTE_CPAS;
-	} else {
-		dev_intf = ipe0_dev_intf;
-		clk_info = &hw_mgr->clk_info[ICP_CLK_HW_IPE];
-		id = CAM_ICP_IPE_CMD_VOTE_CPAS;
-	}
-
-	/*
-	 * Since there are 2 devices, we assume the load is evenly shared
-	 * between HWs and corresponding AXI paths. So divide total bw by half
-	 * to vote on each device
-	 */
-	if ((ctx_data->icp_dev_acquire_info->dev_type !=
-		CAM_ICP_RES_TYPE_BPS) && (ipe1_dev_intf))
-		device_share_ratio = 2;
-
-	if (ctx_data->bw_config_version == CAM_ICP_BW_CONFIG_V1) {
-		clk_update.axi_vote.num_paths = 1;
-		if (ctx_data->icp_dev_acquire_info->dev_type ==
-			CAM_ICP_RES_TYPE_BPS) {
-			clk_update.axi_vote.axi_path[0].path_data_type =
-				CAM_BPS_DEFAULT_AXI_PATH;
-			clk_update.axi_vote.axi_path[0].transac_type =
-				CAM_BPS_DEFAULT_AXI_TRANSAC;
-		} else {
-			clk_update.axi_vote.axi_path[0].path_data_type =
-				CAM_IPE_DEFAULT_AXI_PATH;
-			clk_update.axi_vote.axi_path[0].transac_type =
-				CAM_IPE_DEFAULT_AXI_TRANSAC;
-		}
-
-		clk_info->compressed_bw -= ctx_data->clk_info.compressed_bw;
-		clk_info->uncompressed_bw -= ctx_data->clk_info.uncompressed_bw;
-
-		total_ab_bw = clk_info->compressed_bw;
-
-		ctx_data->clk_info.uncompressed_bw = 0;
-		ctx_data->clk_info.compressed_bw = 0;
-		ctx_data->clk_info.curr_fc = 0;
-		ctx_data->clk_info.base_clk = 0;
-
-		clk_update.axi_vote.num_paths = 1;
-
-		temp = clk_info->uncompressed_bw;
-		do_div(temp, device_share_ratio);
-		clk_update.axi_vote.axi_path[0].camnoc_bw = temp;
-
-		temp = clk_info->compressed_bw;
-		do_div(temp, device_share_ratio);
-		clk_update.axi_vote.axi_path[0].mnoc_ab_bw = temp;
-		clk_update.axi_vote.axi_path[0].mnoc_ib_bw = temp;
-		clk_update.axi_vote.axi_path[0].ddr_ab_bw = temp;
-		clk_update.axi_vote.axi_path[0].ddr_ib_bw = temp;
-	} else {
-		int path_index;
-
-		/*
-		 * Remove previous vote of this context from hw mgr first.
-		 * hw_mgr_clk_info has all valid paths, with each path in its
-		 * own index. BW that we wanted to vote now is after removing
-		 * current context's vote from hw mgr consolidated vote
-		 */
-		for (i = 0; i < ctx_data->clk_info.num_paths; i++) {
-			if (ctx_data->icp_dev_acquire_info->dev_type ==
-				CAM_ICP_RES_TYPE_BPS) {
-				/*
-				 * By assuming BPS has Read-All, Write-All
-				 * votes only.
-				 */
-				path_index =
-					ctx_data->clk_info.axi_path[i]
-					.transac_type -
-					CAM_AXI_TRANSACTION_READ;
-			} else {
-				path_index =
-					ctx_data->clk_info.axi_path[i]
-					.path_data_type -
-					CAM_AXI_PATH_DATA_IPE_START_OFFSET;
-			}
-
-			if (path_index >= CAM_ICP_MAX_PER_PATH_VOTES) {
-				CAM_WARN(CAM_PERF,
-					"Invalid path %d, start offset=%d, max=%d",
-					ctx_data->clk_info.axi_path[i]
-					.path_data_type,
-					CAM_AXI_PATH_DATA_IPE_START_OFFSET,
-					CAM_ICP_MAX_PER_PATH_VOTES);
-				continue;
-			}
-
-			clk_info->axi_path[path_index].camnoc_bw -=
-				ctx_data->clk_info.axi_path[i].camnoc_bw;
-			clk_info->axi_path[path_index].mnoc_ab_bw -=
-				ctx_data->clk_info.axi_path[i].mnoc_ab_bw;
-			clk_info->axi_path[path_index].mnoc_ib_bw -=
-				ctx_data->clk_info.axi_path[i].mnoc_ib_bw;
-			clk_info->axi_path[path_index].ddr_ab_bw -=
-				ctx_data->clk_info.axi_path[i].ddr_ab_bw;
-			clk_info->axi_path[path_index].ddr_ib_bw -=
-				ctx_data->clk_info.axi_path[i].ddr_ib_bw;
-
-			total_ab_bw +=
-				clk_info->axi_path[path_index].mnoc_ab_bw;
-		}
-
-		memset(&ctx_data->clk_info.axi_path[0], 0,
-			CAM_ICP_MAX_PER_PATH_VOTES *
-			sizeof(struct cam_axi_per_path_bw_vote));
-		ctx_data->clk_info.curr_fc = 0;
-		ctx_data->clk_info.base_clk = 0;
-
-		clk_update.axi_vote.num_paths = clk_info->num_paths;
-		memcpy(&clk_update.axi_vote.axi_path[0],
-			&clk_info->axi_path[0],
-			clk_update.axi_vote.num_paths *
-			sizeof(struct cam_axi_per_path_bw_vote));
-
-		if (device_share_ratio > 1) {
-			for (i = 0; i < clk_update.axi_vote.num_paths; i++) {
-				do_div(
-				clk_update.axi_vote.axi_path[i].camnoc_bw,
-					device_share_ratio);
-				do_div(
-				clk_update.axi_vote.axi_path[i].mnoc_ab_bw,
-					device_share_ratio);
-				do_div(
-				clk_update.axi_vote.axi_path[i].mnoc_ib_bw,
-					device_share_ratio);
-				do_div(
-				clk_update.axi_vote.axi_path[i].ddr_ab_bw,
-					device_share_ratio);
-				do_div(
-				clk_update.axi_vote.axi_path[i].ddr_ib_bw,
-					device_share_ratio);
-			}
-		}
-	}
-
-	clk_update.axi_vote_valid = true;
-
-	if (total_ab_bw == 0) {
-		/* If no more contexts are active, reduce AHB vote to minimum */
-		clk_update.ahb_vote.type = CAM_VOTE_ABSOLUTE;
-		clk_update.ahb_vote.vote.level = CAM_LOWSVS_VOTE;
-		clk_update.ahb_vote_valid = true;
-	} else {
-		clk_update.ahb_vote_valid = false;
-	}
-
-	dev_intf->hw_ops.process_cmd(dev_intf->hw_priv, id,
-		&clk_update, sizeof(clk_update));
-
-	/*
-	 * Vote half bandwidth each on both devices.
-	 * Total bw at mnoc - CPAS will take care of adding up.
-	 * camnoc clk calculate is more accurate this way.
-	 */
-	if ((ctx_data->icp_dev_acquire_info->dev_type !=
-		CAM_ICP_RES_TYPE_BPS) && (ipe1_dev_intf))
-		ipe1_dev_intf->hw_ops.process_cmd(ipe1_dev_intf->hw_priv, id,
-		&clk_update, sizeof(clk_update));
-
-	CAM_DBG(CAM_PERF, "X :ctx_id = %d curr_fc = %u bc = %u",
-		ctx_data->ctx_id, ctx_data->clk_info.curr_fc,
-		ctx_data->clk_info.base_clk);
-#endif
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	cam_icp_remove_ctx_bw(&icp_hw_mgr, ctx_data);
-#endif
+
 	mutex_unlock(&ctx_data->ctx_mutex);
 
 	return 0;
@@ -1454,9 +1234,8 @@ static bool cam_icp_update_bw_v2(struct cam_icp_hw_mgr *hw_mgr,
 			hw_mgr_clk_info->axi_path[path_index].mnoc_ab_bw);
 	}
 
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	ctx_data->clk_info.bw_included = true;
-#endif
+
 	if (hw_mgr_clk_info->num_paths < ctx_data->clk_info.num_paths)
 		hw_mgr_clk_info->num_paths = ctx_data->clk_info.num_paths;
 
@@ -1523,9 +1302,7 @@ static bool cam_icp_update_bw(struct cam_icp_hw_mgr *hw_mgr,
 		}
 	}
 
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	ctx_data->clk_info.bw_included = true;
-#endif
 
 	return true;
 }
@@ -1709,9 +1486,7 @@ static int cam_icp_update_clk_rate(struct cam_icp_hw_mgr *hw_mgr,
 static int cam_icp_update_cpas_vote(struct cam_icp_hw_mgr *hw_mgr,
 	struct cam_icp_hw_ctx_data *ctx_data)
 {
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	int rc = 0;
-#endif
 	uint32_t id;
 	uint64_t temp;
 	int i = 0;
@@ -1809,21 +1584,16 @@ static int cam_icp_update_cpas_vote(struct cam_icp_hw_mgr *hw_mgr,
 	}
 
 	clk_update.axi_vote_valid = true;
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	rc = dev_intf->hw_ops.process_cmd(dev_intf->hw_priv, id,
 		&clk_update, sizeof(clk_update));
 	if (rc)
 		CAM_ERR(CAM_PERF, "Failed in updating cpas vote, rc=%d", rc);
-#else
-	dev_intf->hw_ops.process_cmd(dev_intf->hw_priv, id,
-		&clk_update, sizeof(clk_update));
-#endif
+
 	/*
 	 * Vote half bandwidth each on both devices.
 	 * Total bw at mnoc - CPAS will take care of adding up.
 	 * camnoc clk calculate is more accurate this way.
 	 */
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	if ((ctx_data->icp_dev_acquire_info->dev_type !=
 		CAM_ICP_RES_TYPE_BPS) && (ipe1_dev_intf)) {
 		rc = ipe1_dev_intf->hw_ops.process_cmd(ipe1_dev_intf->hw_priv,
@@ -1835,14 +1605,6 @@ static int cam_icp_update_cpas_vote(struct cam_icp_hw_mgr *hw_mgr,
 	}
 
 	return rc;
-#else
-	if ((ctx_data->icp_dev_acquire_info->dev_type !=
-		CAM_ICP_RES_TYPE_BPS) && (ipe1_dev_intf))
-		ipe1_dev_intf->hw_ops.process_cmd(ipe1_dev_intf->hw_priv, id,
-		&clk_update, sizeof(clk_update));
-
-	return 0;
-#endif
 }
 
 static int cam_icp_mgr_ipe_bps_clk_update(struct cam_icp_hw_mgr *hw_mgr,
@@ -2189,8 +1951,7 @@ static int cam_icp_hw_mgr_create_debugfs_entry(void)
 		rc = -ENOMEM;
 		goto err;
 	}
-	/* Set default hang dump lvl */
-	icp_hw_mgr.a5_fw_dump_lvl = HFI_FW_DUMP_ON_FAILURE;
+
 	return rc;
 err:
 	debugfs_remove_recursive(icp_hw_mgr.dentry);
@@ -2662,10 +2423,6 @@ static int cam_icp_mgr_process_fatal_error(
 
 	if (event_notify->event_id == HFI_EVENT_SYS_ERROR) {
 		CAM_INFO(CAM_ICP, "received HFI_EVENT_SYS_ERROR");
-		if (event_notify->event_data1 == HFI_ERR_SYS_FATAL) {
-			CAM_ERR(CAM_ICP, "received HFI_ERR_SYS_FATAL");
-			BUG();
-		}
 		rc = cam_icp_mgr_trigger_recovery(hw_mgr);
 		cam_icp_mgr_process_dbg_buf(icp_hw_mgr.a5_dbg_lvl);
 	}
@@ -2827,7 +2584,7 @@ static int32_t cam_icp_mgr_process_msg(void *priv, void *data)
 	if ((task_data->irq_status & A5_WDT_0) ||
 		(task_data->irq_status & A5_WDT_1)) {
 		CAM_ERR_RATE_LIMIT(CAM_ICP, "watch dog interrupt from A5");
-        BUG_ON(1);
+
 		rc = cam_icp_mgr_trigger_recovery(hw_mgr);
 	}
 
@@ -3016,39 +2773,21 @@ static int cam_icp_allocate_qdss_mem(void)
 static int cam_icp_get_io_mem_info(void)
 {
 	int rc;
-
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
-	//gongqiang.xiao@Camera add for case:04457772
-	size_t len;
-	dma_addr_t iova;
-
-	rc = cam_smmu_get_io_region_info(icp_hw_mgr.iommu_hdl,
-		&iova, &len);
-#else
 	size_t len, discard_iova_len;
 	dma_addr_t iova, discard_iova_start;
 
 	rc = cam_smmu_get_io_region_info(icp_hw_mgr.iommu_hdl,
 		&iova, &len, &discard_iova_start, &discard_iova_len);
-#endif
-
 	if (rc)
 		return rc;
 
 	icp_hw_mgr.hfi_mem.io_mem.iova_len = len;
 	icp_hw_mgr.hfi_mem.io_mem.iova_start = iova;
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
-	//gongqiang.xiao@Camera add for case:04457772
-
-	CAM_DBG(CAM_ICP, "iova: %llx, len: %zu", iova, len);
-#else
 	icp_hw_mgr.hfi_mem.io_mem.discard_iova_start = discard_iova_start;
 	icp_hw_mgr.hfi_mem.io_mem.discard_iova_len = discard_iova_len;
 
 	CAM_DBG(CAM_ICP, "iova: %llx, len: %zu discard iova %llx len %llx",
 		iova, len, discard_iova_start, discard_iova_len);
-#endif
-
 
 	return rc;
 }
@@ -3341,35 +3080,27 @@ static int cam_icp_mgr_hfi_resume(struct cam_icp_hw_mgr *hw_mgr)
 	hfi_mem.qdss.iova = icp_hw_mgr.hfi_mem.qdss_buf.iova;
 	hfi_mem.qdss.len = icp_hw_mgr.hfi_mem.qdss_buf.len;
 
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
-	//gongqiang.xiao@Camera add for case:04457772
-	hfi_mem.io_mem.iova = icp_hw_mgr.hfi_mem.io_mem.iova_start;
-	hfi_mem.io_mem.len = icp_hw_mgr.hfi_mem.io_mem.iova_len;
-
-	CAM_DBG(CAM_ICP, "IO region IOVA = %X length = %lld",
-		hfi_mem.io_mem.iova,
-		hfi_mem.io_mem.len);
-#else
 	if (icp_hw_mgr.hfi_mem.io_mem.discard_iova_start &&
 		icp_hw_mgr.hfi_mem.io_mem.discard_iova_len) {
 		/* IO Region 1 */
 		hfi_mem.io_mem.iova = icp_hw_mgr.hfi_mem.io_mem.iova_start;
 		hfi_mem.io_mem.len =
-		icp_hw_mgr.hfi_mem.io_mem.discard_iova_start -
-		icp_hw_mgr.hfi_mem.io_mem.iova_start;
+			icp_hw_mgr.hfi_mem.io_mem.discard_iova_start -
+			icp_hw_mgr.hfi_mem.io_mem.iova_start;
 
 		/* IO Region 2 */
 		hfi_mem.io_mem2.iova =
-		   icp_hw_mgr.hfi_mem.io_mem.discard_iova_start +
-		   icp_hw_mgr.hfi_mem.io_mem.discard_iova_len;
+			icp_hw_mgr.hfi_mem.io_mem.discard_iova_start +
+			icp_hw_mgr.hfi_mem.io_mem.discard_iova_len;
 		hfi_mem.io_mem2.len =
-		   icp_hw_mgr.hfi_mem.io_mem.iova_start +
-		   icp_hw_mgr.hfi_mem.io_mem.iova_len	 -
-		   hfi_mem.io_mem2.iova;
+			icp_hw_mgr.hfi_mem.io_mem.iova_start +
+			icp_hw_mgr.hfi_mem.io_mem.iova_len   -
+			hfi_mem.io_mem2.iova;
 	} else {
 		/* IO Region 1 */
 		hfi_mem.io_mem.iova = icp_hw_mgr.hfi_mem.io_mem.iova_start;
 		hfi_mem.io_mem.len = icp_hw_mgr.hfi_mem.io_mem.iova_len;
+
 		/* IO Region 2 */
 		hfi_mem.io_mem2.iova = 0x0;
 		hfi_mem.io_mem2.len = 0x0;
@@ -3381,8 +3112,6 @@ static int cam_icp_mgr_hfi_resume(struct cam_icp_hw_mgr *hw_mgr)
 		hfi_mem.io_mem.len,
 		hfi_mem.io_mem2.iova,
 		hfi_mem.io_mem2.len);
-#endif
-
 
 	return cam_hfi_resume(&hfi_mem,
 		a5_dev->soc_info.reg_map[A5_SIERRA_BASE].mem_base,
@@ -3418,7 +3147,7 @@ static int cam_icp_retry_wait_for_abort(
 
 	return -ETIMEDOUT;
 }
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
+
 static int cam_icp_mgr_abort_handle_wq(
 	void *priv, void *data)
 {
@@ -3470,16 +3199,12 @@ static int cam_icp_mgr_abort_handle_wq(
 	kfree(abort_cmd);
 	return rc;
 }
-#endif
+
 static int cam_icp_mgr_abort_handle(
 	struct cam_icp_hw_ctx_data *ctx_data)
 {
 	int rc = 0;
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	unsigned long rem_jiffies = 0;
-#else
-	unsigned long rem_jiffies;
-#endif
 	size_t packet_size;
 	int timeout = 1000;
 	struct hfi_cmd_ipebps_async *abort_cmd;
@@ -3518,7 +3243,6 @@ static int cam_icp_mgr_abort_handle(
 	rem_jiffies = wait_for_completion_timeout(&ctx_data->wait_complete,
 			msecs_to_jiffies((timeout)));
 	if (!rem_jiffies) {
-
 		rc = cam_icp_retry_wait_for_abort(ctx_data);
 		if (rc) {
 			CAM_ERR(CAM_ICP,
@@ -3597,9 +3321,7 @@ static int cam_icp_mgr_release_ctx(struct cam_icp_hw_mgr *hw_mgr, int ctx_id)
 	}
 
 	mutex_lock(&hw_mgr->ctx_data[ctx_id].ctx_mutex);
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	cam_icp_remove_ctx_bw(hw_mgr, &hw_mgr->ctx_data[ctx_id]);
-#endif
 	if (hw_mgr->ctx_data[ctx_id].state !=
 		CAM_ICP_CTX_STATE_ACQUIRED) {
 		mutex_unlock(&hw_mgr->ctx_data[ctx_id].ctx_mutex);
@@ -3619,9 +3341,7 @@ static int cam_icp_mgr_release_ctx(struct cam_icp_hw_mgr *hw_mgr, int ctx_id)
 
 	hw_mgr->ctx_data[ctx_id].fw_handle = 0;
 	hw_mgr->ctx_data[ctx_id].scratch_mem_size = 0;
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	hw_mgr->ctx_data[ctx_id].last_flush_req = 0;
-#endif
 	for (i = 0; i < CAM_FRAME_CMD_MAX; i++)
 		clear_bit(i, hw_mgr->ctx_data[ctx_id].hfi_frame_process.bitmap);
 	kfree(hw_mgr->ctx_data[ctx_id].hfi_frame_process.bitmap);
@@ -3861,49 +3581,31 @@ static int cam_icp_mgr_hfi_init(struct cam_icp_hw_mgr *hw_mgr)
 	hfi_mem.qdss.iova = icp_hw_mgr.hfi_mem.qdss_buf.iova;
 	hfi_mem.qdss.len = icp_hw_mgr.hfi_mem.qdss_buf.len;
 
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
-	//gongqiang.xiao@Camera add for case:04457772
-	hfi_mem.io_mem.iova = icp_hw_mgr.hfi_mem.io_mem.iova_start;
-	hfi_mem.io_mem.len = icp_hw_mgr.hfi_mem.io_mem.iova_len;
-
-	CAM_DBG(CAM_ICP, "IO region IOVA = %X length = %lld",
-		hfi_mem.io_mem.iova,
-		hfi_mem.io_mem.len);
-#else
 	if (icp_hw_mgr.hfi_mem.io_mem.discard_iova_start &&
 		icp_hw_mgr.hfi_mem.io_mem.discard_iova_len) {
 		/* IO Region 1 */
 		hfi_mem.io_mem.iova = icp_hw_mgr.hfi_mem.io_mem.iova_start;
 		hfi_mem.io_mem.len =
-		icp_hw_mgr.hfi_mem.io_mem.discard_iova_start -
-		icp_hw_mgr.hfi_mem.io_mem.iova_start;
+			icp_hw_mgr.hfi_mem.io_mem.discard_iova_start -
+			icp_hw_mgr.hfi_mem.io_mem.iova_start;
 
 		/* IO Region 2 */
 		hfi_mem.io_mem2.iova =
-		   icp_hw_mgr.hfi_mem.io_mem.discard_iova_start +
-		   icp_hw_mgr.hfi_mem.io_mem.discard_iova_len;
+			icp_hw_mgr.hfi_mem.io_mem.discard_iova_start +
+			icp_hw_mgr.hfi_mem.io_mem.discard_iova_len;
 		hfi_mem.io_mem2.len =
-		   icp_hw_mgr.hfi_mem.io_mem.iova_start +
-		   icp_hw_mgr.hfi_mem.io_mem.iova_len	 -
-		   hfi_mem.io_mem2.iova;
+			icp_hw_mgr.hfi_mem.io_mem.iova_start +
+			icp_hw_mgr.hfi_mem.io_mem.iova_len   -
+			hfi_mem.io_mem2.iova;
 	} else {
 		/* IO Region 1 */
 		hfi_mem.io_mem.iova = icp_hw_mgr.hfi_mem.io_mem.iova_start;
 		hfi_mem.io_mem.len = icp_hw_mgr.hfi_mem.io_mem.iova_len;
+
 		/* IO Region 2 */
 		hfi_mem.io_mem2.iova = 0x0;
 		hfi_mem.io_mem2.len = 0x0;
 	}
-
-	CAM_DBG(CAM_ICP,
-		"IO region1 IOVA = %X length = %lld, IO region2 IOVA = %X length = %lld",
-		hfi_mem.io_mem.iova,
-		hfi_mem.io_mem.len,
-		hfi_mem.io_mem2.iova,
-		hfi_mem.io_mem2.len);
-#endif
-
-
 
 	return cam_hfi_init(0, &hfi_mem,
 		a5_dev->soc_info.reg_map[A5_SIERRA_BASE].mem_base,
@@ -4269,12 +3971,12 @@ static int cam_icp_mgr_config_hw(void *hw_mgr_priv, void *config_hw_args)
 		if (rc)
 			CAM_ERR(CAM_ICP, "Fail to send reconfig io cmd");
 	}
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
+
 	if (req_id <= ctx_data->last_flush_req)
 		CAM_WARN(CAM_ICP,
 			"Anomaly submitting flushed req %llu [last_flush %llu] in ctx %u",
 			req_id, ctx_data->last_flush_req, ctx_data->ctx_id);
-#endif
+
 	rc = cam_icp_mgr_enqueue_config(hw_mgr, config_args);
 	if (rc)
 		goto config_err;
@@ -5307,6 +5009,7 @@ static int cam_icp_mgr_flush_req(struct cam_icp_hw_ctx_data *ctx_data,
 
 	return 0;
 }
+
 static void cam_icp_mgr_flush_info_dump(
 	struct cam_hw_flush_args *flush_args, uint32_t ctx_id)
 {
@@ -5324,7 +5027,7 @@ static void cam_icp_mgr_flush_info_dump(
 			ctx_id);
 	}
 }
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
+
 static int cam_icp_mgr_enqueue_abort(
 	struct cam_icp_hw_ctx_data *ctx_data)
 {
@@ -5364,7 +5067,7 @@ static int cam_icp_mgr_enqueue_abort(
 	CAM_DBG(CAM_ICP, "Abort after flush is success");
 	return 0;
 }
-#endif
+
 static int cam_icp_mgr_hw_flush(void *hw_priv, void *hw_flush_args)
 {
 	struct cam_hw_flush_args *flush_args = hw_flush_args;
@@ -5388,15 +5091,11 @@ static int cam_icp_mgr_hw_flush(void *hw_priv, void *hw_flush_args)
 			flush_args->flush_type);
 		return -EINVAL;
 	}
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
+
 	ctx_data->last_flush_req = flush_args->last_flush_req;
 	CAM_DBG(CAM_REQ, "ctx_id %d Flush type %d last_flush_req %u",
 		ctx_data->ctx_id, flush_args->flush_type,
 		ctx_data->last_flush_req);
-#else
-	CAM_DBG(CAM_REQ, "ctx_id %d Flush type %d",
-		ctx_data->ctx_id, flush_args->flush_type);
-#endif
 	switch (flush_args->flush_type) {
 	case CAM_FLUSH_TYPE_ALL:
 		mutex_lock(&hw_mgr->hw_mgr_mutex);
@@ -5405,11 +5104,7 @@ static int cam_icp_mgr_hw_flush(void *hw_priv, void *hw_flush_args)
 			mutex_unlock(&hw_mgr->hw_mgr_mutex);
 			cam_icp_mgr_flush_info_dump(flush_args,
 				ctx_data->ctx_id);
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
 			cam_icp_mgr_enqueue_abort(ctx_data);
-#else
-			cam_icp_mgr_abort_handle(ctx_data);
-#endif
 		} else {
 			mutex_unlock(&hw_mgr->hw_mgr_mutex);
 		}
