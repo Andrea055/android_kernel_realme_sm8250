@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #include <linux/delay.h>
@@ -665,12 +666,14 @@ irqreturn_t cam_hw_cdm_irq(int irq_num, void *data)
 			kfree(payload);
 			return IRQ_HANDLED;
 		}
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		//wangyongwu@Camera add for case:04394854
 		if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR,
 			payload->irq_status))
 			CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ Clear");
 		if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR_CMD, 0x01))
 			CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ cmd");
-
+#endif
 		if (payload->irq_status &
 			CAM_CDM_IRQ_STATUS_INFO_INLINE_IRQ_MASK) {
 			if (cam_cdm_read_hw_reg(cdm_hw, CDM_IRQ_USR_DATA,
@@ -683,6 +686,14 @@ irqreturn_t cam_hw_cdm_irq(int irq_num, void *data)
 		payload->hw = cdm_hw;
 		INIT_WORK((struct work_struct *)&payload->work,
 			cam_hw_cdm_work);
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
+		//wangyongwu@Camera add for case:04394854
+		if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR,
+			payload->irq_status))
+			CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ Clear");
+		if (cam_cdm_write_hw_reg(cdm_hw, CDM_IRQ_CLEAR_CMD, 0x01))
+			CAM_ERR(CAM_CDM, "Failed to Write CDM HW IRQ cmd");
+#endif
 		work_status = queue_work(cdm_core->work_queue, &payload->work);
 		if (work_status == false) {
 			CAM_ERR(CAM_CDM, "Failed to queue work for irq=0x%x",

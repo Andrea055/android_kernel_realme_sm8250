@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #ifndef _CAM_SOC_UTIL_H_
@@ -30,7 +31,11 @@
 #define CAM_SOC_MAX_BASE            CAM_SOC_MAX_BLOCK
 
 /* maximum number of device regulator */
-#define CAM_SOC_MAX_REGULATOR       10 /*sensor max regulator + af*/
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
+#define CAM_SOC_MAX_REGULATOR       6 /*main camera have 6 regulators*/
+#else
+#define CAM_SOC_MAX_REGULATOR       8
+#endif
 
 /* maximum number of device clock */
 #define CAM_SOC_MAX_CLK             32
@@ -381,9 +386,13 @@ long cam_soc_util_get_clk_round_rate(struct cam_hw_soc_info *soc_info,
  *
  * @return:             success or failure
  */
+ #ifdef OPLUS_FEATURE_CAMERA_COMMON
 int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
 	int64_t clk_rate);
-
+#else
+int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
+	int32_t clk_rate);
+#endif
 /**
  * cam_soc_util_get_option_clk_by_name()
  *
@@ -622,10 +631,13 @@ void cam_soc_util_clk_disable_default(struct cam_hw_soc_info *soc_info);
 
 int cam_soc_util_clk_enable_default(struct cam_hw_soc_info *soc_info,
 	enum cam_vote_level clk_level);
-
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
 	int64_t clk_rate, int clk_idx, int32_t *clk_lvl);
-
+#else
+int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
+	int32_t clk_rate, int clk_idx, int32_t *clk_lvl);
+#endif
 /* Callback to get reg space data for specific HW */
 typedef int (*cam_soc_util_regspace_data_cb)(uint32_t reg_base_type,
 	void *ctx, struct cam_hw_soc_info **soc_info_ptr,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #include "cam_actuator_dev.h"
@@ -8,6 +9,9 @@
 #include "cam_actuator_soc.h"
 #include "cam_actuator_core.h"
 #include "cam_trace.h"
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#include "oplus_cam_actuator_dev.h"
+#endif
 
 static long cam_actuator_subdev_ioctl(struct v4l2_subdev *sd,
 	unsigned int cmd, void *arg)
@@ -339,6 +343,10 @@ static int32_t cam_actuator_driver_platform_probe(
 		rc = -ENOMEM;
 		goto free_soc;
 	}
+
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+       oplus_cam_actuator_fswitch_dev_file_create(a_ctrl, pdev);
+#endif
 
 	INIT_LIST_HEAD(&(a_ctrl->i2c_data.init_settings.list_head));
 

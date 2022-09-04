@@ -21,19 +21,39 @@
 #define CAM_RELEASE_DEV                         (CAM_COMMON_OPCODE_BASE + 0x6)
 #define CAM_SD_SHUTDOWN                         (CAM_COMMON_OPCODE_BASE + 0x7)
 #define CAM_FLUSH_REQ                           (CAM_COMMON_OPCODE_BASE + 0x8)
+#define CAM_COMMON_OPCODE_MAX                   (CAM_COMMON_OPCODE_BASE + 0x9)
 
-#define CAM_GET_FUSE_ID                         (CAM_COMMON_OPCODE_BASE + 0x9)
-#define CAM_GET_OIS_GYRO_OFFSET                 (CAM_COMMON_OPCODE_BASE + 0xA)
-#define CAM_GET_OIS_HALL_POSITION               (CAM_COMMON_OPCODE_BASE + 0xB)
-#define CAM_OIS_GYRO_OFFSET_CALIBRATION         (CAM_COMMON_OPCODE_BASE + 0xC)
-#define CAM_GET_OIS_EIS_HALL                    (CAM_COMMON_OPCODE_BASE + 0xD)
-#define CAM_SET_GYRO_POWER_STATUS               (CAM_COMMON_OPCODE_BASE + 0xE)
-#define CAM_GET_GYRO_NOISE                      (CAM_COMMON_OPCODE_BASE + 0xF)
-#define CAM_WRITE_CALIBRATION_DATA              (CAM_COMMON_OPCODE_BASE + 0x10)
-#define CAM_CHECK_CALIBRATION_DATA              (CAM_COMMON_OPCODE_BASE + 0x11)
-#define CAM_WRITE_AE_SYNC_DATA                  (CAM_COMMON_OPCODE_BASE + 0x12)
-#define CAM_GET_GYRO_ENERGY                     (CAM_COMMON_OPCODE_BASE + 0x13)
-#define CAM_COMMON_OPCODE_MAX                   (CAM_COMMON_OPCODE_BASE + 0x14)
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#define CAM_OEM_COMMON_OPCODE_BASE              0x8000
+#define CAM_GET_OIS_EIS_HALL                    (CAM_OEM_COMMON_OPCODE_BASE + 0x1)
+#define CAM_WRITE_CALIBRATION_DATA              (CAM_OEM_COMMON_OPCODE_BASE + 0x2)
+#define CAM_CHECK_CALIBRATION_DATA              (CAM_OEM_COMMON_OPCODE_BASE + 0x3)
+#define CAM_WRITE_AE_SYNC_DATA                  (CAM_OEM_COMMON_OPCODE_BASE + 0x4)
+#define CAM_OEM_IO_CMD                          (CAM_OEM_COMMON_OPCODE_BASE + 0x5)
+#define CAM_OEM_GET_ID                          (CAM_OEM_COMMON_OPCODE_BASE + 0x6)
+
+#define CAM_OEM_CMD_READ_DEV                    0
+#define CAM_OEM_CMD_WRITE_DEV                   1
+#define CAM_OEM_OIS_CALIB                       2
+#define CAM_OEM_RW_SIZE_MAX                     128
+
+struct cam_oem_i2c_reg_array {
+	uint32_t reg_addr;
+	uint32_t reg_data;
+	uint32_t delay;
+	uint32_t data_mask;
+};
+
+struct cam_oem_rw_ctl {
+	int32_t              cmd_code;
+	uint64_t             cam_regs_ptr;
+	uint32_t             slave_addr;
+	uint32_t             reg_data_type;
+	int32_t              reg_addr_type;
+	int16_t              num_bytes;
+};
+
+#endif
 
 #define CAM_COMMON_OPCODE_BASE_v2           0x150
 #define CAM_ACQUIRE_HW                      (CAM_COMMON_OPCODE_BASE_v2 + 0x1)
@@ -200,7 +220,8 @@ struct cam_iommu_handle {
 #define CAM_FORMAT_DPCM_12_10_12                46
 #define CAM_FORMAT_PLAIN32                      47
 #define CAM_FORMAT_ARGB_16                      48
-#define CAM_FORMAT_MAX                          49
+#define CAM_FORMAT_PLAIN16_10_LSB               49
+#define CAM_FORMAT_MAX                          50
 
 /* camera rotaion */
 #define CAM_ROTATE_CW_0_DEGREE                  0
@@ -880,5 +901,9 @@ struct cam_reg_dump_input_info {
 	uint32_t                   dump_set_offsets[1];
 };
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#define VIDIOC_CAM_SENSOR_STATR 0x9000
+#define VIDIOC_CAM_SENSOR_STOP 0x9001
+#endif
 
 #endif /* __UAPI_CAM_DEFS_H__ */

@@ -482,5 +482,39 @@ struct cam_flash_query_cap_info {
 	uint32_t    max_duration_flash[CAM_FLASH_MAX_LED_TRIGGERS];
 	uint32_t    max_current_torch[CAM_FLASH_MAX_LED_TRIGGERS];
 } __attribute__ ((packed));
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+//add dpc read for imx471
+#define FD_DFCT_MAX_NUM 5
+#define SG_DFCT_MAX_NUM 299
 
+struct sony_dfct_tbl_t {
+	//---- single static defect ----
+	int sg_dfct_num;                         // the number of single static defect
+	int sg_dfct_addr[SG_DFCT_MAX_NUM];       // [ u25 ( upper-u13 = x-addr, lower-u12 = y-addr ) ]
+	//---- FD static defect ----
+	int fd_dfct_num;                         // the number of FD static defect
+	int fd_dfct_addr[FD_DFCT_MAX_NUM];       // [ u25 ( upper-u13 = x-addr, lower-u12 = y-addr ) ]
+} __attribute__ ((packed));
+
+#define CALIB_DATA_LENGTH         1689
+#define WRITE_DATA_MAX_LENGTH     16
+#define WRITE_DATA_DELAY          3
+
+struct cam_write_eeprom_t {
+    uint32_t cam_id;
+    uint32_t baseAddr;
+    uint32_t calibDataSize;
+    uint32_t isWRP;
+    uint32_t WRPaddr;
+    unsigned char calibData[CALIB_DATA_LENGTH];
+} __attribute__ ((packed));
+
+#define EEPROM_CHECK_DATA_MAX_SIZE 196
+struct check_eeprom_data_t{
+    uint32_t cam_id;
+    uint32_t checkDataSize;
+    uint32_t startAddr;
+    uint32_t eepromData_checksum;
+} __attribute__ ((packed));
+#endif
 #endif

@@ -128,5 +128,14 @@ int cam_req_mgr_debug_register(struct cam_req_mgr_core_device *core_dev)
 		debugfs_root, core_dev, &bubble_recovery))
 		return -ENOMEM;
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	if (!debugfs_create_bool("recovery_on_apply_fail",
+		0644,
+		debugfs_root,
+		&core_dev->recovery_on_apply_fail)) {
+		return -ENOMEM;
+	}
+#endif
+
 	return 0;
 }

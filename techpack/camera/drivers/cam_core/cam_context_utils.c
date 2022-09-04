@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #include <linux/debugfs.h>
@@ -451,6 +452,19 @@ int32_t cam_context_prepare_dev_to_hw(struct cam_context *ctx,
 				"[%s][%d] : Moving req[%llu] from free_list to pending_list",
 				ctx->dev_name, ctx->ctx_id, req->request_id);
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*wangjingkai@camera qcom case:04895864 Fix context release timing issue */
+		for (j = 0; j < req->num_in_map_entries; j++) {
+			rc = cam_sync_check_valid(
+				req->in_map_entries[j].sync_id);
+			if (rc) {
+				CAM_ERR(CAM_CTXT,
+					"invalid in map sync object %d",
+					req->in_map_entries[j].sync_id);
+				goto put_ref;
+			}
+		}
+#endif
 		for (j = 0; j < req->num_in_map_entries; j++) {
 			cam_context_getref(ctx);
 			rc = cam_sync_register_callback(
@@ -472,7 +486,13 @@ int32_t cam_context_prepare_dev_to_hw(struct cam_context *ctx,
 						ctx->dev_name, ctx->ctx_id,
 						req->request_id);
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*wangjingkai@camera qcom case:04895864 Fix context release timing issue */
+				cam_context_putref(ctx);
+				goto put_ref;
+#else
 				goto put_ctx_ref;
+#endif
 			}
 			CAM_DBG(CAM_CTXT, "register in fence cb: %d ret = %d",
 				req->in_map_entries[j].sync_id, rc);
@@ -480,9 +500,12 @@ int32_t cam_context_prepare_dev_to_hw(struct cam_context *ctx,
 	}
 
 	return rc;
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
+/*wangjingkai@camera qcom case:04895864 Fix context release timing issue */
 put_ctx_ref:
 	for (; j >= 0; j--)
 		cam_context_putref(ctx);
+#endif
 put_ref:
 	for (--i; i >= 0; i--) {
 		if (cam_sync_put_obj_ref(req->out_map_entries[i].sync_id))
@@ -615,7 +638,9 @@ int32_t cam_context_flush_ctx_to_hw(struct cam_context *ctx)
 			ctx->dev_name, ctx->ctx_id);
 
 	flush_args.num_req_pending = 0;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	flush_args.last_flush_req = ctx->last_flush_req;
+#endif
 	while (true) {
 		spin_lock(&ctx->lock);
 		if (list_empty(&temp_list)) {

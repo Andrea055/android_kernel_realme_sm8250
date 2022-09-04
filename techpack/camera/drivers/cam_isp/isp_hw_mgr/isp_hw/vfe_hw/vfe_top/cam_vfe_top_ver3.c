@@ -212,6 +212,19 @@ static int cam_vfe_top_ver3_mux_get_reg_update(
 	return -EINVAL;
 }
 
+static int cam_vfe_top_ver3_get_data(
+	struct cam_vfe_top_ver3_priv *top_priv,
+	void *cmd_args, uint32_t arg_size)
+{
+	struct cam_isp_resource_node  *res = cmd_args;
+
+	if (res->process_cmd)
+		return res->process_cmd(res,
+			CAM_ISP_HW_CMD_CAMIF_DATA, cmd_args, arg_size);
+
+	return -EINVAL;
+}
+
 int cam_vfe_top_ver3_get_hw_caps(void *device_priv,
 	void *get_hw_cap_args, uint32_t arg_size)
 {
@@ -222,23 +235,8 @@ int cam_vfe_top_ver3_init_hw(void *device_priv,
 	void *init_hw_args, uint32_t arg_size)
 {
 	struct cam_vfe_top_ver3_priv   *top_priv = device_priv;
-	struct cam_vfe_top_ver3_common_data common_data = top_priv->common_data;
 
 	top_priv->hw_clk_rate = 0;
-
-	/* Disable clock gating at IFE top */
-	CAM_INFO(CAM_ISP, "Disable clock gating at IFE top");
-	cam_soc_util_w_mb(common_data.soc_info, VFE_CORE_BASE_IDX,
-		common_data.common_reg->core_cgc_ovd_0, 0xFFFFFFFF);
-
-	cam_soc_util_w_mb(common_data.soc_info, VFE_CORE_BASE_IDX,
-		common_data.common_reg->core_cgc_ovd_1, 0xFF);
-
-	cam_soc_util_w_mb(common_data.soc_info, VFE_CORE_BASE_IDX,
-		common_data.common_reg->ahb_cgc_ovd, 0x1);
-
-	cam_soc_util_w_mb(common_data.soc_info, VFE_CORE_BASE_IDX,
-		common_data.common_reg->noc_cgc_ovd, 0x1);
 
 	return 0;
 }
@@ -541,6 +539,10 @@ int cam_vfe_top_ver3_process_cmd(void *device_priv, uint32_t cmd_type,
 		break;
 	case CAM_ISP_HW_CMD_GET_REG_UPDATE:
 		rc = cam_vfe_top_ver3_mux_get_reg_update(top_priv, cmd_args,
+			arg_size);
+		break;
+	case CAM_ISP_HW_CMD_CAMIF_DATA:
+		rc = cam_vfe_top_ver3_get_data(top_priv, cmd_args,
 			arg_size);
 		break;
 	case CAM_ISP_HW_CMD_CLOCK_UPDATE:

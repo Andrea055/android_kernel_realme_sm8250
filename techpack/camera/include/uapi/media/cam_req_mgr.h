@@ -30,6 +30,7 @@
 #define CAM_EEPROM_DEVICE_TYPE    (CAM_DEVICE_TYPE_BASE + 12)
 #define CAM_OIS_DEVICE_TYPE       (CAM_DEVICE_TYPE_BASE + 13)
 #define CAM_CUSTOM_DEVICE_TYPE    (CAM_DEVICE_TYPE_BASE + 14)
+#define CAM_REQ_MGR_ERROR_TYPE_FULL_RECOVERY 5
 
 /* cam_req_mgr hdl info */
 #define CAM_REQ_MGR_HDL_IDX_POS           8
@@ -274,7 +275,10 @@ struct cam_req_mgr_link_control {
 #define CAM_MEM_FLAG_CACHE                      (1<<10)
 #define CAM_MEM_FLAG_HW_SHARED_ACCESS           (1<<11)
 #define CAM_MEM_FLAG_CDSP_OUTPUT                (1<<12)
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+//gongqiang.xiao@Camera add for case:04457772
 #define CAM_MEM_FLAG_DISABLE_DELAYED_UNMAP      (1<<13)
+#endif
 
 #define CAM_MEM_MMU_MAX_HANDLE                  16
 

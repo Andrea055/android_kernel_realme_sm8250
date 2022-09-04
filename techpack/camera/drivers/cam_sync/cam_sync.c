@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #include <linux/init.h>
@@ -286,6 +287,10 @@ int cam_sync_merge(int32_t *sync_obj, uint32_t num_objs, int32_t *merged_obj)
 	int rc;
 	long idx = 0;
 	bool bit;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*wangjingkai@camera qcom case:04895864 Fix context release timing issue */
+	int i = 0;
+#endif
 
 	if (!sync_obj || !merged_obj) {
 		CAM_ERR(CAM_SYNC, "Invalid pointer(s)");
@@ -303,6 +308,17 @@ int cam_sync_merge(int32_t *sync_obj, uint32_t num_objs, int32_t *merged_obj)
 		return -EINVAL;
 	}
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*wangjingkai@camera qcom case:04895864 Fix context release timing issue */
+	for (i = 0; i < num_objs; i++) {
+		rc = cam_sync_check_valid(sync_obj[i]);
+		if (rc) {
+			CAM_ERR(CAM_SYNC, "Sync_obj[%d] %d valid check fail",
+				i, sync_obj[i]);
+			return rc;
+		}
+	}
+#endif
 	do {
 		idx = find_first_zero_bit(sync_dev->bitmap, CAM_SYNC_MAX_OBJS);
 		if (idx >= CAM_SYNC_MAX_OBJS)
@@ -374,6 +390,32 @@ int cam_sync_destroy(int32_t sync_obj)
 	return cam_sync_deinit_object(sync_dev->sync_table, sync_obj);
 }
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*wangjingkai@camera qcom case:04895864 Fix context release timing issue */
+int cam_sync_check_valid(int32_t sync_obj)
+{
+	struct sync_table_row *row = NULL;
+
+	if (sync_obj >= CAM_SYNC_MAX_OBJS || sync_obj <= 0)
+		return -EINVAL;
+
+	row = sync_dev->sync_table + sync_obj;
+
+	if (!test_bit(sync_obj, sync_dev->bitmap)) {
+		CAM_ERR(CAM_SYNC, "Error: Released sync obj received %d",
+			sync_obj);
+		return -EINVAL;
+	}
+
+	if (row->state == CAM_SYNC_STATE_INVALID) {
+		CAM_ERR(CAM_SYNC,
+			"Error: accessing an uninitialized sync obj = %d",
+			sync_obj);
+		return -EINVAL;
+	}
+	return 0;
+}
+#endif
 int cam_sync_wait(int32_t sync_obj, uint64_t timeout_ms)
 {
 	unsigned long timeleft;
@@ -692,10 +734,19 @@ static int cam_sync_handle_deregister_user_payload(
 
 	list_for_each_entry_safe(user_payload_kernel, temp,
 				&row->user_payload_list, list) {
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
 		if (user_payload_kernel->payload_data[0] ==
 				userpayload_info.payload[0] &&
 				user_payload_kernel->payload_data[1] ==
 				userpayload_info.payload[1]) {
+#else
+		if (user_payload_kernel->payload_data[0] ==
+				userpayload_info.payload[0]) {
+			CAM_ERR(CAM_SYNC,
+				"Info: deregister success for sync_obj %d payload[0] %llx",
+				sync_obj,
+				user_payload_kernel->payload_data[0]);
+#endif
 			list_del_init(&user_payload_kernel->list);
 			kfree(user_payload_kernel);
 		}

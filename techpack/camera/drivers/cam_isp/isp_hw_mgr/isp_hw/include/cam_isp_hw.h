@@ -92,8 +92,10 @@ enum cam_isp_hw_cmd_type {
 	CAM_ISP_HW_CMD_BW_CONTROL,
 	CAM_ISP_HW_CMD_STOP_BUS_ERR_IRQ,
 	CAM_ISP_HW_CMD_UBWC_UPDATE,
+	CAM_ISP_HW_CMD_DUMP_BUS_INFO,
 	CAM_ISP_HW_CMD_SOF_IRQ_DEBUG,
 	CAM_ISP_HW_CMD_SET_CAMIF_DEBUG,
+	CAM_ISP_HW_CMD_CAMIF_DATA,
 	CAM_ISP_HW_CMD_CSID_CLOCK_UPDATE,
 	CAM_ISP_HW_CMD_FE_UPDATE_IN_RD,
 	CAM_ISP_HW_CMD_FE_UPDATE_BUS_RD,
@@ -102,6 +104,9 @@ enum cam_isp_hw_cmd_type {
 	CAM_ISP_HW_CMD_WM_CONFIG_UPDATE,
 	CAM_ISP_HW_CMD_CSID_QCFA_SUPPORTED,
 	CAM_ISP_HW_CMD_QUERY_REGSPACE_DATA,
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	CAM_ISP_HW_CMD_CSID_CHANGE_HALT_MODE,
+#endif
 	CAM_ISP_HW_CMD_MAX,
 };
 
@@ -196,12 +201,14 @@ struct cam_isp_hw_cmd_buf_update {
  * @Brief:         Get cmd buffer for WM updates.
  *
  * @ image_buf:    image buffer address array
+ * @ image_buf_offset: image buffer address offset array
  * @ num_buf:      Number of buffers in the image_buf array
  * @ io_cfg:       IO buffer config information sent from UMD
  *
  */
 struct cam_isp_hw_get_wm_update {
 	dma_addr_t                     *image_buf;
+	uint32_t                        image_buf_offset[CAM_PACKET_MAX_PLANES];
 	uint32_t                        num_buf;
 	struct cam_buf_io_cfg          *io_cfg;
 };

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2016-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #ifndef _CAM_REQ_MGR_INTERFACE_H
@@ -15,7 +16,9 @@ struct cam_req_mgr_trigger_notify;
 struct cam_req_mgr_error_notify;
 struct cam_req_mgr_add_request;
 struct cam_req_mgr_timer_notify;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 struct cam_req_mgr_notify_stop;
+#endif
 struct cam_req_mgr_device_info;
 struct cam_req_mgr_core_dev_link_setup;
 struct cam_req_mgr_apply_request;
@@ -38,7 +41,9 @@ typedef int (*cam_req_mgr_notify_trigger)(
 typedef int (*cam_req_mgr_notify_err)(struct cam_req_mgr_error_notify *);
 typedef int (*cam_req_mgr_add_req)(struct cam_req_mgr_add_request *);
 typedef int (*cam_req_mgr_notify_timer)(struct cam_req_mgr_timer_notify *);
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 typedef int (*cam_req_mgr_notify_stop)(struct cam_req_mgr_notify_stop *);
+#endif
 
 /**
  * @brief: cam req mgr to camera device drivers
@@ -70,7 +75,9 @@ struct cam_req_mgr_crm_cb {
 	cam_req_mgr_notify_err      notify_err;
 	cam_req_mgr_add_req         add_req;
 	cam_req_mgr_notify_timer    notify_timer;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	cam_req_mgr_notify_stop     notify_stop;
+#endif
 };
 
 /**
@@ -146,7 +153,9 @@ enum cam_req_mgr_device_error {
 	CRM_KMD_ERR_PAGE_FAULT,
 	CRM_KMD_ERR_OVERFLOW,
 	CRM_KMD_ERR_TIMEOUT,
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	CRM_KMD_ERR_STOPPED,
+#endif
 	CRM_KMD_ERR_MAX,
 };
 
@@ -213,7 +222,10 @@ struct cam_req_mgr_trigger_notify {
 	int64_t  frame_id;
 	uint32_t trigger;
 	uint64_t sof_timestamp_val;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	uint64_t req_id;
+	int32_t  trigger_id;
+#endif
 };
 
 /**
@@ -259,7 +271,7 @@ struct cam_req_mgr_add_request {
 	uint32_t skip_before_applying;
 };
 
-
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 /**
  * struct cam_req_mgr_notify_stop
  * @link_hdl             : link identifier
@@ -268,7 +280,7 @@ struct cam_req_mgr_add_request {
 struct cam_req_mgr_notify_stop {
 	int32_t  link_hdl;
 };
-
+#endif
 
 /* CRM to KMD devices */
 /**
@@ -286,6 +298,7 @@ struct cam_req_mgr_device_info {
 	enum cam_req_mgr_device_id  dev_id;
 	enum cam_pipeline_delay     p_delay;
 	uint32_t                    trigger;
+	bool                        trigger_on;
 };
 
 /**
@@ -296,6 +309,7 @@ struct cam_req_mgr_device_info {
  * @max_delay       : max pipeline delay on this link
  * @crm_cb          : callback funcs to communicate with req mgr
  * @subscribe_event : the mask of trigger points this link subscribes
+ * @trigger_id      : Unique ID provided to the triggering device
  *
  */
 struct cam_req_mgr_core_dev_link_setup {
@@ -305,6 +319,7 @@ struct cam_req_mgr_core_dev_link_setup {
 	enum cam_pipeline_delay    max_delay;
 	struct cam_req_mgr_crm_cb *crm_cb;
 	uint32_t                   subscribe_event;
+	int32_t                    trigger_id;
 };
 
 /**
@@ -314,6 +329,7 @@ struct cam_req_mgr_core_dev_link_setup {
  * @request_id       : request id settings to apply
  * @report_if_bubble : report to crm if failure in applying
  * @trigger_point    : the trigger point of this apply
+ * @re_apply         : to skip re_apply for buf_done request
  *
  */
 struct cam_req_mgr_apply_request {
@@ -322,6 +338,9 @@ struct cam_req_mgr_apply_request {
 	uint64_t   request_id;
 	int32_t    report_if_bubble;
 	uint32_t   trigger_point;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	bool       re_apply;
+#endif
 };
 
 /**

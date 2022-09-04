@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #ifndef _HFI_INTF_H_
@@ -32,7 +33,6 @@ struct hfi_mem {
  * @sec_heap: secondary heap hfi memory for firmware
  * @qdss: qdss mapped memory for fw
  * @io_mem: io memory info
- * @io_mem2: 2nd io memory info
  * @icp_base: icp base address
  */
 struct hfi_mem_info {
@@ -45,7 +45,10 @@ struct hfi_mem_info {
 	struct hfi_mem shmem;
 	struct hfi_mem qdss;
 	struct hfi_mem io_mem;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	//gongqiang.xiao@Camera add for case:04457772
 	struct hfi_mem io_mem2;
+#endif
 	void __iomem *icp_base;
 };
 

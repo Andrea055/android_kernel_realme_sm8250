@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2016-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 #ifndef _CAM_REQ_MGR_CORE_H_
 #define _CAM_REQ_MGR_CORE_H_
@@ -13,7 +14,11 @@
 #define CAM_REQ_MGR_MAX_LINKED_DEV     16
 #define MAX_REQ_SLOTS                  48
 
-#define CAM_REQ_MGR_WATCHDOG_TIMEOUT       5000
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#define CAM_REQ_MGR_WATCHDOG_TIMEOUT       10000
+#else
+#define CAM_REQ_MGR_WATCHDOG_TIMEOUT       1000
+#endif
 #define CAM_REQ_MGR_WATCHDOG_TIMEOUT_MAX   50000
 #define CAM_REQ_MGR_SCHED_REQ_TIMEOUT      1000
 #define CAM_REQ_MGR_SIMULATE_SCHED_REQ     30
@@ -33,10 +38,12 @@
 
 #define MAXIMUM_LINKS_PER_SESSION  4
 
-#define MAXIMUM_RETRY_ATTEMPTS 6
+#define MAXIMUM_RETRY_ATTEMPTS 3
 
 #define VERSION_1  1
 #define VERSION_2  2
+#define CAM_REQ_MGR_MAX_TRIGGERS   2
+
 
 /**
  * enum crm_workq_task_type
@@ -260,7 +267,9 @@ struct cam_req_mgr_req_queue {
 	struct cam_req_mgr_slot     slot[MAX_REQ_SLOTS];
 	int32_t                     rd_idx;
 	int32_t                     wr_idx;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	int32_t                     last_applied_idx;
+#endif
 };
 
 /**
@@ -345,7 +354,6 @@ struct cam_req_mgr_connected_device {
  *                         as part of shutdown.
  * @sof_timestamp_value  : SOF timestamp value
  * @prev_sof_timestamp   : Previous SOF timestamp value
- * @is_first_req         : Flag to indicate about link first req
  */
 struct cam_req_mgr_core_link {
 	int32_t                              link_hdl;
@@ -353,6 +361,9 @@ struct cam_req_mgr_core_link {
 	enum cam_pipeline_delay              max_delay;
 	struct cam_req_mgr_core_workq       *workq;
 	int32_t                              pd_mask;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	int32_t                              dev_hdl_to_skip_apply;
+#endif
 	struct cam_req_mgr_connected_device *l_dev;
 	struct cam_req_mgr_req_data          req;
 	struct cam_req_mgr_timer            *watchdog;
@@ -376,7 +387,8 @@ struct cam_req_mgr_core_link {
 	bool                                 is_shutdown;
 	uint64_t                             sof_timestamp;
 	uint64_t                             prev_sof_timestamp;
-	bool                                 is_first_req;
+	bool                                 dual_trigger;
+	uint32_t    trigger_cnt[CAM_REQ_MGR_MAX_TRIGGERS];
 };
 
 /**
@@ -414,6 +426,10 @@ struct cam_req_mgr_core_session {
 struct cam_req_mgr_core_device {
 	struct list_head             session_head;
 	struct mutex                 crm_lock;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	bool                         recovery_on_apply_fail;
+	bool                         is_closing;
+#endif
 };
 
 /**

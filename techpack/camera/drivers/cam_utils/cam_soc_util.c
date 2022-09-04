@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #include <linux/of.h>
@@ -16,8 +17,13 @@
 static char supported_clk_info[256];
 static char debugfs_dir_name[64];
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
 	int64_t clk_rate, int clk_idx, int32_t *clk_lvl)
+#else
+int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
+	int32_t clk_rate, int clk_idx, int32_t *clk_lvl)
+#endif
 {
 	int i;
 	long clk_rate_round;
@@ -40,10 +46,17 @@ int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
 		if ((soc_info->clk_level_valid[i]) &&
 			(soc_info->clk_rate[i][clk_idx] >=
 			clk_rate_round)) {
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 			CAM_DBG(CAM_UTIL,
 				"soc = %d round rate = %ld actual = %lld",
 				soc_info->clk_rate[i][clk_idx],
-				clk_rate_round, clk_rate);
+				clk_rate_round,	clk_rate);
+#else
+			CAM_DBG(CAM_UTIL,
+				"soc = %d round rate = %ld actual = %d",
+				soc_info->clk_rate[i][clk_idx],
+				clk_rate_round,	clk_rate);
+#endif
 			*clk_lvl = i;
 			return 0;
 		}
@@ -379,16 +392,24 @@ long cam_soc_util_get_clk_round_rate(struct cam_hw_soc_info *soc_info,
  *
  * @return:         Success or failure
  */
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 static int cam_soc_util_set_clk_rate(struct clk *clk, const char *clk_name,
 	int64_t clk_rate)
+#else
+static int cam_soc_util_set_clk_rate(struct clk *clk, const char *clk_name,
+	int32_t clk_rate)
+#endif
 {
 	int rc = 0;
 	long clk_rate_round;
 
 	if (!clk || !clk_name)
 		return -EINVAL;
-
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	CAM_DBG(CAM_UTIL, "set %s, rate %lld", clk_name, clk_rate);
+#else
+	CAM_DBG(CAM_UTIL, "set %s, rate %d", clk_name, clk_rate);
+#endif
 	if (clk_rate > 0) {
 		clk_rate_round = clk_round_rate(clk, clk_rate);
 		CAM_DBG(CAM_UTIL, "new_rate %ld", clk_rate_round);
@@ -422,9 +443,13 @@ static int cam_soc_util_set_clk_rate(struct clk *clk, const char *clk_name,
 
 	return rc;
 }
-
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
 	int64_t clk_rate)
+#else
+int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
+	int32_t clk_rate)
+#endif
 {
 	int rc = 0;
 	int i = 0;
@@ -451,17 +476,28 @@ int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
 	rc = cam_soc_util_get_clk_level(soc_info, clk_rate, src_clk_idx,
 		&apply_level);
 	if (rc || (apply_level < 0) || (apply_level >= CAM_MAX_VOTE)) {
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 		CAM_ERR(CAM_UTIL,
 			"set %s, rate %lld dev_name = %s apply level = %d",
 			soc_info->clk_name[src_clk_idx], clk_rate,
 			soc_info->dev_name, apply_level);
+#else
+		CAM_ERR(CAM_UTIL,
+			"set %s, rate %d dev_name = %s apply level = %d",
+			soc_info->clk_name[src_clk_idx], clk_rate,
+			soc_info->dev_name, apply_level);
+#endif
 			return -EINVAL;
 	}
-
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	CAM_DBG(CAM_UTIL, "set %s, rate %lld dev_name = %s apply level = %d",
 		soc_info->clk_name[src_clk_idx], clk_rate,
 		soc_info->dev_name, apply_level);
-
+#else
+	CAM_DBG(CAM_UTIL, "set %s, rate %d dev_name = %s apply level = %d",
+		soc_info->clk_name[src_clk_idx], clk_rate,
+		soc_info->dev_name, apply_level);
+#endif
 	if ((soc_info->cam_cx_ipeak_enable) && (clk_rate >= 0)) {
 		cam_cx_ipeak_update_vote_cx_ipeak(soc_info,
 			apply_level);
@@ -470,10 +506,17 @@ int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
 	rc = cam_soc_util_set_clk_rate(clk,
 		soc_info->clk_name[src_clk_idx], clk_rate);
 	if (rc) {
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 		CAM_ERR(CAM_UTIL,
 			"SET_RATE Failed: src clk: %s, rate %lld, dev_name = %s rc: %d",
 			soc_info->clk_name[src_clk_idx], clk_rate,
 			soc_info->dev_name, rc);
+#else
+		CAM_ERR(CAM_UTIL,
+			"SET_RATE Failed: src clk: %s, rate %d, dev_name = %s rc: %d",
+			soc_info->clk_name[src_clk_idx], clk_rate,
+			soc_info->dev_name, rc);
+#endif
 		return rc;
 	}
 

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #ifndef _CAM_ISP_CONTEXT_H_
@@ -148,6 +149,7 @@ struct cam_isp_context_state_monitor {
 	unsigned int                         evt_time_stamp;
 };
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 /**
  * struct cam_isp_context_req_id_info - ISP context request id
  *                     information for bufdone.
@@ -159,6 +161,8 @@ struct cam_isp_context_state_monitor {
 struct cam_isp_context_req_id_info {
 	int64_t                          last_bufdone_req_id;
 };
+#endif
+
 /**
  *
  * struct cam_isp_context   -  ISP context object
@@ -215,12 +219,18 @@ struct cam_isp_context {
 	atomic64_t                            state_monitor_head;
 	struct cam_isp_context_state_monitor  cam_isp_ctx_state_monitor[
 		CAM_ISP_CTX_STATE_MONITOR_MAX_ENTRIES];
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	struct cam_isp_context_req_id_info    req_info;
+#endif
 	bool                                  rdi_only_context;
 	bool                                  hw_acquired;
 	bool                                  init_received;
 	bool                                  split_acquire;
 	unsigned int                          init_timestamp;
+	atomic_t                              rxd_epoch;
+	struct cam_req_mgr_core_workq         *workq;
+	int32_t                               trigger_id;
+	uint64_t                              last_sof_timestamp;
 };
 
 /**

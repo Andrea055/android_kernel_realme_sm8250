@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2020, Oplus. All rights reserved.
  */
 
 #ifndef _CAM_CSIPHY_1_2_HWREG_H_
@@ -249,7 +250,12 @@ csiphy_2ph_v1_2_combo_mode_reg[MAX_LANES][MAX_SETTINGS_PER_LANE] = {
 		{0x0600, 0x80, 0x00, CSIPHY_DEFAULT_PARAMS},
 		{0x0604, 0x0C, 0x00, CSIPHY_DEFAULT_PARAMS},
 		{0x0620, 0x00, 0x00, CSIPHY_DEFAULT_PARAMS},
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+//tangruiye@Camera add for case:04402264
+		{0x0624, 0x01, 0x00, CSIPHY_DNP_PARAMS},
+#else
 		{0x0624, 0x01, 0x00, CSIPHY_DEFAULT_PARAMS},
+#endif
 		{0x0608, 0x10, 0x00, CSIPHY_SETTLE_CNT_LOWER_BYTE},
 		{0x060C, 0xFF, 0x00, CSIPHY_DEFAULT_PARAMS},
 		{0x0638, 0x1F, 0x00, CSIPHY_DEFAULT_PARAMS},
