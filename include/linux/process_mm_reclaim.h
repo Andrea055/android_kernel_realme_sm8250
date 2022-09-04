@@ -31,23 +31,6 @@
  * qualcomm has define the sturct in mm.h,
  * mtk do not define it, used for transfer param during scan pages.
  */
-struct reclaim_param {
-	struct vm_area_struct *vma;
-	/* Number of pages scanned */
-	int nr_scanned;
-	/* max pages to reclaim */
-	int nr_to_reclaim;
-	/* pages reclaimed */
-	int nr_reclaimed;
-	/* 
-	 * flag that relcaim inactive pages only 
-         */
-	bool inactive_lru;
-	/*
-	 * the target reclaimed process
-	 */
-	struct task_struct *reclaimed_task;
-};
 #endif
 
 extern int is_reclaim_should_cancel(struct mm_walk *walk);

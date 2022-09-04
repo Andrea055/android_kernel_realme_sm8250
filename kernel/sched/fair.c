@@ -35,9 +35,9 @@
 #include <linux/special_opt/special_opt.h>
 #endif
 #ifdef OPLUS_FEATURE_SCHED_ASSIST
-extern unsigned int walt_scale_demand_divisor;
-bool ux_task_misfit(struct task_struct *p, int cpu);
-#define scale_demand(d) ((d)/walt_scale_demand_divisor)
+// unsigned int walt_scale_demand_divisor;
+// bool ux_task_misfit(struct task_struct *p, int cpu);
+// #define scale_demand(d) ((d)/walt_scale_demand_divisor)
 #endif /* OPLUS_FEATURE_SCHED_ASSIST */
 
 #ifdef OPLUS_FEATURE_SCHED_ASSIST
@@ -8122,12 +8122,6 @@ unlock:
 #ifdef OPLUS_FEATURE_SCHED_ASSIST
 	if (!fbt_env.fastpath)
 		set_ux_task_to_prefer_cpu(p, &best_energy_cpu);
-#endif /* OPLUS_FEATURE_SCHED_ASSIST */
-#ifdef OPLUS_FEATURE_SCHED_ASSIST
-	if (sched_assist_scene(SA_SLIDE) && is_heavy_ux_task(p) &&
-		ux_task_misfit(p, best_energy_cpu)) {
-		find_ux_task_cpu(p, &best_energy_cpu);
-	}
 #endif /* OPLUS_FEATURE_SCHED_ASSIST */
 
 #ifdef CONFIG_OPLUS_FEATURE_TPP
