@@ -67,9 +67,9 @@ static void seed_rng(void)
 		.buffer = "Adding real entropy is not actually important for these tests. Don't try this at home, kids!"
 	};
 
-	if (mknod("/dev/urandom", S_IFCHR | 0644, makedev(1, 9)))
-		panic("mknod(/dev/urandom)");
-	fd = open("/dev/urandom", O_WRONLY);
+	if (mknod("/dev/srandom", S_IFCHR | 0644, makedev(1, 9)))
+		panic("mknod(/dev/srandom)");
+	fd = open("/dev/srandom", O_WRONLY);
 	if (fd < 0)
 		panic("open(urandom)");
 	for (int i = 0; i < 256; ++i) {

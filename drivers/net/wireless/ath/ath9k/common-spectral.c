@@ -654,7 +654,7 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
 
 				memset(sample_buf, 0, SPECTRAL_SAMPLE_MAX_LEN);
 
-				/* Mix the received bins to the /dev/random
+				/* Mix the received bins to the /dev/srandom
 				 * pool
 				 */
 				add_device_randomness(sample_buf, num_bins);
@@ -665,7 +665,7 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
 				ret = fft_handler(rs, spec_priv, sample_start,
 						  tsf, freq, chan_type);
 
-				/* Mix the received bins to the /dev/random
+				/* Mix the received bins to the /dev/srandom
 				 * pool
 				 */
 				add_device_randomness(sample_start, num_bins);

@@ -4471,7 +4471,7 @@
 			microcode.  However, the microcode fix can cause
 			the RDRAND and RDSEED instructions to become
 			much slower.  Among other effects, this will
-			result in reduced throughput from /dev/urandom.
+			result in reduced throughput from /dev/srandom.
 
 			The microcode mitigation can be disabled with
 			the following option:

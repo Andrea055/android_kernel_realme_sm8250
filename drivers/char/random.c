@@ -107,14 +107,14 @@
  * Exported interfaces ---- userspace output
  * -----------------------------------------
  *
- * The userspace interfaces are two character devices /dev/random and
- * /dev/urandom.  /dev/random is suitable for use when very high
+ * The userspace interfaces are two character devices /dev/srandom and
+ * /dev/srandom.  /dev/srandom is suitable for use when very high
  * quality randomness is desired (for example, for key generation or
  * one-time pads), as it will only return a maximum of the number of
  * bits of randomness (as estimated by the random number generator)
  * contained in the entropy pool.
  *
- * The /dev/urandom device does not have this limit, and will return
+ * The /dev/srandom device does not have this limit, and will return
  * as many bytes as are requested.  As more and more random bytes are
  * requested without giving time for the entropy pool to recharge,
  * this will result in random numbers that are merely cryptographically
@@ -129,7 +129,7 @@
  *
  * This interface will return the requested number of random bytes,
  * and place it in the requested buffer.  This is equivalent to a
- * read from /dev/urandom.
+ * read from /dev/srandom.
  *
  * For less critical applications, there are the functions:
  *
@@ -246,12 +246,12 @@
  *	# Carry a random seed from start-up to start-up
  *	# Load and then save the whole entropy pool
  *	if [ -f $random_seed ]; then
- *		cat $random_seed >/dev/urandom
+ *		cat $random_seed >/dev/srandom
  *	else
  *		touch $random_seed
  *	fi
  *	chmod 600 $random_seed
- *	dd if=/dev/urandom of=$random_seed count=1 bs=512
+ *	dd if=/dev/srandom of=$random_seed count=1 bs=512
  *
  * and the following lines in an appropriate script which is run as
  * the system is shutdown:
@@ -262,7 +262,7 @@
  *	random_seed=/var/run/random-seed
  *	touch $random_seed
  *	chmod 600 $random_seed
- *	dd if=/dev/urandom of=$random_seed count=1 bs=512
+ *	dd if=/dev/srandom of=$random_seed count=1 bs=512
  *
  * For example, on most modern systems using the System V init
  * scripts, such code fragments would be found in
@@ -278,16 +278,16 @@
  * of the entropy pool requires knowledge of the previous history of
  * the system.
  *
- * Configuring the /dev/random driver under Linux
+ * Configuring the /dev/srandom driver under Linux
  * ==============================================
  *
- * The /dev/random driver under Linux uses minor numbers 8 and 9 of
+ * The /dev/srandom driver under Linux uses minor numbers 8 and 9 of
  * the /dev/mem major number (#1).  So if your system does not have
- * /dev/random and /dev/urandom created already, they can be created
+ * /dev/srandom and /dev/srandom created already, they can be created
  * by using the commands:
  *
- * 	mknod /dev/random c 1 8
- * 	mknod /dev/urandom c 1 9
+ * 	mknod /dev/srandom c 1 8
+ * 	mknod /dev/srandom c 1 9
  *
  * Acknowledgements:
  * =================
@@ -374,7 +374,7 @@
 /*
  * If the entropy count falls under this number of bits, then we
  * should wake up processes which are selecting or polling on write
- * access to /dev/random.
+ * access to /dev/srandom.
  */
 static int random_write_wakeup_bits = 28 * OUTPUT_POOL_WORDS;
 
@@ -764,7 +764,7 @@ static DECLARE_WAIT_QUEUE_HEAD(crng_init_wait);
 #ifdef CONFIG_NUMA
 /*
  * Hack to deal with crazy userspace progams when they are all trying
- * to access /dev/urandom in parallel.  The programs are almost
+ * to access /dev/srandom in parallel.  The programs are almost
  * certainly doing something terribly wrong, but we'll work around
  * their brain damage.
  */
@@ -1599,7 +1599,7 @@ static void try_to_generate_entropy(void)
 
 /*
  * Wait for the urandom pool to be seeded and thus guaranteed to supply
- * cryptographically secure random numbers. This applies to: the /dev/urandom
+ * cryptographically secure random numbers. This applies to: the /dev/srandom
  * device, the get_random_bytes function, and the get_random_{u32,u64,int,long}
  * family of functions. Using any of these functions without first calling
  * this function forfeits the guarantee of security.
@@ -1628,7 +1628,7 @@ EXPORT_SYMBOL(wait_for_random_bytes);
 /*
  * Returns whether or not the urandom pool has been seeded and thus guaranteed
  * to supply cryptographically secure random numbers. This applies to: the
- * /dev/urandom device, the get_random_bytes function, and the get_random_{u32,
+ * /dev/srandom device, the get_random_bytes function, and the get_random_{u32,
  * ,u64,int,long} family of functions.
  *
  * Returns: true if the urandom pool has been seeded.
@@ -2146,7 +2146,7 @@ struct batched_entropy {
 
 /*
  * Get a random word for internal kernel use only. The quality of the random
- * number is good as /dev/urandom, but there is no backtrack protection, with
+ * number is good as /dev/srandom, but there is no backtrack protection, with
  * the goal of being quite fast and not depleting entropy. In order to ensure
  * that the randomness provided by this function is okay, the function
  * wait_for_random_bytes() should be called and return 0 at least once at any

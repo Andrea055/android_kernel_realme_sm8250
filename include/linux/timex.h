@@ -66,7 +66,7 @@
 
 #ifndef random_get_entropy
 /*
- * The random_get_entropy() function is used by the /dev/random driver
+ * The random_get_entropy() function is used by the /dev/srandom driver
  * in order to extract entropy via the relative unpredictability of
  * when an interrupt takes places versus a high speed, fine-grained
  * timing source or cycle counter.  Since it will be occurred on every
