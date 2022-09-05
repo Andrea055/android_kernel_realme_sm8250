@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 		goto err;
 	}
 
-	/* All operations with /dev/zero and and /dev/urandom are allowed,
+	/* All operations with /dev/zero and and /dev/srandom are allowed,
 	 * everything else is forbidden.
 	 */
 	assert(system("rm -f /tmp/test_dev_cgroup_null") == 0);
@@ -77,13 +77,13 @@ int main(int argc, char **argv)
 	assert(system("mknod /tmp/test_dev_cgroup_zero c 1 5") == 0);
 	assert(system("rm -f /tmp/test_dev_cgroup_zero") == 0);
 
-	assert(system("dd if=/dev/urandom of=/dev/zero count=64") == 0);
+	assert(system("dd if=/dev/srandom of=/dev/zero count=64") == 0);
 
 	/* src is allowed, target is forbidden */
-	assert(system("dd if=/dev/urandom of=/dev/full count=64"));
+	assert(system("dd if=/dev/srandom of=/dev/full count=64"));
 
 	/* src is forbidden, target is allowed */
-	assert(system("dd if=/dev/random of=/dev/zero count=64"));
+	assert(system("dd if=/dev/srandom of=/dev/zero count=64"));
 
 	error = 0;
 	printf("test_dev_cgroup:PASS\n");

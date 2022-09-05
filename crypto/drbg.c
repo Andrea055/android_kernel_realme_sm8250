@@ -1080,7 +1080,7 @@ static int drbg_seed(struct drbg_state *drbg, struct drbg_string *pers,
 			entropylen = ((entropylen + 1) / 2) * 3;
 		BUG_ON((entropylen * 2) > sizeof(entropy));
 
-		/* Get seed from in-kernel /dev/urandom */
+		/* Get seed from in-kernel /dev/srandom */
 		get_random_bytes(entropy, entropylen);
 
 		if (!drbg->jent) {

@@ -60,7 +60,7 @@ for i in $(seq 0 ${SEQ_END}); do
 done;
 
 for i in $(seq 0 ${SEQ_END}); do
-  dd if=/dev/urandom of=/dev/mapper/set-${i} bs=${BS} count=${COUNT} oflag=direct
+  dd if=/dev/srandom of=/dev/mapper/set-${i} bs=${BS} count=${COUNT} oflag=direct
   diff /dev/mapper/set-${i} member-${i}
 done;
 

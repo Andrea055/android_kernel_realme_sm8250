@@ -124,7 +124,7 @@ static int __init rng_init (void)
 {
 	int err;
 
-	err = os_open_file("/dev/random", of_read(OPENFLAGS()), 0);
+	err = os_open_file("/dev/srandom", of_read(OPENFLAGS()), 0);
 	if (err < 0)
 		goto out;
 

@@ -445,7 +445,7 @@ config UML_RANDOM
 	tristate "Hardware random number generator"
 	help
 	  This option enables UML's "hardware" random number generator.  It
-	  attaches itself to the host's /dev/random, supplying as much entropy
+	  attaches itself to the host's /dev/srandom, supplying as much entropy
 	  as the host has, rather than the small amount the UML gets from its
 	  own drivers.  It registers itself as a standard hardware random number
 	  generator, major 10, minor 183, and the canonical device name is
@@ -453,7 +453,7 @@ config UML_RANDOM
 	  The way to make use of this is to install the rng-tools package
 	  (check your distro, or download from
 	  http://sourceforge.net/projects/gkernel/).  rngd periodically reads
-	  /dev/hwrng and injects the entropy into /dev/random.
+	  /dev/hwrng and injects the entropy into /dev/srandom.
 
 config HW_RANDOM_KEYSTONE
 	depends on ARCH_KEYSTONE

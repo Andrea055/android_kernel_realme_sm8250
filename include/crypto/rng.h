@@ -87,7 +87,7 @@ void crypto_put_default_rng(void);
  * the random number generator that does not share a state with other
  * instances. The only exception is the "krng" random number generator which
  * is a kernel crypto API use case for the get_random_bytes() function of the
- * /dev/random driver.
+ * /dev/srandom driver.
  *
  * Return: allocated cipher handle in case of success; IS_ERR() is true in case
  *	   of an error, PTR_ERR() returns the error code.

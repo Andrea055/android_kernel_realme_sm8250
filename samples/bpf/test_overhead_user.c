@@ -63,15 +63,15 @@ static void test_urandom_read(int cpu)
 	char buf[4];
 	int i, fd;
 
-	fd = open("/dev/urandom", O_RDONLY);
+	fd = open("/dev/srandom", O_RDONLY);
 	if (fd < 0) {
-		printf("couldn't open /dev/urandom\n");
+		printf("couldn't open /dev/srandom\n");
 		exit(1);
 	}
 	start_time = time_get_ns();
 	for (i = 0; i < MAX_CNT; i++) {
 		if (read(fd, buf, sizeof(buf)) < 0) {
-			printf("failed to read from /dev/urandom: %s\n", strerror(errno));
+			printf("failed to read from /dev/srandom: %s\n", strerror(errno));
 			close(fd);
 			return;
 		}

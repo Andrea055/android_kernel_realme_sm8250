@@ -123,7 +123,7 @@ static void init_random_seed(void)
 {
 	int fd;
 
-	fd = open("/dev/urandom", O_RDONLY);
+	fd = open("/dev/srandom", O_RDONLY);
 	if (fd < 0)
 		goto fail;
 
@@ -133,7 +133,7 @@ static void init_random_seed(void)
 	close(fd);
 	return;
 fail:
-	usage("Failed to open /dev/urandom");
+	usage("Failed to open /dev/srandom");
 }
 
 /* Read given instruction sequence from the input file */
