@@ -129,6 +129,7 @@ typedef enum grip_operate_object {
 	OBJECT_ELI_AREA,            /* for modify elimination area */
 	OBJECT_DEAD_AREA,           /* for modify dead area */
 	OBJECT_SKIP_HANDLE,         /* for modify no handle setting */
+	OBJECT_EDGE_LIMIT,
 } operate_oject;
 
 enum grip_position {

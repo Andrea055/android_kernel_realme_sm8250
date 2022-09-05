@@ -1201,7 +1201,7 @@ retry:
 		  "err %d errno %d\n", err, errno))
 		goto disable_pmu;
 
-	assert(system("dd if=/dev/urandom of=/dev/zero count=4 2> /dev/null")
+	assert(system("dd if=/dev/srandom of=/dev/zero count=4 2> /dev/null")
 	       == 0);
 	assert(system("./urandom_read") == 0);
 	/* disable stack trace collection */
@@ -1351,7 +1351,7 @@ retry:
 		  "err %d errno %d\n", err, errno))
 		goto disable_pmu;
 
-	assert(system("dd if=/dev/urandom of=/dev/zero count=4 2> /dev/null")
+	assert(system("dd if=/dev/srandom of=/dev/zero count=4 2> /dev/null")
 	       == 0);
 	assert(system("taskset 0x1 ./urandom_read 100000") == 0);
 	/* disable stack trace collection */

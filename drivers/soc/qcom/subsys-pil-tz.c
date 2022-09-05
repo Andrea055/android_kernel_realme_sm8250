@@ -903,7 +903,7 @@ static void log_failure_reason(const struct pil_tz_data *d)
 	save_dump_reason_to_smem(reason, function_name);
 	#endif /*OPLUS_FEATURE_AGINGTEST*/
 
-	//#ifdef OPLUS_FEATURE_SENSOR
+	#ifdef OPLUS_FEATURE_SENSOR
 	set_subsys_crash_cause(reason);
 	if((strncmp(name, "slpi", strlen("slpi")) == 0)
 		|| (strncmp(name, "cdsp", strlen("cdsp")) == 0)
@@ -912,7 +912,7 @@ static void log_failure_reason(const struct pil_tz_data *d)
 		strcat(reason, name);
 		oplus_kevent_fb_str(FB_SENSOR, FB_SENSOR_ID_CRASH, reason);
 	}
-	//#endif
+	#endif
 	#ifdef OPLUS_FEATURE_MM_FEEDBACK
 	if(strncmp(name, "adsp", strlen("adsp")) == 0){
 		mm_fb_audio_kevent_named(OPLUS_AUDIO_EVENTID_ADSP_CRASH, \

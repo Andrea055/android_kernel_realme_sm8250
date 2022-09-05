@@ -17,6 +17,7 @@
 #include <linux/dma-mapping.h>
 
 #include "touch_interfaces.h"
+#include "../touchpanel_common.h"
 
 #ifdef CONFIG_HAVE_ARCH_VMAP_STACK
 #define FIX_I2C_LENGTH   256
@@ -693,7 +694,7 @@ int32_t spi_read_write(struct spi_device *client, uint8_t *buf, size_t len, uint
             memcpy(rbuf, rx_buf, len + DUMMY_BYTES);
 
         }
-    }
+	}
 
 spi_out:
     if (tx_buf) {
@@ -719,6 +720,7 @@ int32_t spi_read_write(struct spi_device *client, uint8_t *buf, size_t len, uint
     struct spi_transfer t = {
         .len    = len,
     };
+	int status;
 
     switch (rw) {
     case SPIREAD:
@@ -734,7 +736,8 @@ int32_t spi_read_write(struct spi_device *client, uint8_t *buf, size_t len, uint
 
     spi_message_init(&m);
     spi_message_add_tail(&t, &m);
-    return spi_sync(client, &m);
+	status = spi_sync(client, &m);
+	return status;
 }
 #endif
 

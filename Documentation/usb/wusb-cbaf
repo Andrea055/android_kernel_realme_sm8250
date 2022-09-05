@@ -108,8 +108,8 @@ case $1 in
     set-cc)
         for dev in ${2:-$devs}; do
             shift
-            CDID="$(head --bytes=16 /dev/urandom  | od -tx1 -An)"
-            CK="$(head --bytes=16 /dev/urandom  | od -tx1 -An)"
+            CDID="$(head --bytes=16 /dev/srandom  | od -tx1 -An)"
+            CK="$(head --bytes=16 /dev/srandom  | od -tx1 -An)"
             echo "$CDID" > $dev/wusb_cdid
             echo "$CK" > $dev/wusb_ck
 

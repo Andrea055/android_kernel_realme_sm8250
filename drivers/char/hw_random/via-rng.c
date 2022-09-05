@@ -61,7 +61,7 @@ enum {
  * Investigate using the 'rep' prefix to obtain 32 bits of random data
  * in one insn.  The upside is potentially better performance.  The
  * downside is that the instruction becomes no longer atomic.  Due to
- * this, just like familiar issues with /dev/random itself, the worst
+ * this, just like familiar issues with /dev/srandom itself, the worst
  * case of a 'rep xstore' could potentially pause a cpu for an
  * unreasonably long time.  In practice, this condition would likely
  * only occur when the hardware is failing.  (or so we hope :))

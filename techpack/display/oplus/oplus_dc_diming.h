@@ -34,4 +34,6 @@ int oplus_display_panel_get_dimlayer_enable(void *data);
 int oplus_display_panel_set_dimlayer_enable(void *data);
 int dsi_panel_parse_oplus_dc_config(struct dsi_panel *panel);
 int oplus_dsi_display_enable_and_waiting_for_next_te_irq(void);
+int dsi_panel_tx_cmd_hbm_pre_check(struct dsi_panel *panel, enum dsi_cmd_set_type type, const char** prop_map);
+void dsi_panel_tx_cmd_hbm_post_check(struct dsi_panel *panel, enum dsi_cmd_set_type type);
 #endif /*_OPLUS_DC_DIMING_H_*/

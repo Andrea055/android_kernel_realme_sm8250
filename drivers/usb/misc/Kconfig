@@ -270,7 +270,7 @@ config USB_CHAOSKEY
 	  Araneus Alea I to your computer's USB port. These devices
 	  are hardware random number generators which hook into the
 	  kernel entropy pool to ensure a large supply of entropy for
-	  /dev/random and /dev/urandom and also provides direct access
+	  /dev/srandom and /dev/srandom and also provides direct access
 	  via /dev/chaoskeyX
 
 	  To compile this driver as a module, choose M here: the

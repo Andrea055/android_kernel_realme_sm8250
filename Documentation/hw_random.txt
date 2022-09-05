@@ -20,8 +20,8 @@ hw_random driver's official Web site:
 	http://sourceforge.net/projects/gkernel/
 
 Those tools use /dev/hwrng to fill the kernel entropy pool,
-which is used internally and exported by the /dev/urandom and
-/dev/random special files.
+which is used internally and exported by the /dev/srandom and
+/dev/srandom special files.
 
 Theory of operation
 ===================

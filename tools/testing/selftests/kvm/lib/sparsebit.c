@@ -1886,7 +1886,7 @@ void sparsebit_validate_internal(struct sparsebit *s)
 #ifdef FUZZ
 /* A simple but effective fuzzing driver.  Look for bugs with the help
  * of some invariants and of a trivial representation of sparsebit.
- * Just use 512 bytes of /dev/zero and /dev/urandom as inputs, and let
+ * Just use 512 bytes of /dev/zero and /dev/srandom as inputs, and let
  * afl-fuzz do the magic. :)
  */
 

@@ -224,6 +224,7 @@ struct dsi_panel_oplus_privite {
 	bool low_light_adjust_gamma_support;
 	bool low_light_gamma_is_adjusted;
 	u32 low_light_adjust_gamma_level;
+	bool oplus_fp_hbm_config_flag;
 };
 #endif /* OPLUS_BUG_STABILITY */
 
@@ -290,7 +291,7 @@ struct dsi_panel {
 	atomic_t esd_pending;
 	bool is_dc_set_color_mode;
 #endif
-
+	int vddr_gpio;
 	int panel_test_gpio;
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
 	bool is_secondary;

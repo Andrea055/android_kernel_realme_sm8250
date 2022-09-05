@@ -7,7 +7,7 @@
  * details can be found at http://chaoskey.org
  *
  * The driver connects to the kernel hardware RNG interface to provide
- * entropy for /dev/random and other kernel activities. It also offers
+ * entropy for /dev/srandom and other kernel activities. It also offers
  * a separate /dev/ entry to allow for direct access to the random
  * bit stream.
  *

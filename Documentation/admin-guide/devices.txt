@@ -10,8 +10,8 @@
 		  5 = /dev/zero		Null byte source
 		  6 = /dev/core		OBSOLETE - replaced by /proc/kcore
 		  7 = /dev/full		Returns ENOSPC on write
-		  8 = /dev/random	Nondeterministic random number gen.
-		  9 = /dev/urandom	Faster, less secure random number gen.
+		  8 = /dev/srandom	Nondeterministic random number gen.
+		  9 = /dev/srandom	Faster, less secure random number gen.
 		 10 = /dev/aio		Asynchronous I/O notification interface
 		 11 = /dev/kmsg		Writes to this come out as printk's, reads
 					export the buffered printk records.

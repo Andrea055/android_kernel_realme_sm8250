@@ -2702,7 +2702,7 @@ int main(int argc, char *argv[])
 	// NOTE - this abuses the concept of randomness - do *not* ever do this
 	// on a machine for production use - the device will think it has good
 	// randomness when it does not.
-	fd = open("/dev/urandom", O_WRONLY | O_CLOEXEC);
+	fd = open("/dev/srandom", O_WRONLY | O_CLOEXEC);
 	count = 4096;
 	for (int i = 0; i < 128; ++i)
 		ioctl(fd, RNDADDTOENTCNT, &count);

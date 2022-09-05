@@ -273,6 +273,88 @@ static int sec_enable_headset_mode(struct chip_data_s6sy791 *chip_info, bool ena
     return ret;
 }
 
+static int sec_limit_switch_mode(struct chip_data_s6sy791 *chip_info, bool enable)
+{
+	int ret = -1;
+	unsigned char buf[5] = {0};
+	unsigned char cmd[3] = {0};
+	unsigned char extra_cmd[3] = {0};
+	struct touchpanel_data *ts = i2c_get_clientdata(chip_info->client);
+
+	if (ts == NULL) {
+		return ret;
+	}
+
+	TPD_INFO("limit_switch is %d\n", ts->limit_switch);
+	if (ts->limit_switch == 1) {		/*LANDSPACE*/
+		cmd[0] = 0x01;
+		ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_DIRECTION, 3, cmd); /*change mode*/
+	}  else if (ts->limit_switch == 2) {
+		cmd[0] = 0x02;
+		ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_DIRECTION, 3, cmd);
+	} else {	/*portrait*/
+		cmd[0] = 0x00;
+		ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_DIRECTION, 3, cmd);
+	}
+	/*dead zone type 1*/
+	if ((ts->limit_switch == 1) || (ts->limit_switch == 2))	/*landscape*/
+		buf[2] = ts->dead_zone_l;	/*default x=15px*/
+	else	/*portrait*/
+		buf[2] = ts->dead_zone_p;	/*default x=15px*/
+
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
+	/*dead zone type 2*/
+	buf[0] = 0x01;
+	if ((ts->limit_switch == 1) || (ts->limit_switch == 2)) {	/*landscape*/
+		buf[2] = 0x50; /*x=80px*/
+		buf[4] = 0x50; /*y=80px*/
+	} else {	/*portrait*/
+		buf[2] = 0x1E; /*x=30px*/
+		buf[4] = 0x82; /*y=130px*/
+	}
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
+	/*long press reject zone*/
+	buf[0] = 0x02;
+	TPD_INFO("project info is %d\n", ts->project_info);
+	if(ts->project_info == 1) { /*19811*/
+		buf[2] = 0x3C; /*x=60px*/
+		buf[4] = 0x50; /*y=80px*/
+	} else {
+		buf[2] = 0x1E; /*x=30px*/
+		buf[4] = 0x32;  /*y=50px*/
+	}
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
+	extra_cmd[0] = 0x02;
+	extra_cmd[1] = 0x14;
+	extra_cmd[2] = 0x46;
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_PARA, 3, extra_cmd);
+	/*large touch reject zone*/
+	buf[0] = 0x03;
+	buf[2] = 0x64; /*x=100px*/
+	buf[4] = 0x64; /*y=100px*/
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
+	extra_cmd[0] = 0x03;
+	extra_cmd[1] = 0x0F;
+	extra_cmd[2] = 0x28;
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_PARA, 3, extra_cmd);
+	/*corner long press reject zone*/
+	buf[0] = 0x04;
+	if (ts->project_info == 1) {
+		buf[2] = 0x78; /*120px*/
+		buf[4] = 0x78; /*120px*/
+	} else {
+		buf[2] = 0x64; /*100px*/
+		buf[4] = 0x64; /*100px*/
+	}
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
+	extra_cmd[0] = 0x04;
+	extra_cmd[1] = 0x32;
+	extra_cmd[2] = 0x00;
+	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_PARA, 3, extra_cmd);
+
+	return ret;
+}
+
 static void sec_mdelay(unsigned int ms)
 {
     if (ms < 20)
@@ -1555,71 +1637,78 @@ static int sec_mode_switch(void *chip_data, work_mode mode, bool flag)
         sec_power_control(chip_info, true);
     }
 
-    switch(mode) {
-    case MODE_NORMAL:
-        ret = 0;
-        break;
+	switch(mode) {
+	case MODE_NORMAL:
+	    ret = 0;
+	    break;
 
-    case MODE_SLEEP:
-        ret = sec_power_control(chip_info, false);
-        if (ret < 0) {
-            TPD_INFO("%s: power down failed\n", __func__);
-        }
-        break;
+	case MODE_SLEEP:
+	    ret = sec_power_control(chip_info, false);
+	    if (ret < 0) {
+	        TPD_INFO("%s: power down failed\n", __func__);
+	    }
+	    break;
 
-    case MODE_GESTURE:
-        ret = sec_enable_black_gesture(chip_info, flag);
-        if (ret < 0) {
-            TPD_INFO("%s: sec enable gesture failed.\n", __func__);
-            return ret;
-        }
-        break;
+	case MODE_GESTURE:
+	    ret = sec_enable_black_gesture(chip_info, flag);
+	    if (ret < 0) {
+	        TPD_INFO("%s: sec enable gesture failed.\n", __func__);
+	        return ret;
+	    }
+	    break;
 
-    case MODE_EDGE:
-        //ret = sec_enable_edge_limit(chip_info, flag);
-        //if (ret < 0) {
-        //    TPD_INFO("%s: sec enable edg limit failed.\n", __func__);
-        //    return ret;
-        //}
-        break;
+	case MODE_EDGE:
+	    /*ret = sec_enable_edge_limit(chip_info, flag);
+	        if (ret < 0) {
+	        TPD_INFO("%s: sec enable edg limit failed.\n", __func__);
+	        return ret;
+	     }*/
+	    break;
 
-    case MODE_CHARGE:
-        ret = sec_enable_charge_mode(chip_info, flag);
-        if (ret < 0) {
-            TPD_INFO("%s: enable charge mode : %d failed\n", __func__, flag);
-        }
-        break;
+	case MODE_CHARGE:
+	    ret = sec_enable_charge_mode(chip_info, flag);
+	    if (ret < 0) {
+	        TPD_INFO("%s: enable charge mode : %d failed\n", __func__, flag);
+	    }
+	    break;
 
-    case MODE_EARSENSE:
-        ret = sec_enable_earsense_mode(chip_info, flag);
-        if (ret < 0) {
-            TPD_INFO("%s: enable earsense mode : %d failed\n", __func__, flag);
-        }
-        break;
+	case MODE_EARSENSE:
+	    ret = sec_enable_earsense_mode(chip_info, flag);
+	    if (ret < 0) {
+	        TPD_INFO("%s: enable earsense mode : %d failed\n", __func__, flag);
+	    }
+	    break;
 
-    case MODE_PALM_REJECTION:
-        ret = sec_enable_palm_reject(chip_info, flag);
-        if (ret < 0) {
-            TPD_INFO("%s: enable palm rejection: %d failed\n", __func__, flag);
-        }
-        break;
+	case MODE_PALM_REJECTION:
+	    ret = sec_enable_palm_reject(chip_info, flag);
+	    if (ret < 0) {
+	        TPD_INFO("%s: enable palm rejection: %d failed\n", __func__, flag);
+	    }
+	    break;
 
-    case MODE_GAME:
-        ret = sec_enable_game_mode(chip_info, flag);
-        if (ret < 0) {
-            TPD_INFO("%s: enable game mode: %d failed\n", __func__, flag);
-        }
-        break;
-    case MODE_HEADSET:
-        ret = sec_enable_headset_mode(chip_info, flag);
-        if (ret < 0) {
-            TPD_INFO("%s: enable headset mode: %d failed\n", __func__, flag);
-        }
-        break;
+	case MODE_GAME:
+	    ret = sec_enable_game_mode(chip_info, flag);
+	    if (ret < 0) {
+	        TPD_INFO("%s: enable game mode: %d failed\n", __func__, flag);
+	    }
+	    break;
+	case MODE_HEADSET:
+	    ret = sec_enable_headset_mode(chip_info, flag);
+	    if (ret < 0) {
+	        TPD_INFO("%s: enable headset mode: %d failed\n", __func__, flag);
+	    }
+	    break;
 
-    default:
-        TPD_INFO("%s: Wrong mode.\n", __func__);
-    }
+	case MODE_LIMIT_SWITCH:
+		ret = sec_limit_switch_mode(chip_info, flag);
+		if (ret < 0) {
+			TPD_INFO("%s: limit switch: %d failed\n", __func__, flag);
+		}
+		break;
+
+	default:
+	    TPD_INFO("%s: Wrong mode.\n", __func__);
+	}
 
     return ret;
 }
@@ -2441,7 +2530,11 @@ static int sec_execute_selftest(struct seq_file *s, int fd, struct chip_data_s6s
     int result_size = SEC_SELFTEST_REPORT_SIZE + sec_testdata->TX_NUM * sec_testdata->RX_NUM * 2;
 
     /* save selftest result in flash */
-    tpara[0] = 0x27;
+	if (chip_info->old_firmware_flag_check) {
+	    tpara[0] = 0x21;
+	} else {
+		tpara[0] = 0x27;
+	}
 
     rBuff = kzalloc(result_size, GFP_KERNEL);
     if (!rBuff) {
@@ -3820,6 +3913,7 @@ static int sec_tp_probe(struct i2c_client *client, const struct i2c_device_id *i
     chip_info->irq_requested = true;
     ts->tp_suspend_order = TP_LCD_SUSPEND;
 	chip_info->auto_test_need_cal_support = of_property_read_bool(ts->dev->of_node, "auto_test_need_cal_support");
+	chip_info->old_firmware_flag_check = of_property_read_bool(ts->dev->of_node, "old_firmware_flag_check");
 
     /* 6. create debug interface*/
     sec_raw_device_init(ts);

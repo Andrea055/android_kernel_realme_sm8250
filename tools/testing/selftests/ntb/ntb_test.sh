@@ -351,9 +351,9 @@ function write_mw()
 
 	if [[ "$REMOTE" != "" ]]; then
 		ssh "$REMOTE" \
-			dd if=/dev/urandom "of=$VPATH" 2> /dev/null || true
+			dd if=/dev/srandom "of=$VPATH" 2> /dev/null || true
 	else
-		dd if=/dev/urandom "of=$VPATH" 2> /dev/null || true
+		dd if=/dev/srandom "of=$VPATH" 2> /dev/null || true
 	fi
 }
 

@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[])
 {
-	int fd = open("/dev/urandom", O_RDONLY);
+	int fd = open("/dev/srandom", O_RDONLY);
 	int i;
 	char buf[BUF_SIZE];
 	int count = 4;

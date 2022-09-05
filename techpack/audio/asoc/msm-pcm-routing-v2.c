@@ -25802,7 +25802,7 @@ static const struct snd_soc_dapm_widget msm_qdsp6_widgets_tdm[] = {
 #endif
 
 #ifdef OPLUS_FEATURE_AUDIO_FTM
-static const struct snd_soc_dapm_route intercon_oppo_lookback[] =
+static const struct snd_soc_dapm_route intercon_oplus_lookback[] =
 {
 	{"PRI_MI2S_RX_DL_HL", "Switch", "TX3_CDC_DMA_DL_HL"},
 	#ifdef OPLUS_FEATURE_PLATFORM_LITO
@@ -31242,8 +31242,8 @@ static int msm_routing_probe(struct snd_soc_component *component)
 	snd_soc_dapm_ignore_suspend(&component->dapm, "BE_OUT");
 	snd_soc_dapm_ignore_suspend(&component->dapm, "BE_IN");
 #ifdef OPLUS_FEATURE_AUDIO_FTM
-	snd_soc_dapm_add_routes(&component->dapm, intercon_oppo_lookback,
-		ARRAY_SIZE(intercon_oppo_lookback));
+	snd_soc_dapm_add_routes(&component->dapm, intercon_oplus_lookback,
+		ARRAY_SIZE(intercon_oplus_lookback));
 #endif /* OPLUS_FEATURE_AUDIO_FTM */
 	snd_soc_dapm_add_routes(&component->dapm, intercon,
 		ARRAY_SIZE(intercon));

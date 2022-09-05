@@ -112,9 +112,9 @@ gen_build_id(struct buildid_note *note,
 	size_t sz = sizeof(note->build_id);
 	ssize_t sret;
 
-	fd = open("/dev/urandom", O_RDONLY);
+	fd = open("/dev/srandom", O_RDONLY);
 	if (fd == -1)
-		err(1, "cannot access /dev/urandom for buildid");
+		err(1, "cannot access /dev/srandom for buildid");
 
 	sret = read(fd, note->build_id, sz);
 
