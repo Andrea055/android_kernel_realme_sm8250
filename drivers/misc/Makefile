@@ -93,3 +93,4 @@ obj-$(CONFIG_AW8697_HAPTIC)     += aw8697_haptic/
 obj-$(CONFIG_FPR_FPC)		+= fpr_FingerprintCard/
 obj-y                           += qrc/
 obj-$(CONFIG_KINECTICS_XR_NORDIC) += kxrctrl/
+obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
