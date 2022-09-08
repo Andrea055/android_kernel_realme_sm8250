@@ -515,7 +515,7 @@ static const struct freq_tbl ftbl_cam_cc_bps_clk_src_kona_v2[] = {
 	F(200000000, P_CAM_CC_PLL0_OUT_ODD, 2, 0, 0),
 	F(400000000, P_CAM_CC_PLL0_OUT_ODD, 1, 0, 0),
 	F(480000000, P_CAM_CC_PLL2_OUT_MAIN, 1.5, 0, 0),
-	F(600000000, P_CAM_CC_PLL0_OUT_MAIN, 2, 0, 0),
+	F(900000000, P_CAM_CC_PLL0_OUT_MAIN, 2, 0, 0),
 	{ }
 };
 
@@ -825,7 +825,7 @@ static const struct freq_tbl ftbl_cam_cc_fd_core_clk_src_kona_v2[] = {
 	F(19200000, P_BI_TCXO, 1, 0, 0),
 	F(400000000, P_CAM_CC_PLL0_OUT_ODD, 1, 0, 0),
 	F(480000000, P_CAM_CC_PLL2_OUT_MAIN, 1.5, 0, 0),
-	F(600000000, P_CAM_CC_PLL0_OUT_MAIN, 2, 0, 0),
+	F(900000000, P_CAM_CC_PLL0_OUT_MAIN, 2, 0, 0),
 	{ }
 };
 
@@ -889,7 +889,7 @@ static const struct freq_tbl ftbl_cam_cc_ife_0_clk_src_kona_v2[] = {
 	F(350000000, P_CAM_CC_PLL3_OUT_EVEN, 1, 0, 0),
 	F(475000000, P_CAM_CC_PLL3_OUT_EVEN, 1, 0, 0),
 	F(576000000, P_CAM_CC_PLL3_OUT_EVEN, 1, 0, 0),
-	F(680000000, P_CAM_CC_PLL3_OUT_EVEN, 1, 0, 0),
+	F(900000000, P_CAM_CC_PLL3_OUT_EVEN, 1, 0, 0),
 	{ }
 };
 
@@ -959,7 +959,7 @@ static const struct freq_tbl ftbl_cam_cc_ife_1_clk_src_kona_v2[] = {
 	F(350000000, P_CAM_CC_PLL4_OUT_EVEN, 1, 0, 0),
 	F(475000000, P_CAM_CC_PLL4_OUT_EVEN, 1, 0, 0),
 	F(576000000, P_CAM_CC_PLL4_OUT_EVEN, 1, 0, 0),
-	F(680000000, P_CAM_CC_PLL4_OUT_EVEN, 1, 0, 0),
+	F(900000000, P_CAM_CC_PLL4_OUT_EVEN, 1, 0, 0),
 	{ }
 };
 
@@ -2721,9 +2721,9 @@ static void cam_cc_kona_fixup_konav2(struct regmap *regmap)
 	cam_cc_fd_core_clk_src.freq_tbl = ftbl_cam_cc_fd_core_clk_src_kona_v2;
 	cam_cc_icp_clk_src.freq_tbl = ftbl_cam_cc_fd_core_clk_src_kona_v2;
 	cam_cc_ife_0_clk_src.freq_tbl = ftbl_cam_cc_ife_0_clk_src_kona_v2;
-	cam_cc_ife_0_clk_src.clkr.hw.init->rate_max[VDD_NOMINAL] = 680000000;
+	cam_cc_ife_0_clk_src.clkr.hw.init->rate_max[VDD_HIGH_L1] = 900000000;
 	cam_cc_ife_1_clk_src.freq_tbl = ftbl_cam_cc_ife_1_clk_src_kona_v2;
-	cam_cc_ife_1_clk_src.clkr.hw.init->rate_max[VDD_NOMINAL] = 680000000;
+	cam_cc_ife_1_clk_src.clkr.hw.init->rate_max[VDD_HIGH_L1] = 900000000;
 	cam_cc_ife_lite_clk_src.freq_tbl = ftbl_cam_cc_ife_lite_clk_src_kona_v2;
 	cam_cc_jpeg_clk_src.freq_tbl = ftbl_cam_cc_bps_clk_src_kona_v2;
 	cam_cc_mclk0_clk_src.freq_tbl = ftbl_cam_cc_mclk0_clk_src_kona_v2;

@@ -1,6 +1,6 @@
 #include <dt-bindings/thermal/thermal.h>
 
-&apsscc {
+&clock_cpu {
 	qcom,cpu-isolation {
 		compatible = "qcom,cpu-isolate";
 		cpu0_isolate: cpu0-isolate {

@@ -16,7 +16,9 @@
 	qca,bt-vdd-dig-supply = <&pm8150_s6>;
 	qca,bt-vdd-rfa1-supply = <&pm8150_s5>;
 	qca,bt-vdd-rfa2-supply = <&pm8150a_s8>;
-	qca,bt-vdd-asd-supply = <&pm8150_l16>;
+//#ifdef OPLUS_FEATURE_FINGERPRINT
+	//qca,bt-vdd-asd-supply = <&pm8150_l16>;
+//#endif /*OPLUS_FEATURE_FINGERPRINT*/
 
 	qca,bt-vdd-aon-voltage-level = <950000 950000>;
 	qca,bt-vdd-dig-voltage-level = <950000 950000>;

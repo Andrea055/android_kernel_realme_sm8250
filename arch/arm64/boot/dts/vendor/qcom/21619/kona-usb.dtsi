@@ -15,10 +15,10 @@
 		#size-cells = <1>;
 		ranges;
 
-		interrupts-extended = <&pdc 14 IRQ_TYPE_EDGE_RISING>,
+		interrupts-extended = <&pdc 14 IRQ_TYPE_EDGE_BOTH>,
 			     <&intc GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>,
 			     <&pdc 17 IRQ_TYPE_LEVEL_HIGH>,
-			     <&pdc 15 IRQ_TYPE_EDGE_RISING>;
+			     <&pdc 15 IRQ_TYPE_EDGE_BOTH>;
 		interrupt-names = "dp_hs_phy_irq", "pwr_event_irq",
 				"ss_phy_irq", "dm_hs_phy_irq";
 		qcom,use-pdc-interrupts;
@@ -52,7 +52,9 @@
 			0x144 /* GSI_RING_BASE_ADDR_H */
 			0x1a4>; /* GSI_IF_STS */
 		qcom,dwc-usb3-msm-tx-fifo-size = <27696>;
-
+//#ifdef OPLUS_FEATURE_CHG_BASIC
+		qcom,pm-qos-latency = <61>;/*CUP0-WFI-LVL latency +1 */
+//#endif
 		qcom,msm-bus,name = "usb0";
 		qcom,msm-bus,num-cases = <4>;
 		qcom,msm-bus,num-paths = <3>;
@@ -79,7 +81,7 @@
 			<MSM_BUS_MASTER_USB3 MSM_BUS_SLAVE_IPA_CFG 1 1>,
 			<MSM_BUS_MASTER_AMPSS_M0 MSM_BUS_SLAVE_USB3 1 1>;
 
-		dwc3@a600000 {
+		dwc0: dwc3@a600000 {
 			compatible = "snps,dwc3";
 			reg = <0x0a600000 0xd93c>;
 			interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
@@ -143,7 +145,18 @@
 
 		resets = <&clock_gcc GCC_QUSB2PHY_PRIM_BCR>;
 		reset-names = "phy_reset";
-		qcom,param-override-seq = <0x43 0x70>;
+//#ifndef OPLUS_FEATURE_CHG_BASIC
+		//qcom,param-override-seq = <0x43 0x70>;
+//#else
+		qcom,param-override-seq = <0x67 0x6c
+								0x0a 0x70
+								0x0a 0x74
+								0x00 0x78>;
+		qcom,param-override-seq-host = <0x67 0x6c
+								0x0a 0x70
+								0x0a 0x74
+								0x00 0x78>;
+//#endif
 	};
 
 	/* Primary USB port related QMP USB DP Combo PHY */
@@ -418,7 +431,11 @@
 			<MSM_BUS_MASTER_USB3_1 MSM_BUS_SLAVE_IPA_CFG 0 2400>,
 			<MSM_BUS_MASTER_AMPSS_M0 MSM_BUS_SLAVE_USB3_1 0 40000>;
 
-		dwc3@a800000 {
+                //#ifdef OPLUS_FEATURE_CHG_BASIC
+                status = "disabled";
+                //#endif
+
+		dwc1: dwc3@a800000 {
 			compatible = "snps,dwc3";
 			reg = <0xa800000 0xd93c>;
 			interrupts = <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>;
@@ -451,7 +468,19 @@
 
 		resets = <&clock_gcc GCC_QUSB2PHY_SEC_BCR>;
 		reset-names = "phy_reset";
-		qcom,param-override-seq = <0x43 0x70>;
+//#ifndef OPLUS_FEATURE_CHG_BASIC
+                //qcom,param-override-seq = <0x43 0x70>;
+//#else
+		qcom,param-override-seq = <0x66 0x6c
+								0x2d 0x70
+								0x1c 0x74
+								0x00 0x78>;
+		qcom,param-override-seq-host = <0x66 0x6c
+								0x2d 0x70
+								0x1c 0x74
+								0x00 0x78>;
+//#endif
+//#endif
 	};
 
 	/* Secondary USB port related QMP PHY */

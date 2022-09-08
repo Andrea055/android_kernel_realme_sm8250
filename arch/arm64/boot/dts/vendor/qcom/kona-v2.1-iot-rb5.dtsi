@@ -196,10 +196,6 @@
 };
 
 &soc {
-	msm_vidc: qcom,vidc@aa00000 {
-		compatible = "qcom,msm-vidc", "qcom,qcs8250-vidc";
-	};
-
 	clk40M: can_clock {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -250,13 +246,7 @@
 };
 
 &pcie1 {
-	status = "okay";
-	qcom,boot-option = <0x0>;
-};
-
-&pcie2 {
-	status = "okay";
-	qcom,boot-option = <0x0>;
+	status = "disabled";
 };
 
 &thermal_zones {

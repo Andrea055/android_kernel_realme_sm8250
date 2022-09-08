@@ -24,22 +24,18 @@
 &qupv3_se6_4uart {
 	status = "ok";
 };
-
+/* #ifdef OPLUS_ARCH_EXTENDS */
+/* delete for audio pa
 &dai_mi2s2 {
 	qcom,msm-mi2s-tx-lines = <1>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&tert_mi2s_sck_active &tert_mi2s_ws_active
+			&tert_mi2s_sd0_active>;
+	pinctrl-1 = <&tert_mi2s_sck_sleep &tert_mi2s_ws_sleep
+			&tert_mi2s_sd0_sleep>;
 };
-
-&q6core {
-	cdc_tert_mi2s_gpios: msm_cdc_pinctrl_tert {
-		compatible = "qcom,msm-cdc-pinctrl";
-		pinctrl-names = "aud_active", "aud_sleep";
-		pinctrl-0 = <&tert_mi2s_sck_active &tert_mi2s_ws_active
-				&tert_mi2s_sd0_active>;
-		pinctrl-1 = <&tert_mi2s_sck_sleep &tert_mi2s_ws_sleep
-				&tert_mi2s_sd0_sleep>;
-	};
-};
-
+*/
+/* #endif OPLUS_ARCH_EXTENDS */
 &kona_snd {
 	qcom,model = "kona-qrd-snd-card";
 	qcom,audio-routing =
@@ -616,7 +612,7 @@
 };
 
 &sde_dsi {
-	qcom,dsi-default-panel = <&dsi_sw43404_amoled_cmd>;
+	qcom,dsi-default-panel = <&dsi_oppo19065_samsung_1440_3168_dsc_cmd>;
 };
 
 &thermal_zones {
@@ -703,12 +699,6 @@
 		wake-capable-sensor;
 		trips {
 			active-config0 {
-				temperature = <125000>;
-				hysteresis = <1000>;
-				type = "passive";
-			};
-
-			active-config1 {
 				temperature = <125000>;
 				hysteresis = <1000>;
 				type = "passive";

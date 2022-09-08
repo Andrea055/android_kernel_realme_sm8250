@@ -38,7 +38,6 @@
 
 	aliases {
 		serial0 = &qupv3_se2_2uart;	/*RUMI*/
-		spi1 = &qupv3_se11_spi;
 		ufshc1 = &ufshc_mem; /* Embedded UFS slot */
 		swr0 = &swr0;
 		swr1 = &swr1;
@@ -310,7 +309,7 @@
 			compatible = "android,firmware";
 			vbmeta {
 				compatible = "android,vbmeta";
-				parts = "vbmeta,boot,system,vendor,dtbo,recovery";
+				parts = "vbmeta,boot,system,vendor,dtbo";
 			};
 
 			fstab {
@@ -320,7 +319,7 @@
 					dev = "/dev/block/platform/soc/1d84000.ufshc/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait,avb";
+					fsmgr_flags = "wait,slotselect,avb";
 					status = "ok";
 				};
 			};
@@ -332,7 +331,7 @@
 		method = "smc";
 	};
 
-	reserved_memory: reserved-memory {
+	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
@@ -377,7 +376,7 @@
 
 		qtee_apps_mem: qtee_apps_region@81e00000 {
 			no-map;
-			reg = <0x0 0x81e00000 0x0 0x4200000>;
+			reg = <0x0 0x81e00000 0x0 0x2600000>;
 		};
 
 		pil_camera_mem: pil_camera_region@86000000 {
@@ -1272,7 +1271,7 @@
 
 	qcom_seecom: qseecom@82200000 {
 		compatible = "qcom,qseecom";
-		reg = <0x82200000 0x3e00000>;
+		reg = <0x82200000 0x2200000>;
 		reg-names = "secapp-region";
 		memory-region = <&qseecom_mem>;
 		qcom,hlos-num-ce-hw-instances = <1>;
@@ -1288,7 +1287,7 @@
 
 	qcom_smcinvoke: smcinvoke@82200000 {
 		compatible = "qcom,smcinvoke";
-		reg = <0x82200000 0x3e00000>;
+		reg = <0x82200000 0x2200000>;
 		reg-names = "secapp-region";
 	};
 
@@ -1401,7 +1400,7 @@
 
 	qcom,msm-rtb {
 		compatible = "qcom,msm-rtb";
-		qcom,rtb-size = <0x200000>;
+		qcom,rtb-size = <0x100000>;
 	};
 
 	wdog: qcom,wdt@17c10000 {
@@ -1410,8 +1409,8 @@
 		reg-names = "wdt-base";
 		interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
-		qcom,bark-time = <20000>;
-		qcom,pet-time = <15000>;
+		qcom,bark-time = <11000>;
+		qcom,pet-time = <9360>;
 		qcom,ipi-ping;
 		qcom,wakeup-enable;
 	};
@@ -1425,7 +1424,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU0>;
-		status = "disabled";
 	};
 
 	jtag_mm1: jtagmm@7140000 {
@@ -1437,7 +1435,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU1>;
-		status = "disabled";
 	};
 
 	jtag_mm2: jtagmm@7240000 {
@@ -1449,7 +1446,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU2>;
-		status = "disabled";
 	};
 
 	jtag_mm3: jtagmm@7340000 {
@@ -1461,7 +1457,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU3>;
-		status = "disabled";
 	};
 
 	jtag_mm4: jtagmm@7440000 {
@@ -1473,7 +1468,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU4>;
-		status = "disabled";
 	};
 
 	jtag_mm5: jtagmm@7540000 {
@@ -1485,7 +1479,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU5>;
-		status = "disabled";
 	};
 
 	jtag_mm6: jtagmm@7640000 {
@@ -1497,7 +1490,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU6>;
-		status = "disabled";
 	};
 
 	jtag_mm7: jtagmm@7740000 {
@@ -1509,7 +1501,6 @@
 		clock-names = "core_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU7>;
-		status = "disabled";
 	};
 
 	keepalive_opp_table: keepalive-opp-table {
@@ -2119,12 +2110,11 @@
 
 	};
 
-	rmtfs_sharedmem: qcom,rmtfs_sharedmem@0 {
+	qcom,rmtfs_sharedmem@0 {
 		compatible = "qcom,sharedmem-uio";
-		reg = <0x0 0x200000>;
+		reg = <0x0 0x280000>;
 		reg-names = "rmtfs";
 		qcom,client-id = <0x00000001>;
-		qcom,guard-memory;
 	};
 
 	ipcc_mproc: qcom,ipcc@408000 {
@@ -3944,8 +3934,8 @@
 };
 
 &L5P {
-	regulator-min-microvolt = <1800000>;
-	regulator-max-microvolt = <1800000>;
+	regulator-min-microvolt = <2800000>;
+	regulator-max-microvolt = <2800000>;
 	qcom,min-dropout-voltage = <300000>;
 };
 

@@ -1251,11 +1251,10 @@ static const struct adreno_a6xx_core adreno_gpu_core_a650v2 = {
 		DEFINE_ADRENO_REV(ADRENO_REV_A650, 6, 5, 0, ANY_ID),
 		.features = ADRENO_64BIT | ADRENO_RPMH | ADRENO_GPMU |
 			ADRENO_IOCOHERENT | ADRENO_CONTENT_PROTECTION |
-			ADRENO_IFPC | ADRENO_PREEMPTION | ADRENO_ACD |
-			ADRENO_LM | ADRENO_APRIV,
+			ADRENO_IFPC | ADRENO_APRIV,
 		.gpudev = &adreno_a6xx_gpudev,
 		.gmem_size = SZ_1M + SZ_128K, /* verified 1152kB */
-		.busy_mask = 0xfffffffe,
+		.busy_mask = 0xcfffff,
 		.bus_width = 32,
 	},
 	.prim_fifo_threshold = 0x00300000,
@@ -1270,7 +1269,7 @@ static const struct adreno_a6xx_core adreno_gpu_core_a650v2 = {
 	.vbif_count = ARRAY_SIZE(a650_gbif_regs),
 	.veto_fal10 = true,
 	.pdc_in_aop = true,
-	.hang_detect_cycles = 0x3ffff,
+	.hang_detect_cycles = 0xcfffff,
 	.protected_regs = a620_protected_regs,
 	.disable_tseskip = true,
 };

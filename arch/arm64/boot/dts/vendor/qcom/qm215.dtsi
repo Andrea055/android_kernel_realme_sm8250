@@ -27,6 +27,10 @@
 	compatible = "qcom,gcc-qm215", "syscon";
 };
 
+&debugcc {
+	compatible = "qcom,qm215-debugcc";
+};
+
 &msm_cpufreq {
 	/delete-property/qcom,cpufreq-table;
 	qcom,cpufreq-table =
