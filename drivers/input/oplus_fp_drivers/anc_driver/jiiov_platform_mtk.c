@@ -256,7 +256,7 @@ static int anc_opticalfp_tp_handler(struct fp_underscreen_info *tp_info)
     int rc = 0;
     char netlink_msg = (char)ANC_NETLINK_EVENT_INVALID;
 
-    pr_info("[anc] %s\n", __func__);
+    //pr_info("[anc] %s\n", __func__);
 
     g_anc_data->fp_tpinfo = *tp_info;
     if(tp_info->touch_state == lasttouchmode){

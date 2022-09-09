@@ -230,7 +230,7 @@ static int oplus_find_index_invmaplist(uint32_t bl_level)
 		}
 	}
 
-	pr_err("%s error\n", __func__);
+	//pr_err("%s error\n", __func__);
 	return -1;
 }
 static int oplus_get_panel_brightness_to_alpha(void)
