@@ -5244,7 +5244,7 @@ int kgsl_request_irq(struct platform_device *pdev, const  char *name,
 	if (num < 0)
 		return num;
 
-	ret = devm_request_irq(&pdev->dev, num, handler, IRQF_TRIGGER_HIGH,
+	ret = devm_request_irq(&pdev->dev, num, kgsl_irq_handler, IRQF_TRIGGER_HIGH,
 		name, data);
 
 	if (ret)
