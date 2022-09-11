@@ -257,7 +257,7 @@ config DEVFREQ_BOOST
 		frequencies. The goal of this driver is to provide an interface to
 		achieve optimal device performance by requesting boosts on key events,
 		such as when a frame is ready to rendered to the display.
-
+    
 if DEVFREQ_BOOST
 
 config DEVFREQ_INPUT_BOOST_DURATION_MS
