@@ -551,10 +551,6 @@ struct kgsl_snapshot {
 	bool gmu_fault;
 	bool recovered;
 	struct kgsl_device *device;
-
-	#if defined(OPLUS_FEATURE_GPU_MINIDUMP)
-	char snapshot_hashid[96];
-	#endif /* OPLUS_FEATURE_GPU_MINIDUMP */
 };
 
 /**

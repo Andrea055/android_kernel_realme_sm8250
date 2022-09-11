@@ -68,8 +68,7 @@ ifdef CONFIG_MSM_SUBSYSTEM_RESTART
 endif
 obj-$(CONFIG_QCOM_EUD) += eud.o
 obj-$(CONFIG_SOC_BUS) += socinfo.o
-#modify for oplus watchdog
-obj-$(CONFIG_QCOM_WATCHDOG_V2) += watchdog_v2.o oplus_watchdog_util.o
+obj-$(CONFIG_QCOM_WATCHDOG_V2) += watchdog_v2.o
 obj-$(CONFIG_QCOM_SDM845_LLCC) += llcc-sdm845.o
 CFLAGS_rpmh-rsc.o := -I$(src)
 obj-$(CONFIG_QCOM_BUS_SCALING) += msm_bus/
