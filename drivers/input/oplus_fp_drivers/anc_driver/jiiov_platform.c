@@ -719,7 +719,7 @@ exit:
 static int anc_irq_init(struct device *dev, struct anc_data *data)
 {
     int rc = 0;
-    int irqf = IRQF_TRIGGER_FALLING | IRQF_ONESHOT;  // IRQF_TRIGGER_FALLING or IRQF_TRIGGER_RISING
+    int irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT;  // IRQF_TRIGGER_FALLING or IRQF_TRIGGER_RISING
 
     rc = select_pin_ctl(data, "anc_irq_active");
     if (rc)
