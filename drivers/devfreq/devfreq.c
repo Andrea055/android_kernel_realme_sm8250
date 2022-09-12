@@ -323,7 +323,6 @@ int update_devfreq(struct devfreq *devfreq)
 			return err;
 	}
 
-
 	/*
 	 * Adjust the frequency with user freq, QoS and available freq.
 	 *
