@@ -1865,7 +1865,7 @@ static const struct file_operations proc_write_ps_status_fops = {
 static ssize_t proc_game_switch_write(struct file *file,
 				      const char __user *buffer, size_t count, loff_t *ppos)
 {
-	int value = 0;
+	int value = 1;
 	char buf[100] = {0};
 	char *ptr = NULL;
 	int time = 20; /*default 20s*/
