@@ -2491,7 +2491,6 @@ fail_dma_mapping:
 	spin_lock_bh(&sys->spinlock);
 	ipa3_skb_recycle(rx_pkt->data.skb);
 	list_add_tail(&rx_pkt->link, &sys->rcycl_list);
-	INIT_LIST_HEAD(&rx_pkt->link);
 	spin_unlock_bh(&sys->spinlock);
 fail_kmem_cache_alloc:
 	if (rx_len_cached == 0)
