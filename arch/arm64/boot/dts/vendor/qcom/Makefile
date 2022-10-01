@@ -1,7 +1,13 @@
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
+dtbo-$(CONFIG_ARCH_KONA) += kona-mtp-19705-overlay.dtbo
+dtbo-$(CONFIG_ARCH_KONA) += kona-mtp-19795-overlay.dtbo
+
 dtbo-$(CONFIG_ARCH_KONA) += kona-mtp-21619-overlay.dtbo
 
-kona-mtp-21619-overlay.dtbo-base := kona.dtb kona-v2.dtb kona-v2.1.dtb
+kona-mtp-19705-overlay.dtbo-base := 19705/kona.dtb 19705/kona-v2.dtb 19705/kona-v2.1.dtb
+kona-mtp-19795-overlay.dtbo-base := 19795/kona.dtb 19795/kona-v2.dtb 19795/kona-v2.1.dtb
+
+kona-mtp-21619-overlay.dtbo-base := 21619/kona.dtb 21619/kona-v2.dtb 21619/kona-v2.1.dtb
 else
 dtb-$(CONFIG_ARCH_KONA) += kona-rumi.dtb \
         kona-mtp.dtb \
