@@ -896,6 +896,13 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 		.matches = has_ssbd_mitigation,
 		.midr_range_list = arm64_ssb_cpus,
 	},
+	{
+		.desc = "Spectre-BHB",
+		.capability = ARM64_SPECTRE_BHB,
+		.type = ARM64_CPUCAP_LOCAL_CPU_ERRATUM,
+		.matches = is_spectre_bhb_affected,
+		.cpu_enable = spectre_bhb_enable_mitigation,
+	},
 #ifdef CONFIG_ARM64_ERRATUM_1188873
 	{
 		.desc = "ARM erratum 1188873",
@@ -992,84 +999,6 @@ ssize_t cpu_show_spectre_v2(struct device *dev, struct device_attribute *attr,
 	return sprintf(buf, "Vulnerable\n");
 }
 
-static enum mitigation_state spectre_bhb_state;
-
-enum mitigation_state arm64_get_spectre_bhb_state(void)
-{
-	return spectre_bhb_state;
-}
-
-#ifdef CONFIG_KVM_INDIRECT_VECTORS
-static const char *kvm_bhb_get_vecs_end(const char *start)
-{
-	if (start == __smccc_workaround_3_smc_start)
-		return __smccc_workaround_3_smc_end;
-	else if (start == __spectre_bhb_loop_k8_start)
-		return __spectre_bhb_loop_k8_end;
-else if (start == __spectre_bhb_loop_k24_start)
-		return __spectre_bhb_loop_k24_end;
-else if (start == __spectre_bhb_loop_k32_start)
-		return __spectre_bhb_loop_k32_end;
-
-	return NULL;
-
-
-void kvm_setup_bhb_slot(const char *hyp_vecs_start)
-{
-	int cpu, slot = -1;
-	const char *hyp_vecs_end;
-
-if (!IS_ENABLED(CONFIG_KVM) || !is_hyp_mode_available())
-		return;
-
-	hyp_vecs_end = kvm_bhb_get_vecs_end(hyp_vecs_start);
-	if (WARN_ON_ONCE(!hyp_vecs_start || !hyp_vecs_end))
-		return;
-
-	spin_lock(&bp_lock);
-	for_each_possible_cpu(cpu) {
-		if (per_cpu(bp_hardening_data.template_start, cpu) == hyp_vecs_start) {
-			slot = per_cpu(bp_hardening_data.hyp_vectors_slot, cpu);
-			break;
-		}
-	}
-
-	if (slot == -1) {
-		slot = atomic_inc_return(&arm64_el2_vector_last_slot);
-		BUG_ON(slot >= BP_HARDEN_EL2_SLOTS);
-		__copy_hyp_vect_bpi(slot, hyp_vecs_start, hyp_vecs_end);
-	}
-
-	__this_cpu_write(bp_hardening_data.hyp_vectors_slot, slot);
-	__this_cpu_write(bp_hardening_data.template_start, hyp_vecs_start);
-	spin_unlock(&bp_lock);
-}
-#else
-#define __smccc_workaround_3_smc_start NULL
-#define __spectre_bhb_loop_k8_start NULL
-#define __spectre_bhb_loop_k24_start NULL
-#define __spectre_bhb_loop_k32_start NULL
-
-void kvm_setup_bhb_slot(const char *hyp_vecs_start) { };
-#endif
-
-ssize_t cpu_show_spec_store_bypass(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	if (__ssb_safe)
-		return sprintf(buf, "Not affected\n");
-
-	switch (ssbd_state) {
-	case ARM64_SSBD_KERNEL:
-	case ARM64_SSBD_FORCE_ENABLE:
-		if (IS_ENABLED(CONFIG_ARM64_SSBD))
-			return sprintf(buf,
-			    "Mitigation: Speculative Store Bypass disabled via prctl\n");
-	}
-
-	return sprintf(buf, "Vulnerable\n");
-}
-
 /*
  * We try to ensure that the mitigation state can never change as the result of
  * onlining a late CPU.
@@ -1093,11 +1022,11 @@ static void update_mitigation_state(enum mitigation_state *oldp,
  * - Mitigated by a branchy loop a CPU specific number of times, and listed
  *   in our "loop mitigated list".
  * - Mitigated in software by the firmware Spectre v2 call.
- * - Has the ClearBHB instruction to perform the mitigation.
  * - Has the 'Exception Clears Branch History Buffer' (ECBHB) feature, so no
  *   software mitigation in the vectors is needed.
  * - Has CSV2.3, so is unaffected.
  */
+
 static enum mitigation_state spectre_bhb_state;
 
 enum mitigation_state arm64_get_spectre_bhb_state(void)
@@ -1167,7 +1096,7 @@ static enum mitigation_state spectre_bhb_get_cpu_fw_mitigation_state(void)
 		break;
 
 	case PSCI_CONDUIT_SMC:
-		arm_smccc_1_1_smc(ARM_SMCCC_ARCH_FEATURES_FUNC_ID,
+	arm_smccc_1_1_smc(ARM_SMCCC_ARCH_FEATURES_FUNC_ID,
 				  ARM_SMCCC_ARCH_WORKAROUND_3, &res);
 		break;
 
@@ -1233,9 +1162,6 @@ bool is_spectre_bhb_affected(const struct arm64_cpu_capabilities *entry,
 	if (supports_csv2p3(scope))
 		return false;
 
-	if (supports_clearbhb(scope))
-		return true;
-
 	if (spectre_bhb_loop_affected(scope))
 		return true;
 
@@ -1272,22 +1198,20 @@ static const char *kvm_bhb_get_vecs_end(const char *start)
 		return __smccc_workaround_3_smc_end;
 	else if (start == __spectre_bhb_loop_k8_start)
 		return __spectre_bhb_loop_k8_end;
-	else if (start == __spectre_bhb_loop_k24_start)
+else if (start == __spectre_bhb_loop_k24_start)
 		return __spectre_bhb_loop_k24_end;
-	else if (start == __spectre_bhb_loop_k32_start)
+else if (start == __spectre_bhb_loop_k32_start)
 		return __spectre_bhb_loop_k32_end;
-	else if (start == __spectre_bhb_clearbhb_start)
-		return __spectre_bhb_clearbhb_end;
 
 	return NULL;
-}
+
 
 static void kvm_setup_bhb_slot(const char *hyp_vecs_start)
 {
 	int cpu, slot = -1;
 	const char *hyp_vecs_end;
 
-	if (!IS_ENABLED(CONFIG_KVM) || !is_hyp_mode_available())
+if (!IS_ENABLED(CONFIG_KVM) || !is_hyp_mode_available())
 		return;
 
 	hyp_vecs_end = kvm_bhb_get_vecs_end(hyp_vecs_start);
@@ -1317,10 +1241,26 @@ static void kvm_setup_bhb_slot(const char *hyp_vecs_start)
 #define __spectre_bhb_loop_k8_start NULL
 #define __spectre_bhb_loop_k24_start NULL
 #define __spectre_bhb_loop_k32_start NULL
-#define __spectre_bhb_clearbhb_start NULL
 
 static void kvm_setup_bhb_slot(const char *hyp_vecs_start) { };
 #endif
+
+ssize_t cpu_show_spec_store_bypass(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	if (__ssb_safe)
+		return sprintf(buf, "Not affected\n");
+
+	switch (ssbd_state) {
+	case ARM64_SSBD_KERNEL:
+	case ARM64_SSBD_FORCE_ENABLE:
+		if (IS_ENABLED(CONFIG_ARM64_SSBD))
+			return sprintf(buf,
+			    "Mitigation: Speculative Store Bypass disabled via prctl\n");
+	}
+
+	return sprintf(buf, "Vulnerable\n");
+}
 
 void spectre_bhb_enable_mitigation(const struct arm64_cpu_capabilities *entry)
 {
@@ -1336,11 +1276,6 @@ void spectre_bhb_enable_mitigation(const struct arm64_cpu_capabilities *entry)
 	} else if (cpu_mitigations_off()) {
 		pr_info_once("spectre-bhb mitigation disabled by command line option\n");
 	} else if (supports_ecbhb(SCOPE_LOCAL_CPU)) {
-		state = SPECTRE_MITIGATED;
-	} else if (supports_clearbhb(SCOPE_LOCAL_CPU)) {
-		kvm_setup_bhb_slot(__spectre_bhb_clearbhb_start);
-		this_cpu_set_vectors(EL1_VECTOR_BHB_CLEAR_INSN);
-
 		state = SPECTRE_MITIGATED;
 	} else if (spectre_bhb_loop_affected(SCOPE_LOCAL_CPU)) {
 		switch (spectre_bhb_loop_affected(SCOPE_SYSTEM)) {
