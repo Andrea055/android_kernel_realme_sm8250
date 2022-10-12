@@ -1003,7 +1003,7 @@ alternative_else_nop_endif
 	sub	\dst, \dst, PAGE_SIZE
 	.endm
 
-	.macro tramp_ventry, regsize = 64
+	.macro tramp_ventry, vector_start, regsize
 	.align	7
 1:
 	.if	\regsize == 64
@@ -1036,10 +1036,13 @@ alternative_else_nop_endif
 #ifdef CONFIG_RANDOMIZE_BASE
 	tramp_data_page		x30
 alternative_insn isb, nop, ARM64_WORKAROUND_QCOM_FALKOR_E1003
-	tramp_data_read_var	x30, vectors
+	ldr	x30, [x30]
+#else
+	ldr	x30, =vectors
+#endif
 	prfm	plil1strm, [x30, #(1b - \vector_start)]
 	msr	vbar_el1, x30
-	add	x30, x30, #(1b - tramp_vectors + 4)
+	add	x30, x30, #(1b - \vector_start + 4)
 	isb
 	.else
 	ldr	x30, =vectors
@@ -1078,33 +1081,21 @@ alternative_endif
 	eret
 	.endm
 
-	.macro	generate_tramp_vector,	kpti, bhb
+	.macro	generate_tramp_vector
 .Lvector_start\@:
 	.space	0x400
 
 	.rept	4
-	tramp_ventry	.Lvector_start\@, 64, \kpti, \bhb
+	tramp_ventry	.Lvector_start\@, 64
 	.endr
 	.rept	4
-	tramp_ventry	.Lvector_start\@, 32, \kpti, \bhb
+	tramp_ventry	.Lvector_start\@, 32
 	.endr
 	.endm
 
-#ifdef CONFIG_UNMAP_KERNEL_AT_EL0
-/*
- * Exception vectors trampoline.
- * The order must match __bp_harden_el1_vectors and the
- * arm64_bp_harden_el1_vectors enum.
- */
-	.pushsection ".entry.tramp.text", "ax"
 	.align	11
 ENTRY(tramp_vectors)
-#ifdef CONFIG_MITIGATE_SPECTRE_BRANCH_HISTORY
-	generate_tramp_vector	kpti=1, bhb=BHB_MITIGATION_LOOP
-	generate_tramp_vector	kpti=1, bhb=BHB_MITIGATION_FW
-	generate_tramp_vector	kpti=1, bhb=BHB_MITIGATION_INSN
-#endif /* CONFIG_MITIGATE_SPECTRE_BRANCH_HISTORY */
-	generate_tramp_vector	kpti=1, bhb=BHB_MITIGATION_NONE
+	generate_tramp_vector
 END(tramp_vectors)
 
 ENTRY(tramp_exit_native)
