@@ -1003,9 +1003,10 @@ alternative_else_nop_endif
 	sub	\dst, \dst, PAGE_SIZE
 	.endm
 
-	.macro tramp_ventry, vector_start, regsize
+	.macro tramp_ventry, vector_start, regsize, kpti
 	.align	7
 1:
+	.if	\kpti == 1
 	.if	\regsize == 64
 	msr	tpidrro_el0, x30	// Restored in kernel_ventry
 	.endif
@@ -1042,20 +1043,10 @@ alternative_insn isb, nop, ARM64_WORKAROUND_QCOM_FALKOR_E1003
 #endif
 	prfm	plil1strm, [x30, #(1b - \vector_start)]
 	msr	vbar_el1, x30
-	add	x30, x30, #(1b - \vector_start + 4)
 	isb
 	.else
 	ldr	x30, =vectors
 	.endif // \kpti == 1
-
-	.if	\bhb == BHB_MITIGATION_FW
-	/*
-	 * The firmware sequence must appear before the first indirect branch.
-	 * i.e. the ret out of tramp_ventry. But it also needs the stack to be
-	 * mapped to save/restore the registers the SMC clobbers.
-	 */
-	__mitigate_spectre_bhb_fw
-	.endif // \bhb == BHB_MITIGATION_FW
 
 	add	x30, x30, #(1b - \vector_start + 4)
 	ret
@@ -1081,15 +1072,15 @@ alternative_endif
 	eret
 	.endm
 
-	.macro	generate_tramp_vector
+	.macro	generate_tramp_vector, kpti
 .Lvector_start\@:
 	.space	0x400
 
 	.rept	4
-	tramp_ventry	.Lvector_start\@, 64
+	tramp_ventry	.Lvector_start\@, 64, \kpti
 	.endr
 	.rept	4
-	tramp_ventry	.Lvector_start\@, 32
+	tramp_ventry	.Lvector_start\@, 32, \kpti
 	.endr
 	.endm
 
@@ -1100,7 +1091,7 @@ alternative_endif
 	.pushsection ".entry.tramp.text", "ax"
 	.align	11
 ENTRY(tramp_vectors)
-	generate_tramp_vector
+	generate_tramp_vector kpti=1
 END(tramp_vectors)
 
 ENTRY(tramp_exit_native)
