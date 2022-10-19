@@ -7,6 +7,7 @@
 # Compiler: Clang 16
 #
 
+CONFIG_POLLY_CLANG=y
 CONFIG_KLAPSE=n
 # CONFIG_DEVFREQ_BOOST is not set
 # CONFIG_DEVFREQ_BOOST_DDR is not set
