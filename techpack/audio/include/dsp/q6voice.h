@@ -1468,8 +1468,8 @@ struct vss_ivocproc_cmd_create_full_control_session_v2_t {
 	 * with passive controllers (optional). The string size, including the
 	 * NULL termination character, is limited to 31 characters.
 	 */
-} __packed;
-
+};
+// Remove packed struct __packed
 struct vss_ivocproc_cmd_set_volume_index_t {
 	uint16_t vol_index;
 	/*
@@ -1530,8 +1530,8 @@ struct vss_ivocproc_cmd_set_device_v2_t {
 	/* Port ID to which the vocproc connects for receiving
 	 * echo
 	 */
-} __packed;
-
+};
+// Removed packed struct __packed
 struct vss_ivocproc_cmd_register_device_config_t {
 	uint32_t mem_handle;
 	/*
