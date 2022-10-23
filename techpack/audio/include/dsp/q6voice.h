@@ -1711,7 +1711,7 @@ struct cvp_push_buf_cmd {
 struct cvp_create_full_ctl_session_cmd {
 	struct apr_hdr hdr;
 	struct vss_ivocproc_cmd_create_full_control_session_v2_t cvp_session;
-} __packed;
+};
 
 struct cvp_command {
 	struct apr_hdr hdr;
@@ -1720,7 +1720,7 @@ struct cvp_command {
 struct cvp_set_device_cmd {
 	struct apr_hdr hdr;
 	struct vss_ivocproc_cmd_set_device_v2_t cvp_set_device_v2;
-} __packed;
+};
 
 struct cvp_set_dev_channels_cmd {
 	struct apr_hdr hdr;
