@@ -78,6 +78,16 @@
 #include <qdf_hang_event_notifier.h>
 #include <qdf_notifier.h>
 
+// struct pe_hang_event_fixed_param {
+// 	uint16_t tlv_header;
+// 	uint8_t vdev_id;
+// 	uint8_t limmlmstate;
+// 	uint8_t limprevmlmstate;
+// 	uint8_t limsmestate;
+// 	uint8_t limprevsmestate;
+// } qdf_packed;
+
+// Packed structure have problem with clang 14 so we remove it
 struct pe_hang_event_fixed_param {
 	uint16_t tlv_header;
 	uint8_t vdev_id;
@@ -85,7 +95,8 @@ struct pe_hang_event_fixed_param {
 	uint8_t limprevmlmstate;
 	uint8_t limsmestate;
 	uint8_t limprevsmestate;
-} qdf_packed;
+};
+
 
 static void __lim_init_bss_vars(struct mac_context *mac)
 {
