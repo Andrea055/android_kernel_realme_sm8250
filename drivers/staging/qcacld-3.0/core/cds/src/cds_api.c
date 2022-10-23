@@ -98,7 +98,8 @@ struct cds_hang_event_fixed_param {
 	uint8_t recovery_reason;
 	char driver_version[DRIVER_VER_LEN];
 	char hang_event_version[HANG_EVENT_VER_LEN];
-} qdf_packed;
+};
+// Removed qdf_packed from struct to avoid clang 14 problem
 
 #ifdef QCA_WIFI_QCA8074
 static inline int
