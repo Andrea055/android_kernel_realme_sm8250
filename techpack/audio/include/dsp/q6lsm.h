@@ -250,7 +250,7 @@ struct lsm_param_lab_out_ch_cfg {
 } ;
 
 struct lsm_cmd_read {
-	struct apr_hdr hdr;
+	struct apr_hdr hdr; 
 	uint32_t buf_addr_lsw;
 	uint32_t buf_addr_msw;
 	uint32_t mem_map_handle;
