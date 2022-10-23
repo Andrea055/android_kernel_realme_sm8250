@@ -752,8 +752,8 @@ struct dfs_nolelem {
 	uint32_t       nol_timeout_ms;
 	qdf_timer_t    nol_timer;
 	struct dfs_nolelem *nol_next;
-} qdf_packed;
-
+};
+// Removed qdf_packed from this struct for Clang 14 compatibility
 
 /**
  * struct dfs_info - DFS Info.
