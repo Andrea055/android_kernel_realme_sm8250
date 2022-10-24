@@ -2961,12 +2961,16 @@ static int voice_send_cvp_create_cmd(struct voice_data *v)
 	cvp_session_cmd.hdr.token = 0;
 
 	if (voice_get_cvd_int_version(common.cvd_version) >=
-	    CVD_INT_VERSION_2_2)
-		cvp_session_cmd.hdr.opcode =
+	    CVD_INT_VERSION_2_2){
+			cvp_session_cmd.hdr.opcode =
 				VSS_IVOCPROC_CMD_CREATE_FULL_CONTROL_SESSION_V3;
-	else
+		}
+
+	else{
 		cvp_session_cmd.hdr.opcode =
-				VSS_IVOCPROC_CMD_CREATE_FULL_CONTROL_SESSION_V2;
+			VSS_IVOCPROC_CMD_CREATE_FULL_CONTROL_SESSION_V2;
+	}
+
 
 	voc_get_tx_rx_topology(v,
 			&cvp_session_cmd.cvp_session.tx_topology_id,
