@@ -5028,17 +5028,20 @@ static int nu1619_charge_status_process(struct oplus_nu1619_ic *chip)
 		if (chip->nu1619_chg_status.rx_runing_mode == RX_RUNNING_MODE_EPP_15W) {
 			if ((chip->nu1619_chg_status.epp_current_limit >= chip->nu1619_chg_status.wpc_chg_param.epp_temp_warm_input_ma
 						&& oplus_chg_get_tbatt_status() == BATTERY_STATUS__WARM_TEMP)
-					|| chip->nu1619_chg_status.epp_current_limit >= chip->nu1619_chg_status.wpc_chg_param.epp_15w_input_ma)
-				chip->nu1619_chg_status.charge_status = WPC_CHG_STATUS_EPP_WORKING;
-				power_test_iout_threshold = 1000;
-				power_test_vout_threshold = 11000;
+					|| chip->nu1619_chg_status.epp_current_limit >= chip->nu1619_chg_status.wpc_chg_param.epp_15w_input_ma){
+						chip->nu1619_chg_status.charge_status = WPC_CHG_STATUS_EPP_WORKING;
+						power_test_iout_threshold = 1000;
+						power_test_vout_threshold = 11000;
+					}
 		} else {
 			if ((chip->nu1619_chg_status.epp_current_limit >= chip->nu1619_chg_status.wpc_chg_param.epp_temp_warm_input_ma
 						&& oplus_chg_get_tbatt_status() == BATTERY_STATUS__WARM_TEMP)
-					|| chip->nu1619_chg_status.epp_current_limit >= chip->nu1619_chg_status.wpc_chg_param.epp_input_ma)
-				chip->nu1619_chg_status.charge_status = WPC_CHG_STATUS_EPP_WORKING;
-				power_test_iout_threshold = 700;
-				power_test_vout_threshold = 10000;
+					|| chip->nu1619_chg_status.epp_current_limit >= chip->nu1619_chg_status.wpc_chg_param.epp_input_ma){
+						chip->nu1619_chg_status.charge_status = WPC_CHG_STATUS_EPP_WORKING;
+						power_test_iout_threshold = 700;
+						power_test_vout_threshold = 10000;
+					}
+
 		}
 		if (chip->nu1619_chg_status.charge_status == WPC_CHG_STATUS_EPP_WORKING) {
 			chg_err("<~WPC~> 2 turn to WPC_CHG_STATUS_EPP_WORKING\n");

@@ -538,6 +538,7 @@ VL53L1_Error VL53L1_data_init(
 			pdev->mm_config_timeout_us,
 			pdev->range_config_timeout_us,
 			pdev->inter_measurement_period_ms);
+	
 
 
 

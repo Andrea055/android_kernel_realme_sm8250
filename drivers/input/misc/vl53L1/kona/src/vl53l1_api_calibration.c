@@ -2556,8 +2556,10 @@ VL53L1_Error   VL53L1_run_hist_xtalk_extraction(
 				pX->mm_config_timeout_us,
 				pX->range_config_timeout_us,
 				100);
-	if (status != VL53L1_ERROR_NONE)
+	if (status != VL53L1_ERROR_NONE){
 		goto LOOPOUT;
+	}
+		
 
 	//if (status == VL53L1_ERROR_NONE)
 		status = VL53L1_disable_xtalk_compensation(Dev);
@@ -2633,15 +2635,19 @@ VL53L1_Error   VL53L1_run_hist_xtalk_extraction(
 
 			//if (status == VL53L1_ERROR_NONE)
 				status = VL53L1_wait_for_firmware_ready(Dev);
-			if (status != VL53L1_ERROR_NONE)
+			if (status != VL53L1_ERROR_NONE){
 				goto LOOPOUT;
+			}
+				
 
 			//if (status == VL53L1_ERROR_NONE)
 				status =
 				VL53L1_clear_interrupt_and_enable_next_range(
 					Dev, measurement_mode);
-			if (status != VL53L1_ERROR_NONE)
+			if (status != VL53L1_ERROR_NONE){
 				goto LOOPOUT;
+			}
+				
 
 			//if (status == VL53L1_ERROR_NONE)
 				status =

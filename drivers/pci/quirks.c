@@ -3536,36 +3536,6 @@ next:
 }
 early_param("pcie_acs_override", pcie_acs_override_setup);
 
-static int pcie_acs_overrides(struct pci_dev *dev, u16 acs_flags)
-{
-	int i;
-
-	/* Never override ACS for legacy devices or devices with ACS caps */
-	if (!pci_is_pcie(dev) ||
-		pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS))
-			return -ENOTTY;
-
-	for (i = 0; i < max_acs_id; i++)
-		if (acs_on_ids[i].vendor == dev->vendor &&
-			acs_on_ids[i].device == dev->device)
-				return 1;
-
-	switch (pci_pcie_type(dev)) {
-	case PCI_EXP_TYPE_DOWNSTREAM:
-	case PCI_EXP_TYPE_ROOT_PORT:
-		if (acs_on_downstream)
-			return 1;
-		break;
-	case PCI_EXP_TYPE_ENDPOINT:
-	case PCI_EXP_TYPE_UPSTREAM:
-	case PCI_EXP_TYPE_LEG_END:
-	case PCI_EXP_TYPE_RC_END:
-		if (acs_on_multifunction && dev->multifunction)
-			return 1;
-	}
-
-	return -ENOTTY;
-}
 /*
  * Some Atheros AR9xxx and QCA988x chips do not behave after a bus reset.
  * The device will throw a Link Down error on AER-capable systems and

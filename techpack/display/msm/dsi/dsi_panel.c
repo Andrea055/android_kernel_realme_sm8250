@@ -4384,8 +4384,9 @@ int dsi_panel_drv_init(struct dsi_panel *panel,
 		       rc);
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
         if (iris_is_chip_supported()) {
-            if (!strcmp(panel->type, "primary"))
-                goto error_pinctrl_deinit;
+            if (!strcmp(panel->type, "primary")){
+				goto error_pinctrl_deinit;
+			}
 	        rc = 0;
 	    } else 
 #endif

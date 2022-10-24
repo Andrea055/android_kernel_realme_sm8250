@@ -4806,11 +4806,16 @@ int smblib_get_prop_usb_voltage_now(struct smb_charger *chg,
 
 restore_adc_config:
 	 /* Restore ADC channel config */
-	if (chg->wa_flags & USBIN_ADC_WA)
+	if (chg->wa_flags & USBIN_ADC_WA){
 		rc = smblib_write(chg, BATIF_ADC_CHANNEL_EN_REG, reg);
-		if (rc < 0)
-			smblib_err(chg, "Couldn't write ADC config rc=%d\n",
+
+	}
+	if (rc < 0){
+		smblib_err(chg, "Couldn't write ADC config rc=%d\n",
 						rc);
+	}
+
+
 
 unlock:
 	mutex_unlock(&chg->adc_lock);
@@ -7017,9 +7022,11 @@ void smblib_usb_plugin_locked(struct smb_charger *chg)
 		schedule_delayed_work(&chg->pl_enable_work,
 					msecs_to_jiffies(PL_DELAY_MS));
 #ifdef OPLUS_FEATURE_CHG_BASIC
-		if(g_oplus_chip->pmic_spmi.smb5_chip->chg.pd_active)
+		if(g_oplus_chip->pmic_spmi.smb5_chip->chg.pd_active){
 			cancel_delayed_work(&g_oplus_chip->update_work);
 			oplus_chg_wake_update_work();
+		}
+
 #endif
 	} else {
 #ifdef OPLUS_CUSTOM_OP_DEF
@@ -7501,9 +7508,11 @@ irqreturn_t usb_source_change_irq_handler(int irq, void *data)
 		(bool)(stat & APSD_DTC_STATUS_DONE_BIT));
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
-	if ((bool)(stat & APSD_DTC_STATUS_DONE_BIT))
+	if ((bool)(stat & APSD_DTC_STATUS_DONE_BIT)){
 		cancel_delayed_work(&g_oplus_chip->update_work);
 		oplus_chg_wake_update_work();
+	}
+
 #endif
 
 	smblib_handle_hvdcp_detect_done(chg,
