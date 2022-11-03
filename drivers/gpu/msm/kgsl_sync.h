@@ -34,6 +34,7 @@ struct kgsl_sync_timeline {
 	struct kgsl_device *device;
 	unsigned int context_id;
 	bool detached;
+	struct kgsl_context *context;
 };
 
 /**
