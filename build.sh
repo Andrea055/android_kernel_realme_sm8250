@@ -2,11 +2,11 @@
 
 export SOURCE_ROOT=~/workspace/source
 export DEFCONFIG=vendor/sm8250_defconfig
-export MAKE_PATH=${SOURCE_ROOT}/prebuilts/build-tools/linux-x86/bin/
-export CROSS_COMPILE=/home/andreock/workspace/source/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+export MAKE_PATH=${SOURCE_ROOT}/prebuilts/build-tools/bin/
+export CROSS_COMPILE=/home/andreock/workspace/source/prebuilts/gcc/linux-x86/aarch64/bin/aarch64-linux-android-
 export KERNEL_ARCH=arm64
-export KERNEL_DIR=${SOURCE_ROOT}/kernel/msm-4.19
-export KERNEL_OUT=${KERNEL_DIR}/../kernel_out
+export KERNEL_DIR=${SOURCE_ROOT}/kernel/msm-4.19/android_kernel_realme_sm8250
+export KERNEL_OUT=${KERNEL_DIR}/../../kernel_out
 export KERNEL_SRC=${KERNEL_OUT}
 export CLANG_TRIPLE=aarch64-linux-gnu-
 export OUT_DIR=${KERNEL_OUT}
