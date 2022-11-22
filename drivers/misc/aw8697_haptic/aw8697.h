@@ -94,6 +94,14 @@
 #define AW8697_0815_HAPTIC_CONT_TD               0x009a
 #define AW8697_0815_HAPTIC_CONT_ZC_THR           0x0ff1
 #define AW8697_0815_HAPTIC_CONT_NUM_BRK          3
+
+#define AW8697_081538_HAPTIC_F0_PRE                1500    /* 150Hz */
+#define AW8697_081538_HAPTIC_F0_CALI_PERCEN        7       /* -7%~7% */
+#define AW8697_081538_HAPTIC_CONT_DRV_LVL          118     /* 118*6.1/256=2.81v */
+#define AW8697_081538_HAPTIC_CONT_DRV_LVL_OV       118     /* NA */
+#define AW8697_081538_HAPTIC_CONT_TD               0x009a
+#define AW8697_081538_HAPTIC_CONT_ZC_THR           0x0ff1
+#define AW8697_081538_HAPTIC_CONT_NUM_BRK          3
 #endif
 
 #define AW8697_HAPTIC_F0_COEFF              260     //2.604167
@@ -520,6 +528,8 @@ struct aw8697_que_seq {
 #ifdef OPLUS_FEATURE_CHG_BASIC
 #define F0_VAL_MAX_0815                     1800
 #define F0_VAL_MIN_0815                     1600
+#define F0_VAL_MAX_081538                   1600
+#define F0_VAL_MIN_081538                   1400
 #define F0_VAL_MAX_0832                     2350
 #define F0_VAL_MIN_0832                     2250
 #define F0_VAL_MAX_0833                     2380
@@ -585,10 +595,14 @@ struct aw8697_que_seq {
 #define AW8697_WAVEFORM_INDEX_TRANSIENT            8
 #endif
 #ifdef CONFIG_OPLUS_HAPTIC_OOS
-#define AW8697_WAVEFORM_INDEX_SINE_CYCLE           9
+#ifdef CONFIG_ARCH_LITO
+#define AW8697_WAVEFORM_INDEX_SINE_CYCLE           10
 #else
 #define AW8697_WAVEFORM_INDEX_SINE_CYCLE           9
-#endif
+#endif /* CONFIG_ARCH_LITO */
+#else
+#define AW8697_WAVEFORM_INDEX_SINE_CYCLE           9
+#endif /* CONFIG_OPLUS_HAPTIC_OOS */
 #define AW8697_WAVEFORM_INDEX_HIGH_TEMP            51
 #define AW8697_WAVEFORM_INDEX_OLD_STEADY           52
 #define AW8697_WAVEFORM_INDEX_LISTEN_POP           53
