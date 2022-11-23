@@ -43,6 +43,12 @@
 #include "acl.h"
 
 #include <trace/events/ext4.h>
+
+static inline bool fscrypt_is_nokey_name(const struct dentry *dentry)
+{
+	return dentry->d_flags & DCACHE_ENCRYPTED_NAME;
+}
+
 /*
  * define how far ahead to read directories while searching them.
  */
