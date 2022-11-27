@@ -324,8 +324,6 @@ static int default_key_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 
 	ti->num_flush_bios = 1;
 
-	ti->may_passthrough_inline_crypto = true;
-
 	err = 0;
 	goto out;
 
