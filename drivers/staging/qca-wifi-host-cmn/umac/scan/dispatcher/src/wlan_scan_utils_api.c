@@ -584,12 +584,18 @@ util_scan_parse_chan_switch_wrapper_ie(struct scan_cache_entry *scan_params,
 		}
 		switch (sub_ie->ie_id) {
 		case WLAN_ELEMID_COUNTRY:
+			if (sub_ie->ie_len < WLAN_COUNTRY_IE_MIN_LEN)
+				return QDF_STATUS_E_INVAL;
 			scan_params->ie_list.country = (uint8_t *)sub_ie;
 			break;
 		case WLAN_ELEMID_WIDE_BAND_CHAN_SWITCH:
+			if (sub_ie->ie_len != WLAN_WIDE_BW_CHAN_SWITCH_IE_LEN)
+				return QDF_STATUS_E_INVAL;
 			scan_params->ie_list.widebw = (uint8_t *)sub_ie;
 			break;
 		case WLAN_ELEMID_VHT_TX_PWR_ENVLP:
+			if (sub_ie->ie_len > WLAN_TPE_IE_MAX_LEN)
+				return QDF_STATUS_E_INVAL;
 			scan_params->ie_list.txpwrenvlp = (uint8_t *)sub_ie;
 			break;
 		}
@@ -739,6 +745,8 @@ util_scan_parse_extn_ie(struct scan_cache_entry *scan_params,
 
 	switch (extn_ie->ie_extn_id) {
 	case WLAN_EXTN_ELEMID_MAX_CHAN_SWITCH_TIME:
+		if (extn_ie->ie_len != WLAN_MAX_CHAN_SWITCH_TIME_IE_LEN)
+			return QDF_STATUS_E_INVAL;
 		scan_params->ie_list.mcst  = (uint8_t *)ie;
 		break;
 	case WLAN_EXTN_ELEMID_SRP:
@@ -1004,9 +1012,16 @@ util_scan_populate_bcn_ie_list(struct wlan_objmgr_pdev *pdev,
 				(uint8_t *)&(((struct htcap_ie *)ie)->ie);
 			break;
 		case WLAN_ELEMID_RSN:
-			if (ie->ie_len < WLAN_RSN_IE_MIN_LEN)
-				goto err;
-			scan_params->ie_list.rsn = (uint8_t *)ie;
+			/*
+			 * For security cert TC, RSNIE length can be 1 but if
+			 * beacon is dropped, old entry will remain in scan
+			 * cache and cause cert TC failure as connection with
+			 * old entry with valid RSN IE will pass.
+			 * So instead of dropping the frame, do not store the
+			 * RSN pointer so that old entry is overwritten.
+			 */
+			if (ie->ie_len >= WLAN_RSN_IE_MIN_LEN)
+				scan_params->ie_list.rsn = (uint8_t *)ie;
 			break;
 		case WLAN_ELEMID_XRATES:
 			scan_params->ie_list.xrates = (uint8_t *)ie;
@@ -1095,6 +1110,11 @@ util_scan_populate_bcn_ie_list(struct wlan_objmgr_pdev *pdev,
 				goto err;
 			scan_params->ie_list.fils_indication = (uint8_t *)ie;
 			break;
+		case WLAN_ELEMID_RSNXE:
+			if (!ie->ie_len)
+				goto err;
+			scan_params->ie_list.rsnxe = (uint8_t *)ie;
+			break;
 		case WLAN_ELEMID_EXTN_ELEM:
 			status = util_scan_parse_extn_ie(scan_params, ie);
 			if (QDF_IS_STATUS_ERROR(status))
@@ -1171,7 +1191,7 @@ static void util_scan_update_esp_data(struct wlan_esp_ie *esp_information,
 	}
 
 	for (i = 0; i < total_elements &&
-	    data < ((uint8_t *)esp_ie + esp_ie->esp_len + 3); i++) {
+	     data < ((uint8_t *)esp_ie + esp_ie->esp_len + 3); i++) {
 		esp_info = (struct wlan_esp_info *)data;
 		if (esp_info->access_category == ESP_AC_BK) {
 			qdf_mem_copy(&esp_information->esp_info_AC_BK,
@@ -1768,25 +1788,7 @@ static uint32_t util_gen_new_ie(uint8_t *ie, uint32_t ielen,
 						qdf_mem_copy(pos, tmp,
 							     tmp[1] + 2);
 						pos += tmp[1] + 2;
-						tmp[0] = 0;
-					}
-				} else {
-					if ((pos + tmp_old[1] + 2) <=
-					    (new_ie + ielen)) {
-						qdf_mem_copy(pos, tmp_old,
-							     tmp_old[1] + 2);
-						pos += tmp_old[1] + 2;
-					}
-				}
-			} else if (tmp_old[0] == WLAN_ELEMID_EXTN_ELEM) {
-				if (tmp_old[2] == tmp[2]) {
-					/* same ie, copy from subelement */
-					if ((pos + tmp[1] + 2) <=
-					     (new_ie + ielen)) {
-						qdf_mem_copy(pos, tmp,
-							     tmp[1] + 2);
-						pos += tmp[1] + 2;
-						tmp[0] = 0;
+						tmp[0] = 0xff;
 					}
 				} else {
 					if ((pos + tmp_old[1] + 2) <=
@@ -1801,7 +1803,7 @@ static uint32_t util_gen_new_ie(uint8_t *ie, uint32_t ielen,
 				if ((pos + tmp[1] + 2) <= (new_ie + ielen)) {
 					qdf_mem_copy(pos, tmp, tmp[1] + 2);
 					pos += tmp[1] + 2;
-					tmp[0] = 0;
+					tmp[0] = 0xff;
 				}
 			}
 		}
@@ -1819,7 +1821,8 @@ static uint32_t util_gen_new_ie(uint8_t *ie, uint32_t ielen,
 	while (tmp_new + tmp_new[1] + 2 - sub_copy <= subie_len) {
 		if (!(tmp_new[0] == WLAN_ELEMID_NONTX_BSSID_CAP ||
 		      tmp_new[0] == WLAN_ELEMID_SSID ||
-		      tmp_new[0] == WLAN_ELEMID_MULTI_BSSID_IDX)) {
+		      tmp_new[0] == WLAN_ELEMID_MULTI_BSSID_IDX ||
+		      tmp_new[0] == 0xff)) {
 			if ((pos + tmp_new[1] + 2) <= (new_ie + ielen)) {
 				qdf_mem_copy(pos, tmp_new, tmp_new[1] + 2);
 				pos += tmp_new[1] + 2;
