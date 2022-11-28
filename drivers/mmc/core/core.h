@@ -193,4 +193,12 @@ static inline void mmc_post_req(struct mmc_host *host, struct mmc_request *mrq,
 		host->ops->post_req(host, mrq, err);
 }
 
+static inline bool mmc_cache_enabled(struct mmc_host *host)
+{
+	if (host->bus_ops->cache_enabled)
+		return host->bus_ops->cache_enabled(host);
+
+	return false;
+}
+
 #endif
