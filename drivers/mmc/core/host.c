@@ -21,6 +21,7 @@
 #include <linux/export.h>
 #include <linux/leds.h>
 #include <linux/slab.h>
+#include <linux/sysfs.h>
 
 #include <linux/mmc/host.h>
 #include <linux/mmc/card.h>
@@ -528,11 +529,6 @@ int mmc_add_host(struct mmc_host *host)
 		pr_err("%s: Error getting ipc_log_ctxt\n", __func__);
 #endif
 
-	err = sysfs_create_group(&host->class_dev.kobj, &clk_scaling_attr_grp);
-	if (err)
-		pr_err("%s: failed to create clk scale sysfs group with err %d\n",
-				__func__, err);
-
 	mmc_start_host(host);
 	if (!(host->pm_flags & MMC_PM_IGNORE_PM_NOTIFY))
 		mmc_register_pm_notifier(host);
@@ -564,7 +560,6 @@ void mmc_remove_host(struct mmc_host *host)
 	ipc_log_context_destroy(host->ipc_log_ctxt);
 	host->ipc_log_ctxt = NULL;
 #endif
-	sysfs_remove_group(&host->class_dev.kobj, &clk_scaling_attr_grp);
 
 	device_del(&host->class_dev);
 
