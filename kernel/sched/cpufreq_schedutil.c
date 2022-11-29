@@ -1159,6 +1159,25 @@ static void sugov_clear_global_tunables(void)
 		global_tunables = NULL;
 }
 
+
+static void sugov_tunables_restore(struct cpufreq_policy *policy)
+{
+	struct sugov_policy *sg_policy = policy->governor_data;
+	struct sugov_tunables *tunables = sg_policy->tunables;
+	struct sugov_tunables *cached = per_cpu(cached_tunables, policy->cpu);
+
+	if (!cached)
+		return;
+
+	tunables->pl = cached->pl;
+	tunables->attr_set = cached->attr_set;
+	tunables->up_rate_limit_us = cached->up_rate_limit_us;
+	tunables->down_rate_limit_us = cached->down_rate_limit_us;
+	tunables->hispeed_load = cached->hispeed_load;
+	tunables->hispeed_freq = cached->hispeed_freq;
+	tunables->rtg_boost_freq = cached->rtg_boost_freq;
+}
+
 static int sugov_init(struct cpufreq_policy *policy)
 {
 	struct sugov_policy *sg_policy;
