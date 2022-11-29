@@ -4187,8 +4187,6 @@ static irqreturn_t dwc3_thread_interrupt(int irq, void *_evt)
 	irqreturn_t ret = IRQ_NONE;
 	ktime_t start_time;
 
-	start_time = ktime_get();
-
 	local_bh_disable();
 	spin_lock_irqsave(&dwc->lock, flags);
 	dwc->bh_handled_evt_cnt[dwc->irq_dbg_index] = 0;
