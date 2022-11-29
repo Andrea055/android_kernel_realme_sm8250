@@ -1582,6 +1582,8 @@ skip_clk_reset:
 		}
 	}
 
+	dwc3_check_params(dwc);
+	dwc3_debugfs_init(dwc);
 	dwc->dwc_ipc_log_ctxt = ipc_log_context_create(NUM_LOG_PAGES,
 					dev_name(dwc->dev), 0);
 	if (!dwc->dwc_ipc_log_ctxt)
@@ -1594,6 +1596,7 @@ skip_clk_reset:
 	if (!dwc->dwc_dma_ipc_log_ctxt)
 		dev_err(dwc->dev, "Error getting ipc_log_ctxt for ep_events\n");
 
+	pm_runtime_put(dev);
 	dwc3_instance[count] = dwc;
 	dwc->index = count;
 	count++;
@@ -1601,6 +1604,25 @@ skip_clk_reset:
 	pm_runtime_allow(dev);
 	dwc3_debugfs_init(dwc);
 	return 0;
+
+err5:
+	dwc3_debugfs_exit(dwc);
+	dwc3_event_buffers_cleanup(dwc);
+
+	usb_phy_shutdown(dwc->usb2_phy);
+	usb_phy_shutdown(dwc->usb3_phy);
+	phy_exit(dwc->usb2_generic_phy);
+	phy_exit(dwc->usb3_generic_phy);
+
+	usb_phy_set_suspend(dwc->usb2_phy, 1);
+	usb_phy_set_suspend(dwc->usb3_phy, 1);
+	phy_power_off(dwc->usb2_generic_phy);
+	phy_power_off(dwc->usb3_generic_phy);
+
+	dwc3_ulpi_exit(dwc);
+
+err4:
+	dwc3_free_scratch_buffers(dwc);
 
 err3:
 	dwc3_free_scratch_buffers(dwc);
