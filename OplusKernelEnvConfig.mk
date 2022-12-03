@@ -74,7 +74,6 @@ OPLUS_FEATURE_APP_MONITOR \
 OPLUS_FEATURE_MIC_VA_MIC_CLK_SWITCH
 
 $(foreach myfeature,$(ALLOWED_MCROS),\
-         $(warning make $(myfeature) to be a macro here) \
          $(eval KBUILD_CFLAGS += -D$(myfeature)) \
          $(eval KBUILD_CPPFLAGS += -D$(myfeature)) \
          $(eval CFLAGS_KERNEL += -D$(myfeature)) \
