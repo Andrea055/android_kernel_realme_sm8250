@@ -16,8 +16,8 @@
 
 #define BOEFFLA_WL_BLOCKER_VERSION	"1.1.0"
 
-#define LIST_WL_DEFAULT				""
+#define LIST_WL_DEFAULT				"wlan;wlan_wow_wl;scan_wake_lock;NETLINK;prox_lock;SensorsHAL_WAKEUP;b0000000.qcom,cnss-qca6390;scan_wake_lock;wlan_wow_wl;tftp_server_wakelock;"
 
 #define LENGTH_LIST_WL				255
-#define LENGTH_LIST_WL_DEFAULT		150
+#define LENGTH_LIST_WL_DEFAULT		200
 #define LENGTH_LIST_WL_SEARCH		LENGTH_LIST_WL + LENGTH_LIST_WL_DEFAULT + 5
