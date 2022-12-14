@@ -93,7 +93,6 @@ void set_esd_check_happened(int val)
 {
 	atomic_set(&esd_check_happened, val);
 
-	DSI_INFO("%s, esd_check_happened = %d\n", __func__, get_esd_check_happened());
 }
 EXPORT_SYMBOL_GPL(set_esd_check_happened);
 
@@ -493,7 +492,6 @@ int dsi_panel_trigger_esd_attack(struct dsi_panel *panel)
 	if (gpio_is_valid(r_config->reset_gpio)) {
 		gpio_set_value(r_config->reset_gpio, 0);
 		SDE_EVT32(SDE_EVTLOG_FUNC_CASE1);
-		DSI_INFO("GPIO pulled low to simulate ESD\n");
 		return 0;
 	}
 	DSI_ERR("failed to pull down gpio\n");
@@ -1225,7 +1223,6 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 					panel->oplus_priv.low_light_gamma_is_adjusted = false;
 				} else {
 					panel->oplus_priv.low_light_gamma_is_adjusted = true;
-					pr_info("bl_lvl=%d, send DSI_GAMMA_LOWBL_COMMAND ok\n", bl_lvl);
 				}
 			}
 		} else if (bl_lvl > panel->oplus_priv.low_light_adjust_gamma_level){
@@ -1236,7 +1233,6 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 					panel->oplus_priv.low_light_gamma_is_adjusted = true;
 				} else {
 					panel->oplus_priv.low_light_gamma_is_adjusted = false;
-					pr_info("bl_lvl=%d, send DSI_GAMMA_NOMAL_COMMAND ok\n", bl_lvl);
 				}
 			}
 		}
@@ -1318,32 +1314,29 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 		lcd_closebl_flag_fp = 0;
 	}
 #endif
-	DSI_DEBUG("backlight type:%d lvl:%d\n", bl->type, bl_lvl);
-//#ifdef OPLUS_BUG_STABILITY
+
 	if(!strcmp(panel->name,"samsung amb655xl08 amoled fhd+ panel")) {
 		lcdinfo_notify(LCM_BRIGHTNESS_TYPE, &bl_lvl);
-		DSI_INFO("backlight type:%d lvl:%d\n", bl->type, bl_lvl);
 	}
 	if(panel->oplus_priv.is_oplus_project) {
-		DSI_INFO("backlight type:%d lvl:%d\n", bl->type, bl_lvl);
 	}
 	panel->bl_config.bl_lvl_backup = bl_lvl;
-//#endif /* OPLUS_BUG_STABILITY */
+
 	switch (bl->type) {
-	case DSI_BACKLIGHT_WLED:
-		rc = backlight_device_set_brightness(bl->raw_bd, bl_lvl);
-		break;
-	case DSI_BACKLIGHT_DCS:
-		rc = dsi_panel_update_backlight(panel, bl_lvl);
-		break;
-	case DSI_BACKLIGHT_EXTERNAL:
-		break;
-	case DSI_BACKLIGHT_PWM:
-		rc = dsi_panel_update_pwm_backlight(panel, bl_lvl);
-		break;
-	default:
-		DSI_ERR("Backlight type(%d) not supported\n", bl->type);
-		rc = -ENOTSUPP;
+		case DSI_BACKLIGHT_WLED:
+			rc = backlight_device_set_brightness(bl->raw_bd, bl_lvl);
+			break;
+		case DSI_BACKLIGHT_DCS:
+			rc = dsi_panel_update_backlight(panel, bl_lvl);
+			break;
+		case DSI_BACKLIGHT_EXTERNAL:
+			break;
+		case DSI_BACKLIGHT_PWM:
+			rc = dsi_panel_update_pwm_backlight(panel, bl_lvl);
+			break;
+		default:
+			DSI_ERR("Backlight type(%d) not supported\n", bl->type);
+			rc = -ENOTSUPP;
 	}
 
 	return rc;
@@ -1374,7 +1367,6 @@ static u32 dsi_panel_get_brightness(struct dsi_backlight_config *bl)
 		break;
 	}
 
-	DSI_DEBUG("cur_bl_level=%d\n", cur_bl_level);
 	return cur_bl_level;
 }
 
@@ -1546,10 +1538,6 @@ static int dsi_panel_parse_timing(struct dsi_mode_info *mode,
 		DSI_ERR("qcom,mdss-dsi-h-sync-skew is not defined, rc=%d\n",
 				rc);
 
-	DSI_DEBUG("panel horz active:%d front_portch:%d back_porch:%d sync_skew:%d\n",
-		mode->h_active, mode->h_front_porch, mode->h_back_porch,
-		mode->h_sync_width);
-
 	rc = utils->read_u32(utils->data, "qcom,mdss-dsi-panel-height",
 				  &mode->v_active);
 	if (rc) {
@@ -1581,9 +1569,6 @@ static int dsi_panel_parse_timing(struct dsi_mode_info *mode,
 		       rc);
 		goto error;
 	}
-	DSI_DEBUG("panel vert active:%d front_portch:%d back_porch:%d pulse_width:%d\n",
-		mode->v_active, mode->v_front_porch, mode->v_back_porch,
-		mode->v_sync_width);
 
 error:
 	return rc;
@@ -1797,14 +1782,12 @@ static int dsi_panel_parse_misc_host_config(struct dsi_host_common_cfg *host,
 	rc = utils->read_u32(utils->data, "qcom,mdss-dsi-t-clk-post", &val);
 	if (!rc) {
 		host->t_clk_post = val;
-		DSI_DEBUG("[%s] t_clk_post = %d\n", name, val);
 	}
 
 	val = 0;
 	rc = utils->read_u32(utils->data, "qcom,mdss-dsi-t-clk-pre", &val);
 	if (!rc) {
 		host->t_clk_pre = val;
-		DSI_DEBUG("[%s] t_clk_pre = %d\n", name, val);
 	}
 
 	host->t_clk_pre_extend = utils->read_bool(utils->data,
@@ -2068,7 +2051,6 @@ static int dsi_panel_parse_dyn_clk_caps(struct dsi_panel *panel)
 		dyn_clk_caps->type = DSI_DYN_CLK_TYPE_LEGACY;
 		dyn_clk_caps->maintain_const_fps = false;
 	}
-	DSI_DEBUG("Dynamic clock type is [%s]\n", type);
 	return 0;
 }
 
@@ -2312,9 +2294,6 @@ static int dsi_panel_parse_panel_mode(struct dsi_panel *panel)
 
 	panel_mode_switch_enabled = utils->read_bool(utils->data,
 					"qcom,mdss-dsi-panel-mode-switch");
-
-	DSI_DEBUG("%s: panel operating mode switch feature %s\n", __func__,
-		(panel_mode_switch_enabled ? "enabled" : "disabled"));
 
 	if (panel_mode == DSI_OP_VIDEO_MODE || panel_mode_switch_enabled) {
 		rc = dsi_panel_parse_video_host_config(&panel->video_config,
@@ -2741,9 +2720,6 @@ static int dsi_panel_parse_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
 		goto error;
 	}
 
-	DSI_DEBUG("type=%d, name=%s, length=%d\n", type,
-		cmd_set_prop_map[type], length);
-
 	print_hex_dump_debug("", DUMP_PREFIX_NONE,
 		       8, 1, data, length, false);
 
@@ -2752,8 +2728,6 @@ static int dsi_panel_parse_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
 		DSI_ERR("commands failed, rc=%d\n", rc);
 		goto error;
 	}
-	DSI_DEBUG("[%s] packet-count=%d, %d\n", cmd_set_prop_map[type],
-		packet_count, length);
 
 	rc = dsi_panel_alloc_cmd_packets(cmd, packet_count);
 	if (rc) {
@@ -2856,7 +2830,6 @@ static int dsi_panel_parse_reset_sequence(struct dsi_panel *panel)
 		goto error;
 	}
 
-	DSI_DEBUG("RESET SEQ LENGTH = %d\n", length);
 	length = length / sizeof(u32);
 
 	size = length * sizeof(u32);
@@ -2905,14 +2878,8 @@ static int dsi_panel_parse_misc_features(struct dsi_panel *panel)
 	panel->ulps_feature_enabled =
 		utils->read_bool(utils->data, "qcom,ulps-enabled");
 
-	DSI_DEBUG("%s: ulps feature %s\n", __func__,
-		(panel->ulps_feature_enabled ? "enabled" : "disabled"));
-
 	panel->ulps_suspend_enabled =
 		utils->read_bool(utils->data, "qcom,suspend-ulps-enabled");
-
-	DSI_DEBUG("%s: ulps during suspend feature %s\n", __func__,
-		(panel->ulps_suspend_enabled ? "enabled" : "disabled"));
 
 	panel->te_using_watchdog_timer = utils->read_bool(utils->data,
 					"qcom,mdss-dsi-te-using-wd");
@@ -3105,8 +3072,6 @@ static int dsi_panel_parse_gpios(struct dsi_panel *panel)
 	if (!gpio_is_valid(panel->reset_config.lcd_mode_sel_gpio))
 		DSI_DEBUG("mode gpio not specified\n");
 
-	DSI_DEBUG("mode gpio=%d\n", panel->reset_config.lcd_mode_sel_gpio);
-
 	data = utils->get_property(utils->data,
 		"qcom,mdss-dsi-mode-sel-gpio-state", NULL);
 	if (data) {
@@ -3191,8 +3156,6 @@ static int dsi_panel_parse_bl_config(struct dsi_panel *panel)
 	} else if (!strcmp(bl_type, "bl_ctrl_external")) {
 		panel->bl_config.type = DSI_BACKLIGHT_EXTERNAL;
 	} else {
-		DSI_DEBUG("[%s] bl-pmic-control-type unknown-%s\n",
-			 panel->name, bl_type);
 		panel->bl_config.type = DSI_BACKLIGHT_UNKNOWN;
 	}
 
@@ -3202,8 +3165,6 @@ static int dsi_panel_parse_bl_config(struct dsi_panel *panel)
 	} else if (!strcmp(data, "delay_until_first_frame")) {
 		panel->bl_config.bl_update = BL_UPDATE_DELAY_UNTIL_FIRST_FRAME;
 	} else {
-		DSI_DEBUG("[%s] No valid bl-update-flag: %s\n",
-						panel->name, data);
 		panel->bl_config.bl_update = BL_UPDATE_NONE;
 	}
 
@@ -3576,7 +3537,6 @@ static int dsi_panel_parse_dsc_params(struct dsi_display_mode *mode,
 		priv_info->dsc_enabled = true;
 
 	if (!priv_info->dsc_enabled) {
-		DSI_DEBUG("dsc compression is not enabled for the mode\n");
 		return 0;
 	}
 
@@ -3774,11 +3734,6 @@ static int dsi_panel_parse_topology(
 	}
 
 	if (topology_override >= 0 && topology_override < top_count) {
-		DSI_INFO("override topology: cfg:%d lm:%d comp_enc:%d intf:%d\n",
-			topology_override,
-			topology[topology_override].num_lm,
-			topology[topology_override].num_enc,
-			topology[topology_override].num_intf);
 		top_sel = topology_override;
 		goto parse_done;
 	}
@@ -3796,11 +3751,6 @@ static int dsi_panel_parse_topology(
 			rc);
 		goto parse_fail;
 	}
-
-	DSI_INFO("default topology: lm: %d comp_enc:%d intf: %d\n",
-		topology[top_sel].num_lm,
-		topology[top_sel].num_enc,
-		topology[top_sel].num_intf);
 
 parse_done:
 	memcpy(&priv_info->topology, &topology[top_sel],
@@ -3847,14 +3797,6 @@ static int dsi_panel_parse_roi_alignment(struct dsi_parser_utils *utils,
 			align->min_width = value[4];
 			align->min_height = value[5];
 		}
-
-		DSI_INFO("roi alignment: [%d, %d, %d, %d, %d, %d]\n",
-			align->xstart_pix_align,
-			align->width_pix_align,
-			align->ystart_pix_align,
-			align->height_pix_align,
-			align->min_width,
-			align->min_height);
 	}
 
 	return rc;
@@ -3884,13 +3826,9 @@ static int dsi_panel_parse_partial_update_caps(struct dsi_display_mode *mode,
 		else if (!strcmp(data, "single_roi"))
 			roi_caps->num_roi = 1;
 		else {
-			DSI_INFO(
-			"invalid value for qcom,partial-update-enabled: %s\n",
-			data);
 			return 0;
 		}
 	} else {
-		DSI_DEBUG("partial update disabled as the property is not set\n");
 		return 0;
 	}
 
@@ -3898,9 +3836,6 @@ static int dsi_panel_parse_partial_update_caps(struct dsi_display_mode *mode,
 			"qcom,partial-update-roi-merge");
 
 	roi_caps->enabled = roi_caps->num_roi > 0;
-
-	DSI_DEBUG("partial update num_rois=%d enabled=%d\n", roi_caps->num_roi,
-			roi_caps->enabled);
 
 	if (roi_caps->enabled)
 		rc = dsi_panel_parse_roi_alignment(utils,
@@ -4217,8 +4152,6 @@ static int dsi_panel_parse_esd_config(struct dsi_panel *panel)
 	} else if (panel->esd_config.status_mode ==  ESD_MODE_PANEL_TE) {
 		esd_mode = "te_check";
 	}
-
-	DSI_DEBUG("ESD enabled with mode: %s\n", esd_mode);
 
 	return 0;
 
@@ -4746,8 +4679,6 @@ void dsi_panel_calc_dsi_transfer_time(struct dsi_host_common_cfg *config,
 		 */
 		min_threshold_us = min_threshold_us + 100 + prefill_time_us;
 
-		DSI_DEBUG("min threshold time=%d\n", min_threshold_us);
-
 		if (min_threshold_us > frame_threshold_us)
 			frame_threshold_us = min_threshold_us;
 
@@ -4878,9 +4809,6 @@ int dsi_panel_get_mode(struct dsi_panel *panel,
 			if (rc) {
 				rc = 0;
 				mode->panel_mode = panel->panel_mode;
-				DSI_INFO(
-				"POMS: panel mode isn't specified in timing[%d]\n",
-				child_idx);
 			}
 		} else {
 			mode->panel_mode = panel->panel_mode;
@@ -4977,7 +4905,6 @@ int dsi_panel_pre_prepare(struct dsi_panel *panel)
 		}
 		if ((0 == mdss_tp_black_gesture_status()) || (1 == tp_black_power_on_ff_flag)) {
 			tp_black_power_on_ff_flag = 0;
-			pr_info("%s:[TP] tp_black_power_on_ff_flag = %d\n",__func__,tp_black_power_on_ff_flag);
 			dsi_panel_1p8_on_off(panel,true);
 			rc = dsi_pwr_enable_regulator(&panel->power_info, true);
 			if (rc) {
@@ -4989,7 +4916,6 @@ int dsi_panel_pre_prepare(struct dsi_panel *panel)
 		if (panel->oplus_priv.is_tps65132_support) {
 			TPS65132_pw_enable(1);
 			usleep_range(2000, 3000);
-			DSI_INFO("dsi_panel_power_on TPS65132 power on success\n");
 		}
 	#endif /*CONFIG_REGULATOR_TPS65132*/
 	}
@@ -5337,7 +5263,6 @@ int dsi_panel_send_qsync_on_dcs(struct dsi_panel *panel,
 	mutex_lock(&panel->panel_lock);
 
 #ifdef OPLUS_FEATURE_ADFR
-	DSI_INFO("ctrl:%d qsync on\n", ctrl_idx);
 	SDE_ATRACE_INT("qsync_mode_cmd", 1);
 #else
 	DSI_DEBUG("ctrl:%d qsync on\n", ctrl_idx);
@@ -5368,7 +5293,6 @@ int dsi_panel_send_qsync_off_dcs(struct dsi_panel *panel,
 	mutex_lock(&panel->panel_lock);
 
 #ifdef OPLUS_FEATURE_ADFR
-	DSI_INFO("ctrl:%d qsync off\n", ctrl_idx);
 	SDE_ATRACE_INT("qsync_mode_cmd", 0);
 	SDE_ATRACE_INT("oplus_adfr_qsync_mode_minfps_cmd", panel->cur_mode->timing.refresh_rate);
 #else
@@ -5404,8 +5328,6 @@ int dsi_panel_send_roi_dcs(struct dsi_panel *panel, int ctrl_idx,
 				panel->name, rc);
 		return rc;
 	}
-	DSI_DEBUG("[%s] send roi x %d y %d w %d h %d\n", panel->name,
-			roi->x, roi->y, roi->w, roi->h);
 	SDE_EVT32(roi->x, roi->y, roi->w, roi->h);
 
 	mutex_lock(&panel->panel_lock);
@@ -5527,7 +5449,6 @@ int dsi_panel_fps_change(struct dsi_panel *panel)
 			}
 	}
 	fps_tmp = panel->cur_mode->timing.refresh_rate;
-	pr_info("fps_tmp = %d\n", fps_tmp);
 	return rc;
 }
 
@@ -5823,7 +5744,6 @@ int dsi_panel_unprepare(struct dsi_panel *panel)
 #ifdef OPLUS_BUG_STABILITY
 	if (strstr(panel->oplus_priv.vendor_name,"NT36672C")) {
 		if (1 != tp_gesture_enable_flag()) {
-			pr_info("%s:%d tp gesture is off set reset 0\n", __func__, __LINE__);
 			if (gpio_is_valid(panel->reset_config.reset_gpio))
 				gpio_set_value(panel->reset_config.reset_gpio, 0);
 			usleep_range(5000, 6000);
