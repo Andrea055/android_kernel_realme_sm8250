@@ -138,11 +138,13 @@ bool get_sboot_state_with_bootargs(void)
                 bootargs = (char *)of_get_property(of_chosen, "bootargs", NULL);
                 if (!bootargs) {
                         pr_err("%s: failed to get bootargs\n", __func__);
+                        return false;
                 } else {
                         pr_err("%s: bootargs: %s\n", __func__, bootargs);
                 }
         } else {
                 pr_err("%s: failed to get /chosen \n", __func__);
+                return false;
         }
         if (strstr(bootargs, "mtkboot.sbootstate=on")) {
                 pr_err("%s: success to get mtkboot.sbootstate=on in bootargs!\n", __func__);
