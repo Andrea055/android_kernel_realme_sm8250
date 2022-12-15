@@ -14,7 +14,6 @@
 #include <linux/time.h>
 
 #include "../touchpanel_common.h"
-#include "../touchpanel_healthinfo.h"
 #include <soc/oplus/system/oplus_project.h>
 #include <soc/oplus/device_info.h>
 
@@ -88,6 +87,14 @@ enum {
     TYPE_SCAP_CB_WATERPROOF_DATA                = 0x06,
     TYPE_PANEL_DIFFER_DATA                      = 0x07,
     TYPE_SCAP_RAW_WATERPROOF_DATA               = 0x08,
+    TYPE_SHORT_DATA                             = 0x09,
+    TYPE_OPEN_DATA                              = 0x0A,
+    TYPE_CB_DATA                                = 0x0B,
+
+    TYPE_BLACK_CB_DATA                          = 0x10,
+    TYPE_BLACK_RAW_DATA                         = 0x11,
+    TYPE_BLACK_NOISE_DATA                       = 0x12,
+    
 
     TYPE_FACTORY_NOISE_DATA                     = 0x15,            /*limit from panel factory*/
     TYPE_FACTORY_RAW_DATA                       = 0x16,

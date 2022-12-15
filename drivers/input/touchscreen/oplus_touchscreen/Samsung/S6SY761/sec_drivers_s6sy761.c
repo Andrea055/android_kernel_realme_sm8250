@@ -50,6 +50,9 @@
     }while(0)
 /******************** End of Log Tag Declear and level define*********************************/
 
+static struct chip_data_s6sy761 *g_chip_info;
+static DEFINE_MUTEX(sec_mtx_lock);
+
 /*************************** start of function delcare****************************************/
 static void sec_mdelay(unsigned int ms);
 static int sec_reset(void *chip_data);
@@ -67,25 +70,40 @@ static int sec_enable_black_gesture(struct chip_data_s6sy761 *chip_info, bool en
 {
     int ret = -1;
     int i = 0;
+	bool single_tap_support_a = 0;
+	struct touchpanel_data *ts = i2c_get_clientdata(chip_info->client);
 
-    TPD_INFO("%s, enable = %d\n", __func__, enable);
+	if (ts) {
+		single_tap_support_a = ts->single_tap_support;
+	}
+
+	TPD_INFO("%s, enable = %d,single_tap_support_a = %d\n", __func__, enable, single_tap_support_a);
 
     if (enable) {
-        for (i = 0; i < 20; i++)
-        {
-            touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0xFF1F);
-            touch_i2c_write_byte(chip_info->client, SEC_CMD_SET_POWER_MODE, 0x01);
-            sec_mdelay(10);
-            ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_SET_POWER_MODE);
-            if (0x01 == ret)
-                break;
-        }
+		for (i = 0; i < 20; i++) {
+			if (single_tap_support_a) {
+				touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0xFFFF);
+			} else {
+				touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0xFF1F);
+			}
+			touch_i2c_write_byte(chip_info->client, SEC_CMD_SET_POWER_MODE, 0x01);
+			sec_mdelay(10);
+			ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_SET_POWER_MODE);
+			if (0x01 == ret)
+				break;
+		}
     } else {
-        touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0x0000);
-        return 0;
+		for (i = 0; i < 20; i++) {
+			touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0x0000);
+			touch_i2c_write_byte(chip_info->client, SEC_CMD_SET_POWER_MODE, 0x00);
+			sec_mdelay(10);
+			ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_SET_POWER_MODE);
+			if (0x00 == ret)
+				break;
+		}
     }
 
-    if (i >= 5) {
+	if (i >= 20) {
         ret = -1;
         TPD_INFO("%s: enter black gesture failed\n", __func__);
     } else {
@@ -186,9 +204,39 @@ static int sec_enable_game_mode(struct chip_data_s6sy761 *chip_info, bool enable
 
     buf[3] = enable ? 0x12 : 0x18;  //default value 0x18
     ret = touch_i2c_write_block(chip_info->client, SEC_CMD_SENSETIVE_CTRL, sizeof(buf), buf);
+	ret |= touch_i2c_write_byte(chip_info->client, SEC_CMD_GAME_MODE, enable ? 1 : 0);
     TPD_INFO("%s: state: %d %s!\n", __func__, enable, ret < 0 ? "failed" : "success");
     return ret;
 }
+
+void sec_refresh_switch(int fps)
+{
+	int ret = -1;
+
+	if (!g_chip_info) {
+		return;
+	}
+	if(g_chip_info->sec_refresh_rate_delay) {
+		mutex_lock(&sec_mtx_lock);
+		g_chip_info->display_refresh_rate = fps;
+
+	    if (!g_chip_info->is_power_down) {
+			ret = touch_i2c_write_byte(g_chip_info->client, SEC_CMD_REFRESH_RATE_SWITCH, fps);
+			TPD_INFO("%s: refresh_switch: %d HZ %s! 100ms\n", __func__, fps, ret < 0 ? "failed" : "success");
+			sec_mdelay(100); /* Adding delay when switching 60hz to 90hz and vice versa, to set refresh rate properly in some race condition situations*/
+		}
+		mutex_unlock(&sec_mtx_lock);
+	} else {
+		g_chip_info->display_refresh_rate = fps;
+
+		if (!g_chip_info->is_power_down) {
+			ret = touch_i2c_write_byte(g_chip_info->client, SEC_CMD_REFRESH_RATE_SWITCH, fps);
+			TPD_INFO("%s: refresh_switch: %d HZ %s!\n", __func__, fps, ret < 0 ? "failed" : "success");
+		}
+	}
+	return;
+}
+EXPORT_SYMBOL(sec_refresh_switch);
 
 static void sec_mdelay(unsigned int ms)
 {
@@ -303,7 +351,7 @@ static int sec_flash_page_erase(struct chip_data_s6sy761 *chip_info, u32 page_id
     tCmd[4] = (u8)((page_num >> 0) & 0xFF);
     tCmd[5] = sec_checksum(tCmd, 1, 4);
 
-    ret = touch_i2c_write(chip_info->client, tCmd, 6);
+	ret = touch_i2c_write_block(chip_info->client, tCmd[0], 5, &tCmd[1]);
 
     return ret;
 }
@@ -321,7 +369,7 @@ static int sec_flash_page_write(struct chip_data_s6sy761 *chip_info, u32 page_id
     memcpy(&tCmd[3], page_data, flash_page_size);
     tCmd[1 + 2 + flash_page_size] = sec_checksum(tCmd, 1, 2 + flash_page_size);
 
-    ret = touch_i2c_write(chip_info->client, tCmd, 1 + 2 + flash_page_size + 1);
+	ret = touch_i2c_write_block(chip_info->client, tCmd[0], 1 + 2 + flash_page_size, &tCmd[1]);
     return ret;
 }
 
@@ -355,9 +403,9 @@ static bool sec_limited_flash_page_write(struct chip_data_s6sy761 *chip_info, u3
 
         memcpy(&tCmd[1], &copy_data[copy_size], copy_cur);
 
-        ret = touch_i2c_write(chip_info->client, tCmd, 1 + copy_cur);
+        ret = touch_i2c_write_block(chip_info->client, tCmd[0], copy_cur, &tCmd[1]);
         if (ret < 0) {
-            ret = touch_i2c_write(chip_info->client, tCmd, 1 + copy_cur);
+			ret = touch_i2c_write_block(chip_info->client, tCmd[0], copy_cur, &tCmd[1]);
             if (ret < 0) {
                 TPD_INFO("%s: failed, ret:%d\n", __func__, ret);
             }
@@ -458,7 +506,7 @@ static int sec_block_read(struct chip_data_s6sy761 *chip_info, u32 mem_addr, int
     cmd[3] = (u8)((mem_addr >> 8) & 0xff);
     cmd[4] = (u8)((mem_addr >> 0) & 0xff);
 
-    ret = touch_i2c_write(chip_info->client, cmd, 5);
+	ret = touch_i2c_write_block(chip_info->client, cmd[0], 4, &cmd[1]);
     if (ret < 0) {
         TPD_INFO("%s: send command failed, %02X\n", __func__, cmd[0]);
         return -EIO;
@@ -469,7 +517,7 @@ static int sec_block_read(struct chip_data_s6sy761 *chip_info, u32 mem_addr, int
     cmd[1] = (u8)((mem_size >> 8) & 0xff);
     cmd[2] = (u8)((mem_size >> 0) & 0xff);
 
-    ret = touch_i2c_write(chip_info->client, cmd, 3);
+	ret = touch_i2c_write_block(chip_info->client, cmd[0], 2, &cmd[1]);
     if (ret < 0) {
         TPD_INFO("%s: send command failed, %02X\n", __func__, cmd[0]);
         return -EIO;
@@ -479,7 +527,7 @@ static int sec_block_read(struct chip_data_s6sy761 *chip_info, u32 mem_addr, int
     cmd[0] = (u8)SEC_CMD_FLASH_READ_DATA;
     data = buf;
 
-    ret = touch_i2c_read(chip_info->client, cmd, 1, data, mem_size);
+	ret = touch_i2c_read_block(chip_info->client, cmd[0], mem_size, data);
     if (ret < 0) {
         TPD_INFO("%s: memory read failed\n", __func__);
         return -EIO;
@@ -582,7 +630,7 @@ static int sec_read_calibration_report(struct chip_data_s6sy761 *chip_info)
 
     buf[0] = SEC_CMD_READ_CALIBRATION_REPORT;
 
-    ret = touch_i2c_read(chip_info->client, &buf[0], 1, &buf[1], 4);
+	ret = touch_i2c_read_block(chip_info->client, buf[0], 4, &buf[1]);
     if (ret < 0) {
         TPD_INFO("%s: failed to read, ret = %d\n", __func__, ret);
         return ret;
@@ -667,7 +715,7 @@ static int sec_reset(void *chip_data)
     TPD_INFO("%s: write sense on %s\n", __func__, (ret < 0) ? "failed" : "success");
 
     enable_irq(chip_info->client->irq);
-
+	sec_refresh_switch(chip_info->display_refresh_rate);
     return 0;
 }
 
@@ -731,7 +779,7 @@ static int sec_power_control(void *chip_data, bool enable)
         ret = touch_i2c_write_block(chip_info->client, SEC_CMD_SENSE_ON, 0, NULL);
         TPD_INFO("%s: write sense on %s\n", __func__, (ret < 0) ? "failed" : "success");
         chip_info->is_power_down = false;
-
+	sec_refresh_switch(chip_info->display_refresh_rate);
         enable_irq(chip_info->client->irq);
     } else {
         disable_irq_nosync(chip_info->client->irq);
@@ -932,7 +980,7 @@ CAL_CHECK:
     return update_state;
 }
 
-static u8 sec_trigger_reason(void *chip_data, int gesture_enable, int is_suspended)
+static u32 sec_trigger_reason(void *chip_data, int gesture_enable, int is_suspended)
 {
     int ret = 0;
     int event_id = 0;
@@ -996,6 +1044,15 @@ static u8 sec_trigger_reason(void *chip_data, int gesture_enable, int is_suspend
             TPD_INFO("noise mode level :%d\n", p_event_status->status_data_1);
         }
 
+		if ((p_event_status->stype == TYPE_STATUS_EVENT_VENDOR_INFO) && (p_event_status->status_id == SEC_STATUS_TOUCHHOLD)) {
+			if (p_event_status->status_data_1 == 0x01) {
+                chip_info->fingerprint_status = FINGERPRINT_DOWN_DETECT;
+			} else if (p_event_status->status_data_1 == 0x00) {
+				chip_info->fingerprint_status = FINGERPRINT_UP_DETECT;
+			}
+			return IRQ_FINGERPRINT;
+        }
+
         /* event queue full-> all finger release */
         if ((p_event_status->stype == TYPE_STATUS_EVENT_ERR) && (p_event_status->status_id == SEC_ERR_EVENT_QUEUE_FULL)) {
             TPD_INFO("%s: IC Event Queue is full\n", __func__);
@@ -1018,36 +1075,37 @@ static u8 sec_trigger_reason(void *chip_data, int gesture_enable, int is_suspend
 
     return IRQ_IGNORE;
 }
-
+/*
 static bool corner_point_filtered(struct chip_data_s6sy761 *chip_info, uint16_t x, uint16_t y)
 {
-    uint16_t vertical_height = 120, hori_width = 100, width = 32, corner_len = 60;
+	if (!chip_info->old_firmware_flag_check) {
+		uint16_t vertical_height = 120, hori_width = 100, width = 32, corner_len = 60;
 
-    if (!chip_info->touch_direction && (y > 2340 - vertical_height)) {
-        if ((x < width) && (y > (2340 - vertical_height))) {
-            return true;
-        }
-        if ((y > 2340 - width) && (x  < hori_width)) {
-            return true;
-        }
-        if ((x < corner_len) && (y > 2340 - corner_len)) {
-            return true;
-        }
+		if (!chip_info->touch_direction && (y > 2340 - vertical_height)) {
+			if ((x < width) && (y > (2340 - vertical_height))) {
+				return true;
+			}
+			if ((y > 2340 - width) && (x  < hori_width)) {
+				return true;
+			}
+			if ((x < corner_len) && (y > 2340 - corner_len)) {
+				return true;
+			}
 
-        if ((x > 1080 - width) && (y > (2340 - vertical_height))) {
-            return true;
-        }
-        if ((y > 2340 - width) && (x  > 1080 - hori_width)) {
-            return true;
-        }
-        if ((x > 1080 - corner_len) && (y > 2340 - corner_len)) {
-            return true;
-        }
-    }
-
-    return false;
+			if ((x > 1080 - width) && (y > (2340 - vertical_height))) {
+				return true;
+			}
+			if ((y > 2340 - width) && (x  > 1080 - hori_width)) {
+				return true;
+			}
+			if ((x > 1080 - corner_len) && (y > 2340 - corner_len)) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
-
+*/
 static int sec_get_touch_points(void *chip_data, struct point_info *points, int max_num)
 {
     int i = 0;
@@ -1073,8 +1131,7 @@ static int sec_get_touch_points(void *chip_data, struct point_info *points, int 
             points[t_id].z = 1;
         }
 
-        if (!corner_point_filtered(chip_info, points[t_id].x, points[t_id].y))
-            obj_attention = obj_attention | (1 << t_id);    //set touch bit
+	obj_attention = obj_attention | (1 << t_id);    /*set touch bit*/
     }
 
     left_event = chip_info->first_event[7] & 0x3F;
@@ -1104,8 +1161,7 @@ static int sec_get_touch_points(void *chip_data, struct point_info *points, int 
             if (points[t_id].z <= 0) {
                 points[t_id].z = 1;
             }
-            if (!corner_point_filtered(chip_info, points[t_id].x, points[t_id].y))
-                obj_attention = obj_attention | (1 << t_id);    //set touch bit
+		obj_attention = obj_attention | (1 << t_id);    /*set touch bit*/
         }
     }
 
@@ -1119,13 +1175,19 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
     struct Coordinate limitPoint[4];
     struct sec_gesture_status *p_event_gesture = NULL;
     struct chip_data_s6sy761 *chip_info = (struct chip_data_s6sy761 *)chip_data;
+	bool ear_sense_support_a = 0;
+	struct touchpanel_data *ts = i2c_get_clientdata(chip_info->client);
 
     p_event_gesture = (struct sec_gesture_status *)chip_info->first_event;
     if (p_event_gesture->coordLen > 18) {
         p_event_gesture->coordLen = 18;
     }
 
-    if (p_event_gesture->gestureId == GESTURE_EARSENSE) {
+	if (ts) {
+		ear_sense_support_a = ts->ear_sense_support;
+	}
+
+	if ((p_event_gesture->gestureId == GESTURE_EARSENSE) && ear_sense_support_a) {
         TPD_DETAIL("earsense gesture: away from panel\n");
         return 0;
     }
@@ -1141,9 +1203,8 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
         }
     }
 
-    switch (p_event_gesture->gestureId)     //judge gesture type
-    {
-        case GESTURE_RIGHT:
+	switch (p_event_gesture->gestureId) {    /* judge gesture type */
+	case GESTURE_RIGHT:
             gesture->gesture_type  = Left2RightSwip;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1151,7 +1212,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_end.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_LEFT:
+	case GESTURE_LEFT:
             gesture->gesture_type  = Right2LeftSwip;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1159,7 +1220,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_end.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_DOWN:
+	case GESTURE_DOWN:
             gesture->gesture_type  = Up2DownSwip;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1167,7 +1228,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_end.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_UP:
+	case GESTURE_UP:
             gesture->gesture_type  = Down2UpSwip;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1175,14 +1236,14 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_end.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_DOUBLECLICK:
+	case GESTURE_DOUBLECLICK:
             gesture->gesture_type  = DouTap;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
             gesture->Point_end     = gesture->Point_start;
             break;
 
-        case GESTURE_UP_V:
+	case GESTURE_UP_V:
             gesture->gesture_type  = UpVee;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1192,7 +1253,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_1st.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_DOWN_V:
+	case GESTURE_DOWN_V:
             gesture->gesture_type  = DownVee;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1202,7 +1263,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_1st.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_LEFT_V:
+	case GESTURE_LEFT_V:
             gesture->gesture_type = LeftVee;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1212,7 +1273,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_1st.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_RIGHT_V:
+	case GESTURE_RIGHT_V:
             gesture->gesture_type  = RightVee;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1222,7 +1283,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_1st.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
             break;
 
-        case GESTURE_O:
+	case GESTURE_O:
             gesture->gesture_type = Circle;
             gesture->clockwise = (p_event_gesture->data == 0) ? 1 : 0;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
@@ -1244,7 +1305,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_4th = limitPoint[3]; //xmax
             break;
 
-        case GESTURE_DOUBLE_LINE:
+	case GESTURE_DOUBLE_LINE:
             gesture->gesture_type  = DouSwip;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1256,7 +1317,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_2nd.y   = (coord[10] << 4) | ((coord[11] >> 0) & 0x0F);
             break;
 
-        case GESTURE_M:
+	case GESTURE_M:
             gesture->gesture_type  = Mgestrue;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1270,7 +1331,7 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_end.y   = (coord[13] << 4) | ((coord[14] >> 0) & 0x0F);
             break;
 
-        case GESTURE_W:
+	case GESTURE_W:
             gesture->gesture_type  = Wgestrue;
             gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
             gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
@@ -1284,7 +1345,25 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
             gesture->Point_end.y   = (coord[13] << 4) | ((coord[14] >> 0) & 0x0F);
             break;
 
-        default:
+	case GESTURE_SINGLE_TAP:
+		gesture->gesture_type  = SingleTap;
+		gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
+		gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
+		break;
+
+	case GESTURE_S:
+		gesture->gesture_type  = SGESTRUE;
+		gesture->Point_start.x = (coord[0] << 4) | ((coord[2] >> 4) & 0x0F);
+		gesture->Point_start.y = (coord[1] << 4) | ((coord[2] >> 0) & 0x0F);
+		gesture->Point_1st.x   = (coord[3] << 4) | ((coord[5] >> 4) & 0x0F);
+		gesture->Point_1st.y   = (coord[4] << 4) | ((coord[5] >> 0) & 0x0F);
+		gesture->Point_2nd.x   = (coord[6] << 4) | ((coord[8] >> 4) & 0x0F);
+		gesture->Point_2nd.y   = (coord[7] << 4) | ((coord[8] >> 0) & 0x0F);
+		gesture->Point_end.x   = (coord[9] << 4) | ((coord[11] >> 4) & 0x0F);
+		gesture->Point_end.y   = (coord[10] << 4) | ((coord[11] >> 0) & 0x0F);
+		break;
+
+	default:
             gesture->gesture_type = UnkownGesture;
             break;
     }
@@ -1299,6 +1378,72 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info * gesture)
                 gesture->Point_4th.x, gesture->Point_4th.y);
 
     return 0;
+}
+
+static void sec_enable_fingerprint_mode(void *chip_data, uint32_t enable)
+{
+	int ret = -1;
+	int i = 0;
+	struct chip_data_s6sy761 *chip_info = (struct chip_data_s6sy761 *)chip_data;
+
+	if (chip_info->is_power_down) {
+		sec_power_control(chip_info, true);
+	}
+
+	if (enable == 1) {
+		for(i = 0; i < 10; i++) {
+			ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_TOUCHHOLD_SWITCH);
+			ret |= 0x01;
+			ret = touch_i2c_write_byte(chip_info->client, SEC_CMD_TOUCHHOLD_SWITCH, ret);
+			sec_mdelay(10);
+			ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_TOUCHHOLD_SWITCH);
+			if (ret == 1)
+				break;
+		}
+	} else if (enable == 0) {
+		ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_TOUCHHOLD_SWITCH);
+		ret &= 0xFE;
+		ret = touch_i2c_write_byte(chip_info->client, SEC_CMD_TOUCHHOLD_SWITCH, ret);
+		if (!*chip_info->in_suspend) {
+			for (i = 0; i < 20; i++) {
+				ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_SET_POWER_MODE);
+				if (0x00 == ret) {
+					break;
+				}
+				touch_i2c_write_byte(chip_info->client, SEC_CMD_SET_POWER_MODE, 0x00);
+				sec_mdelay(10);
+			}
+		}
+		chip_info->fingerprint_status = 0;
+	}
+	TPD_INFO("%s: touchhold_enable: %d %s!\n", __func__, enable, ret < 0 ? "failed" : "success");
+	return;
+}
+
+static void sec_get_fingerprint_info(void *chip_data, struct fp_underscreen_info *fp_tpinfo)
+{
+	struct chip_data_s6sy761 *chip_info = (struct chip_data_s6sy761 *)chip_data;
+	struct sec_event_status *p_event_status = NULL;
+	int ret = -1;
+	int i = 0;
+
+	p_event_status = (struct sec_event_status *)chip_info->first_event;
+
+	fp_tpinfo->x = (p_event_status->status_data_2 <<4)|((p_event_status->status_data_4 >> 4) & 0x0F); /* 720 */
+	fp_tpinfo->y = (p_event_status->status_data_3 <<4)|((p_event_status->status_data_4 >> 0) & 0x0F); /* 2728 */
+
+	fp_tpinfo->touch_state = chip_info->fingerprint_status;
+
+	if (chip_info->fingerprint_status == FINGERPRINT_UP_DETECT && !*chip_info->in_suspend) {
+		for (i = 0; i < 20; i++) {
+			ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_SET_POWER_MODE);
+			if (0x00 == ret) {
+				break;
+			}
+			touch_i2c_write_byte(chip_info->client, SEC_CMD_SET_POWER_MODE, 0x00);
+			sec_mdelay(10);
+		}
+	}
 }
 
 static int sec_mode_switch(void *chip_data, work_mode mode, bool flag)
@@ -1408,13 +1553,15 @@ static struct oplus_touchpanel_operations sec_ops = {
     .power_control              = sec_power_control,
     .fw_check                   = sec_fw_check,
     .fw_update                  = sec_fw_update,
-    .trigger_reason             = sec_trigger_reason,
+    .u32_trigger_reason         = sec_trigger_reason,
     .get_touch_points           = sec_get_touch_points,
     .get_gesture_info           = sec_get_gesture_info,
     .mode_switch                = sec_mode_switch,
 //    .get_usb_state              = sec_get_usb_state,
     .set_touch_direction        = sec_set_touch_direction,
     .get_touch_direction        = sec_get_touch_direction,
+    .enable_fingerprint         = sec_enable_fingerprint_mode,
+    .screenon_fingerprint_info  = sec_get_fingerprint_info,
     .calibrate			= sec_calibrate,
     .get_cal_status 	= sec_get_cal_status,
 };
@@ -2067,7 +2214,11 @@ static int sec_execute_selftest(struct seq_file *s, int fd, struct chip_data_s6s
     int result_size = SEC_SELFTEST_REPORT_SIZE + sec_testdata->TX_NUM * sec_testdata->RX_NUM * 2;
 
     /* save selftest result in flash */
-    tpara[0] = 0x27;
+	if (chip_info->old_firmware_flag_check) {
+		tpara[0] = 0x21;
+	} else {
+	    tpara[0] = 0x27;
+	}
 
     rBuff = kzalloc(result_size, GFP_KERNEL);
     if (!rBuff) {
@@ -3077,6 +3228,9 @@ static int sec_tp_probe(struct i2c_client *client, const struct i2c_device_id *i
     chip_info->grip_area.ver_edgescreen_y1 = 0x0258;
     chip_info->grip_area.ver_edgescreen_y2 = 0x0384;
     chip_info->grip_area.edgescreen_switch = 0x00;
+	chip_info->in_suspend = &ts->is_suspended;
+	chip_info->display_refresh_rate = 90;
+	chip_info->old_firmware_flag_check = of_property_read_bool(ts->dev->of_node, "old_firmware_flag_check");
 
     /* 4. file_operations callbacks binding */
     ts->ts_ops = &sec_ops;
@@ -3099,6 +3253,7 @@ static int sec_tp_probe(struct i2c_client *client, const struct i2c_device_id *i
         sec_init_kernel_grip_proc(ts->prEntry_tp, ts);
 
     }
+	g_chip_info = chip_info;
     TPD_INFO("%s, probe normal end\n", __func__);
     return 0;
 

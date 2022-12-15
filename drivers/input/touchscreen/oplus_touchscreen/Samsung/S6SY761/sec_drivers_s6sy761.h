@@ -28,6 +28,8 @@
 #define GESTURE_M                               0x0A
 #define GESTURE_W                               0x0B
 #define GESTURE_DOUBLE_LINE                     0x0C
+#define GESTURE_SINGLE_TAP                      0x0E
+#define GESTURE_S                               0x0F
 #define GESTURE_EARSENSE                        0x0E
 
 #define RESET_TO_NORMAL_TIME                    (70)
@@ -71,6 +73,9 @@
 
 //earsense status
 #define SEC_STATUS_EARDETECTED                  0x84
+
+/* touchhold status */
+#define SEC_STATUS_TOUCHHOLD                    0x6B
 
 //boot status
 #define SEC_STATUS_BOOT_MODE                    0x10
@@ -128,12 +133,15 @@
 #define SEC_CMD_GRIP_PZONE                      0xAA
 #define SEC_CMD_GRIP_PCORNER                    0xAB
 #define SEC_CMD_GRIP_LCORNER                    0xAC
-#define SEC_CMD_GRIP_DIRECTION                  0xAD
+#define SEC_CMD_GRIP_DIRECTION                  0xAD	/* 0 is portrait,1 is landscape */
 #define SEC_CMD_ELI_LCORNER                     0xBF
 #define SEC_CMD_EDGE_SCREEN                     0xBE
 #define SEC_CMD_SENSETIVE_CTRL                  0x3F
 #define SEC_CMD_NOISE_CTRL                      0x33
 #define SEC_CMD_WET_SWITCH                      0x4B
+#define SEC_CMD_TOUCHHOLD_SWITCH                0x43
+#define SEC_CMD_GAME_MODE                       0x45
+#define SEC_CMD_REFRESH_RATE_SWITCH             0x40
 
 #define SEC_CMD_RTDP_ERASE                      0xC9    //Erase RTDP Memory
 #define SEC_CMD_RTDP_START                      0xC0    //Start RTDP
@@ -272,6 +280,8 @@ struct chip_data_s6sy761 {
     tp_dev                          tp_type;
     struct i2c_client               *client;
     u8                              boot_ver[3];
+	u8                              fingerprint_status;
+	int                             *in_suspend;
     bool                            is_power_down;
     struct hw_resource              *hw_res;
     bool                            cal_needed;
@@ -280,5 +290,8 @@ struct chip_data_s6sy761 {
     uint8_t                         touch_direction;
     u8                              first_event[SEC_EVENT_BUFF_SIZE];
     struct grip_rejction            grip_area;
+	bool				old_firmware_flag_check; /* Flag to check old Samsung firmware */
+	int					display_refresh_rate;
+	bool				sec_refresh_rate_delay;
 };
 #endif

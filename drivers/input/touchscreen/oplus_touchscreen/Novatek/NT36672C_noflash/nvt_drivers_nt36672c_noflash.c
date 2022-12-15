@@ -218,6 +218,12 @@ void nvt_bootloader_reset_noflash(struct chip_data_nt36672c *chip_info)
     nvt_write_addr(chip_info->s_client, SWRST_N8_ADDR, 0x69);
 
     mdelay(5);  //wait tBRST2FR after Bootload RST
+//#ifdef OPLUS_FEATURE_TP_BASIC
+    if (chip_info->spi_fast_read_support) {
+        nvt_write_addr(chip_info->s_client, SPI_READ_FAST, 0x40);
+        TPD_INFO("%s load spi fast read 0x40\n", __func__);
+    }
+//#endif OPLUS_FEATURE_TP_BASIC
 }
 
 /*******************************************************
@@ -5667,6 +5673,21 @@ static void nova_init_oplus_apk_op(struct touchpanel_data *ts)
 }
 #endif // end of CONFIG_OPLUS_TP_APK
 
+//#ifdef OPLUS_FEATURE_TP_BASIC
+static int nt36672c_parse_dts(struct chip_data_nt36672c *chip_info, struct spi_device *client)
+{
+    struct device *dev;
+    struct device_node *np;
+
+    dev = &client->dev;
+    np = dev->of_node;
+
+    chip_info->spi_fast_read_support = of_property_read_bool(np, "spi_fast_read_support");
+    TPD_INFO("%s:spi_fast_read_support is:%d\n", __func__, chip_info->spi_fast_read_support);
+
+    return 0;
+}
+//#endif OPLUS_FEATURE_TP_BASIC
 
 /*********** Start of SPI Driver and Implementation of it's callbacks*************************/
 int __maybe_unused nvt_tp_probe(struct spi_device *client)
@@ -5769,6 +5790,7 @@ int __maybe_unused nvt_tp_probe(struct spi_device *client)
 
     /* 4. file_operations callbacks binding */
     ts->ts_ops = &nvt_ops;
+    nt36672c_parse_dts(chip_info, client);
 
     /* 5. register common touch device*/
     ret = register_common_touch_device(ts);

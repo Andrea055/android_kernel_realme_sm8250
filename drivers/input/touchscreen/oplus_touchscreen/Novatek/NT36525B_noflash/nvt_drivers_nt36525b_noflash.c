@@ -106,13 +106,20 @@ static const struct nvt_ts_mem_map NT36672A_memory_map = {
 };
 
 static const struct nvt_ts_trim_id_table trim_id_table[] = {
-    {
-        .id = {0x0B, 0xFF, 0xFF, 0x25, 0x65, 0x03},
-        .mask = {1, 0, 0, 1, 1, 1},
-        .mmap = &NT36672A_memory_map,
-        .carrier_system = 0,
-        .support_hw_crc = 1
-    },
+	{
+		.id = {0x0B, 0xFF, 0xFF, 0x25, 0x65, 0x03},
+		.mask = {1, 0, 0, 1, 1, 1},
+		.mmap = &NT36672A_memory_map,
+		.carrier_system = 0,
+		.support_hw_crc = 1
+	},
+	{
+		.id = {0x0C, 0xFF, 0xFF, 0x25, 0x65, 0x03},
+		.mask = {1, 0, 0, 1, 1, 1},
+		.mmap = &NT36672A_memory_map,
+		.carrier_system = 0,
+		.support_hw_crc = 1
+	},
 };
 
 #ifdef CONFIG_TOUCHPANEL_MTK_PLATFORM
@@ -2700,7 +2707,11 @@ static void store_to_file(int fd, char *format, ...)
     va_end(args);
 
     if(fd >= 0) {
+#ifdef CONFIG_ARCH_HAS_SYSCALL_WRAPPER
+	ksys_write(fd, buf, strlen(buf));
+#else
         sys_write(fd, buf, strlen(buf));
+#endif
     }
 }
 
@@ -3578,10 +3589,17 @@ TEST_END:
 
     old_fs = get_fs();
     set_fs(KERNEL_DS);
+#ifdef CONFIG_ARCH_HAS_SYSCALL_WRAPPER
+	ksys_mkdir("/sdcard/TpTestReport/screenOff", 0666);
+	ksys_mkdir("/sdcard/TpTestReport/screenOff/OK", 0666);
+	ksys_mkdir("/sdcard/TpTestReport/screenOff/NG", 0666);
+	fd = ksys_open(data_buf, O_WRONLY | O_CREAT | O_TRUNC, 0);
+#else
     sys_mkdir("/sdcard/TpTestReport/screenOff", 0666);
     sys_mkdir("/sdcard/TpTestReport/screenOff/OK", 0666);
     sys_mkdir("/sdcard/TpTestReport/screenOff/NG", 0666);
     fd = sys_open(data_buf, O_WRONLY | O_CREAT | O_TRUNC, 0);
+#endif
     if (fd < 0) {
         TPD_INFO("Open log file '%s' failed.\n", data_buf);
         goto OUT;
@@ -3645,7 +3663,11 @@ TEST_END:
 
 OUT:
     if (fd >= 0) {
+#ifdef CONFIG_ARCH_HAS_SYSCALL_WRAPPER
+	ksys_close(fd);
+#else
         sys_close(fd);
+#endif
     }
     set_fs(old_fs);
 
@@ -4691,11 +4713,19 @@ TEST_END:
 
     old_fs = get_fs();
     set_fs(KERNEL_DS);
+#ifdef CONFIG_ARCH_HAS_SYSCALL_WRAPPER
+	ksys_mkdir("/sdcard/TpTestReport", 0666);
+	ksys_mkdir("/sdcard/TpTestReport/screenOn", 0666);
+	ksys_mkdir("/sdcard/TpTestReport/screenOn/OK", 0666);
+	ksys_mkdir("/sdcard/TpTestReport/screenOn/NG", 0666);
+	nvt_testdata->fd = ksys_open(data_buf, O_WRONLY | O_CREAT | O_TRUNC, 0);
+#else
     sys_mkdir("/sdcard/TpTestReport", 0666);
     sys_mkdir("/sdcard/TpTestReport/screenOn", 0666);
     sys_mkdir("/sdcard/TpTestReport/screenOn/OK", 0666);
     sys_mkdir("/sdcard/TpTestReport/screenOn/NG", 0666);
     nvt_testdata->fd = sys_open(data_buf, O_WRONLY | O_CREAT | O_TRUNC, 0);
+#endif
     if (nvt_testdata->fd < 0) {
         TPD_INFO("Open log file '%s' failed.\n", data_buf);
         //seq_printf(s, "Open log file '%s' failed.\n", data_buf);
@@ -4780,7 +4810,11 @@ TEST_END:
 
 OUT:
     if (nvt_testdata->fd >= 0) {
+#ifdef CONFIG_ARCH_HAS_SYSCALL_WRAPPER
+	ksys_close(nvt_testdata->fd);
+#else
         sys_close(nvt_testdata->fd);
+#endif
     }
     set_fs(old_fs);
 

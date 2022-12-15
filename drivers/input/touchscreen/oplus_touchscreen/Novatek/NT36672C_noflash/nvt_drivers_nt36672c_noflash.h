@@ -298,6 +298,7 @@ struct chip_data_nt36672c {
     bool g_fw_sta;
     u8 *fw_buf_dma;
     bool need_judge_irq_throw;
+    bool spi_fast_read_support;
 #ifdef CONFIG_OPLUS_TP_APK
 
     bool lock_point_status;

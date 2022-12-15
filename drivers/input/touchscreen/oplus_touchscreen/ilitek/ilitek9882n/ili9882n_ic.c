@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "ili7807s.h"
+#include "ili9882n.h"
 
 #define PROTOCL_VER_NUM     8
 static struct ilitek_protocol_info protocol_info[PROTOCL_VER_NUM] = {
@@ -154,13 +154,8 @@ int ili_ice_mode_write(u32 addr, u32 data, int len)
 int ili_ice_mode_read(u32 addr, u32 *data, int len)
 {
     int ret = 0;
-    u8 rxbuf[4] = {0};
+    u8 *rxbuf = NULL;
     u8 txbuf[4] = {0};
-
-    if(len > sizeof(u32)) {
-        ILI_ERR("ice mode read lenght = %d, must less than or equal to 4 bytes\n", len);
-        len = 4;
-    }
 
     if (!atomic_read(&ilits->ice_stat)) {
         ILI_ERR("ice mode not enabled\n");
@@ -177,19 +172,22 @@ int ili_ice_mode_read(u32 addr, u32 *data, int len)
         goto out;
     }
 
+    rxbuf = kcalloc(len, sizeof(u8), GFP_KERNEL);
+
+    if (ERR_ALLOC_MEM(rxbuf)) {
+        ILI_ERR("Failed to allocate rxbuf, %ld\n", PTR_ERR(rxbuf));
+        ret = -ENOMEM;
+        goto out;
+    }
+
     ret = ilits->wrapper(NULL, 0, rxbuf, len, OFF, OFF);
 
     if (ret < 0) {
         goto out;
     }
 
-    *data = 0;
-    if (len == 1) {
+    if (len == sizeof(u8)) {
         *data = rxbuf[0];
-    } else if (len == 2) {
-        *data = (rxbuf[0] | rxbuf[1] << 8);
-    } else if (len == 3) {
-        *data = (rxbuf[0] | rxbuf[1] << 8 | rxbuf[2] << 16);
     } else {
         *data = (rxbuf[0] | rxbuf[1] << 8 | rxbuf[2] << 16 | rxbuf[3] << 24);
     }
@@ -200,6 +198,7 @@ out:
         ILI_ERR("Failed to read data in ice mode, ret = %d\n", ret);
     }
 
+    ili_kfree((void **)&rxbuf);
     return ret;
 }
 
@@ -208,11 +207,11 @@ int ili_ice_mode_ctrl(bool enable, bool mcu)
     int ret = 0;
     u8 cmd_open[4] = {0x25, 0x62, 0x10, 0x18};
     u8 cmd_close[4] = {0x1B, 0x62, 0x10, 0x18};
-    ILI_DBG("%s ICE mode, mcu on = %d\n", (enable ? "Enable" : "Disable"), mcu);
+    ILI_INFO("%s ICE mode, mcu on = %d\n", (enable ? "Enable" : "Disable"), mcu);
 
     if (enable) {
         if (atomic_read(&ilits->ice_stat)) {
-            ILI_DBG("ice mode already enabled\n");
+            ILI_INFO("ice mode already enabled\n");
             return 0;
         }
 
@@ -230,7 +229,7 @@ int ili_ice_mode_ctrl(bool enable, bool mcu)
         ilits->pll_clk_wakeup = false;
     } else {
         if (!atomic_read(&ilits->ice_stat)) {
-            ILI_DBG("ice mode already disabled\n");
+            ILI_INFO("ice mode already disabled\n");
             return 0;
         }
 
@@ -282,14 +281,14 @@ int ili_ic_func_ctrl(const char *name, int ctrl)
     if (ilits->protocol->ver >= PROTOCOL_VER_560) {
         if (ipio_strcmp(func_ctrl[i].name, "gesture") == 0 ||
             ipio_strcmp(func_ctrl[i].name, "phone_cover_window") == 0) {
-            ILI_ERR("Non support %s function ctrl\n", func_ctrl[i].name);
+            ILI_INFO("Non support %s function ctrl\n", func_ctrl[i].name);
             ret = -1;
             goto out;
         }
     }
 
     func_ctrl[i].cmd[2] = ctrl;
-    ILI_DBG("func = %s, len = %d, cmd = 0x%x, 0%x, 0x%x\n", func_ctrl[i].name, func_ctrl[i].len,
+    ILI_INFO("func = %s, len = %d, cmd = 0x%x, 0%x, 0x%x\n", func_ctrl[i].name, func_ctrl[i].len,
              func_ctrl[i].cmd[0], func_ctrl[i].cmd[1], func_ctrl[i].cmd[2]);
     ret = ilits->wrapper(func_ctrl[i].cmd, func_ctrl[i].len, NULL, 0, OFF, OFF);
 
@@ -676,7 +675,7 @@ int ili_ic_get_core_ver(void)
     }
 
 out:
-    ILI_DBG("Core version = %d.%d.%d.%d\n", buf[1], buf[2], buf[3], buf[4]);
+    ILI_INFO("Core version = %d.%d.%d.%d\n", buf[1], buf[2], buf[3], buf[4]);
     ilits->chip->core_ver = buf[1] << 24 | buf[2] << 16 | buf[3] << 8 | buf[4];
     return ret;
 }
@@ -704,7 +703,7 @@ void ili_fw_uart_ctrl(u8 ctrl)
 
 int ili_ic_get_fw_ver(void)
 {
-    int ret = 0, len = 0;
+    int ret = 0;
     u8 cmd[2] = {0};
     u8 buf[10] = {0};
     char dev_version[MAX_DEVICE_VERSION_LENGTH] = {0};
@@ -742,8 +741,8 @@ int ili_ic_get_fw_ver(void)
     }
 
 out:
-    ILI_DBG("Firmware version = %d.%d.%d.%d\n", buf[1], buf[2], buf[3], buf[4]);
-    ILI_DBG("Firmware MP version = %d.%d.%d.%d\n", buf[5], buf[6], buf[7], buf[8]);
+    ILI_INFO("Firmware version = %d.%d.%d.%d\n", buf[1], buf[2], buf[3], buf[4]);
+    ILI_INFO("Firmware MP version = %d.%d.%d.%d\n", buf[5], buf[6], buf[7], buf[8]);
     ilits->chip->fw_ver = buf[1] << 24 | buf[2] << 16 | buf[3] << 8 | buf[4];
     ilits->chip->fw_mp_ver = buf[5] << 24 | buf[6] << 16 | buf[7] << 8 | buf[8];
     snprintf(dev_version, MAX_DEVICE_VERSION_LENGTH, "%02X", buf[3]);
@@ -756,12 +755,9 @@ out:
 
             //strlcpy(&(ilits->ts->panel_data.manufacture_info.version[12]), dev_version, 3);
             if (ver_len <= 11) {
-                //snprintf(ilits->ts->panel_data.manufacture_info.version + 9, sizeof(dev_version),"%s", dev_version);
-                strlcpy(&ilits->ts->panel_data.manufacture_info.version[7], dev_version, 3);
-                ILI_ERR("melo version %s\n", ilits->ts->panel_data.manufacture_info.version);
+                snprintf(ilits->ts->panel_data.manufacture_info.version + 9, sizeof(dev_version),"%s", dev_version);
             } else {
                 strlcpy(&ilits->ts->panel_data.manufacture_info.version[12], dev_version, 3);
-                ILI_ERR("melo version1 %s\n", ilits->ts->panel_data.manufacture_info.version);
             }
         } else {
             ver_len = ilits->ts->panel_data.vid_len;
@@ -772,7 +768,6 @@ out:
 
             strlcpy(&ilits->ts->panel_data.manufacture_info.version[ver_len],
                     dev_version, MAX_DEVICE_VERSION_LENGTH - ver_len);
-            ILI_ERR("melo version2 %s\n", ilits->ts->panel_data.manufacture_info.version);
         }
     }
 
@@ -783,20 +778,20 @@ out:
 int ili_ic_get_panel_info(void)
 {
     if ((ilits->ts->resolution_info.max_x != 0 && ilits->ts->resolution_info.max_y != 0)) {
-        ILI_DBG("use kit default resolution\n");
+        ILI_INFO("use kit default resolution\n");
         ilits->panel_wid = ilits->ts->resolution_info.max_x;
         ilits->panel_hei = ilits->ts->resolution_info.max_y;
         ilits->trans_xy = (ilits->chip->core_ver >= CORE_VER_1430
                            && (ilits->rib.nReportByPixel > 0)) ? ON : OFF;
     } else {
-        ILI_DBG("Invalid panel info, use default resolution\n");
+        ILI_INFO("Invalid panel info, use default resolution\n");
         ilits->panel_wid = TOUCH_SCREEN_X_MAX;
         ilits->panel_hei = TOUCH_SCREEN_Y_MAX;
         ilits->trans_xy = OFF;
     }
 
-    ILI_DBG("Panel info: width = %d, height = %d\n", ilits->panel_wid, ilits->panel_hei);
-    ILI_DBG("Transfer touch coordinate = %s\n", ilits->trans_xy ? "ON" : "OFF");
+    ILI_INFO("Panel info: width = %d, height = %d\n", ilits->panel_wid, ilits->panel_hei);
+    ILI_INFO("Transfer touch coordinate = %s\n", ilits->trans_xy ? "ON" : "OFF");
     return 0;
 }
 
@@ -851,9 +846,9 @@ out:
     ilits->ych_num = buf[8];
     ilits->stx = buf[11];
     ilits->srx = buf[12];
-    ILI_DBG("TP Info: min_x = %d, min_y = %d, max_x = %d, max_y = %d\n", ilits->min_x, ilits->min_y,
+    ILI_INFO("TP Info: min_x = %d, min_y = %d, max_x = %d, max_y = %d\n", ilits->min_x, ilits->min_y,
              ilits->max_x, ilits->max_y);
-    ILI_DBG("TP Info: xch = %d, ych = %d, stx = %d, srx = %d\n", ilits->xch_num, ilits->ych_num,
+    ILI_INFO("TP Info: xch = %d, ych = %d, stx = %d, srx = %d\n", ilits->xch_num, ilits->ych_num,
              ilits->stx, ilits->srx);
     return ret;
 }
@@ -917,7 +912,7 @@ int ili_ic_get_protocl_ver(void)
 out:
     ver = buf[1] << 16 | buf[2] << 8 | buf[3];
     ilitek_tddi_ic_check_protocol_ver(ver);
-    ILI_DBG("Protocol version = %d.%d.%d\n", ilits->protocol->ver >> 16,
+    ILI_INFO("Protocol version = %d.%d.%d\n", ilits->protocol->ver >> 16,
              (ilits->protocol->ver >> 8) & 0xFF, ilits->protocol->ver & 0xFF);
     return ret;
 }
@@ -958,35 +953,26 @@ int ili_ic_dummy_check(void)
     int ret = 0;
     u32 wdata = 0xA55A5AA5;
     u32 rdata = 0;
-	int i = 0;
+
     if (!atomic_read(&ilits->ice_stat)) {
         ILI_ERR("ice mode doesn't enable\n");
         return -1;
     }
 
-	for (i = 0; i < 3; i++) {
-	    if (ili_ice_mode_write(WDT9_DUMMY2, wdata, sizeof(u32)) < 0) {
-	        ILI_ERR("Write dummy error\n");
-	    }
+    if (ili_ice_mode_write(WDT9_DUMMY2, wdata, sizeof(u32)) < 0) {
+        ILI_ERR("Write dummy error\n");
+    }
 
-	    if (ili_ice_mode_read(WDT9_DUMMY2, &rdata, sizeof(u32)) < 0) {
-	        ILI_ERR("Read dummy error\n");
-	    }
-		if (rdata == wdata || rdata == (u32)-wdata){
-			if (rdata == (u32)-wdata) {
-				ilits->eng_flow = true;
-			} else {
-				ilits->eng_flow = false;
-			}
-			break;
-		}
-		mdelay(30);
-	}
-	if (i >= 3) {
+    if (ili_ice_mode_read(WDT9_DUMMY2, &rdata, sizeof(u32)) < 0) {
+        ILI_ERR("Read dummy error\n");
+    }
+
+    if (rdata != wdata) {
         ILI_ERR("Dummy check incorrect, rdata = %x wdata = %x \n", rdata, wdata);
         return -1;
     }
-	ILI_INFO("Ilitek IC check successe ilits->eng_flow = %d\n", ilits->eng_flow);
+
+    ILI_INFO("Ilitek IC check successe\n");
     return ret;
 }
 
