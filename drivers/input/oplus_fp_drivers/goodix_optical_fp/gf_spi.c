@@ -345,14 +345,14 @@ static void irq_cleanup(struct gf_dev *gf_dev)
     free_irq(gf_dev->irq, gf_dev);//need modify
 }
 
-static void gf_auto_send_touchdown(void)
+static void gf_auto_send_touchdown()
 {
     struct fp_underscreen_info tp_info;
     tp_info.touch_state = 1;
     gf_opticalfp_irq_handler(&tp_info);
 }
 
-static void gf_auto_send_touchup(void)
+static void gf_auto_send_touchup()
 {
     struct fp_underscreen_info tp_info;
     tp_info.touch_state = 0;
@@ -555,22 +555,21 @@ static int gf_open(struct inode *inode, struct file *filp)
             if (gf_dev->users == 1) {
                 status = gf_parse_dts(gf_dev);
                 if (status)
-                    goto err_parse_dt;
+                    goto out;
 
                 status = irq_setup(gf_dev);
-                if (status)
-                    goto err_irq;
+                if (status) {
+                    gf_cleanup(gf_dev);
+                    goto out;
+                }
             }
         }
     } else {
         pr_info("No device for minor %d\n", iminor(inode));
     }
-    mutex_unlock(&device_list_lock);
 
-    return status;
-err_irq:
-    gf_cleanup(gf_dev);
-err_parse_dt:
+out:
+    mutex_unlock(&device_list_lock);
     return status;
 }
 
@@ -952,6 +951,7 @@ static int __init gf_init(void)
      */
 
     if ((FP_GOODIX_3268 != get_fpsensor_type())
+            && (FP_GOODIX_3688 != get_fpsensor_type())
             && (FP_GOODIX_5288 != get_fpsensor_type())
             && (FP_GOODIX_5228 != get_fpsensor_type())
             && (FP_GOODIX_5658 != get_fpsensor_type())
