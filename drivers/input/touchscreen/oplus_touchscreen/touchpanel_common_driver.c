@@ -221,9 +221,6 @@ void operate_mode_switch(struct touchpanel_data *ts)
         if (ts->edge_limit_support || ts->fw_edge_limit_support)
             ts->ts_ops->mode_switch(ts->chip_data, MODE_EDGE, ts->limit_edge);
 
-        if (ts->game_switch_support)
-            ts->ts_ops->mode_switch(ts->chip_data, MODE_GAME, ts->noise_level);
-
         if (ts->glove_mode_support)
             ts->ts_ops->mode_switch(ts->chip_data, MODE_GLOVE, ts->glove_enable);
 
@@ -523,22 +520,15 @@ static void tp_gesture_handle(struct touchpanel_data *ts)
     }
 #endif // end of CONFIG_OPLUS_TP_APK
 
-    if (gesture_info_temp.gesture_type == DouTap && CHK_BIT(ts->gesture_enable_indep, (1 << gesture_info_temp.gesture_type))) {
-        memcpy(&ts->gesture, &gesture_info_temp, sizeof(struct gesture_info));
-
-        input_report_key(ts->input_dev, KEY_WAKEUP, 1);
-        input_sync(ts->input_dev);
-        input_report_key(ts->input_dev, KEY_WAKEUP, 0);
-        input_sync(ts->input_dev);
-    } else if (gesture_info_temp.gesture_type != UnkownGesture && gesture_info_temp.gesture_type != FingerprintDown && gesture_info_temp.gesture_type != FingerprintUp && CHK_BIT(ts->gesture_enable_indep, (1 << gesture_info_temp.gesture_type))) {
+    if (gesture_info_temp.gesture_type != UnkownGesture && gesture_info_temp.gesture_type != FingerprintDown && gesture_info_temp.gesture_type != FingerprintUp) {
         memcpy(&ts->gesture, &gesture_info_temp, sizeof(struct gesture_info));
 #if GESTURE_RATE_MODE
         if(ts->geature_ignore)
             return;
 #endif
-        input_report_key(ts->input_dev, KEY_GESTURE_START + gesture_info_temp.gesture_type, 1);
+        input_report_key(ts->input_dev, KEY_F4, 1);
         input_sync(ts->input_dev);
-        input_report_key(ts->input_dev, KEY_GESTURE_START + gesture_info_temp.gesture_type, 0);
+        input_report_key(ts->input_dev, KEY_F4, 0);
         input_sync(ts->input_dev);
     } else if (gesture_info_temp.gesture_type == FingerprintDown) {
         ts->fp_info.touch_state = 1;
@@ -1434,8 +1424,10 @@ void switch_headset_state(int headset_state)
 EXPORT_SYMBOL(switch_headset_state);
 
 /*
- *    gesture_enable = 0 : disable dt2w
- *    gesture_enable = 1 : enable dt2w
+ *    gesture_enable = 0 : disable gesture
+ *    gesture_enable = 1 : enable gesture when ps is far away
+ *    gesture_enable = 2 : disable gesture when ps is near
+ *    gesture_enable = 3 : enable single tap gesture when ps is far away
  */
 static ssize_t proc_gesture_control_write(struct file *file, const char __user *buffer, size_t count, loff_t *ppos)
 {
@@ -1453,17 +1445,25 @@ static ssize_t proc_gesture_control_write(struct file *file, const char __user *
         return count;
     }
     sscanf(buf, "%d", &value);
-    if ((ts->gesture_test_support && ts->gesture_test.flag))
+    if (value > 3 || (ts->gesture_test_support && ts->gesture_test.flag))
         return count;
 
     mutex_lock(&ts->mutex);
-    if (value)
-        ts->gesture_enable_indep |= (1 << DouTap);
-    else
-        ts->gesture_enable_indep &= ~(1 << DouTap);
-
-    if (ts->ts_ops->set_gesture_state)
-        ts->ts_ops->set_gesture_state(ts->chip_data, ts->gesture_enable_indep);
+    if (ts->gesture_enable != value) {
+        ts->gesture_enable = value;
+        TPD_INFO("%s: gesture_enable = %d, is_suspended = %d\n", __func__, ts->gesture_enable, ts->is_suspended);
+        if (ts->is_incell_panel && (ts->suspend_state == TP_RESUME_EARLY_EVENT || ts->disable_gesture_ctrl) && (ts->tp_resume_order == LCD_TP_RESUME)) {
+            TPD_INFO("tp will resume, no need mode_switch in incell panel\n"); /*avoid i2c error or tp rst pulled down in lcd resume*/
+        } else if (ts->is_suspended) {
+            if (ts->fingerprint_underscreen_support && ts->fp_enable && ts->ts_ops->enable_gesture_mask) {
+                ts->ts_ops->enable_gesture_mask(ts->chip_data, (ts->gesture_enable & 0x01) == 1);
+            } else {
+                operate_mode_switch(ts);
+            }
+        }
+    } else {
+        TPD_INFO("%s: do not do same operator :%d\n", __func__, value);
+    }
     mutex_unlock(&ts->mutex);
 
     return count;
@@ -1472,17 +1472,14 @@ static ssize_t proc_gesture_control_write(struct file *file, const char __user *
 static ssize_t proc_gesture_control_read(struct file *file, char __user *user_buf, size_t count, loff_t *ppos)
 {
     int ret = 0;
-	int value = 0;
     char page[PAGESIZE] = {0};
     struct touchpanel_data *ts = PDE_DATA(file_inode(file));
 
     if (!ts)
         return 0;
 
-    value = !!(ts->gesture_enable_indep & (1 << DouTap));
-
-    TPD_DEBUG("double tap enable is: %d\n", value);
-    ret = snprintf(page, PAGESIZE - 1, "%d", value);
+    TPD_DEBUG("double tap enable is: %d\n", ts->gesture_enable);
+    ret = snprintf(page, PAGESIZE - 1, "%d", ts->gesture_enable);
     ret = simple_read_from_buffer(user_buf, count, ppos, page, strlen(page));
 
     return ret;
@@ -1515,9 +1512,8 @@ static ssize_t proc_gesture_control_indep_write(struct file *file, const char __
 
     mutex_lock(&ts->mutex);
 
-    ts->gesture_enable_indep = value;
-
     if (ts->ts_ops->set_gesture_state) {
+        ts->gesture_enable_indep = value;
         ts->ts_ops->set_gesture_state(ts->chip_data, value);
     }
     mutex_unlock(&ts->mutex);
@@ -6064,7 +6060,7 @@ static int init_debug_info_proc(struct touchpanel_data *ts)
  */
 static int init_input_device(struct touchpanel_data *ts)
 {
-    int ret = 0, i = 0;
+    int ret = 0;
     struct kobject *vk_properties_kobj;
 
     TPD_INFO("%s is called\n", __func__);
@@ -6111,10 +6107,6 @@ static int init_input_device(struct touchpanel_data *ts)
 #ifdef CONFIG_OPLUS_TP_APK
         set_bit(KEY_POWER, ts->input_dev->keybit);
 #endif //end of CONFIG_OPLUS_TP_APK
-        set_bit(KEY_WAKEUP, ts->input_dev->keybit);
-        for (i = UpVee; i <= SGESTRUE; i++) {
-            set_bit(KEY_GESTURE_START + i, ts->input_dev->keybit);
-        }
     }
 
     ts->kpd_input_dev->name = TPD_DEVICE"_kpd";
@@ -6273,7 +6265,7 @@ static int init_parse_dts(struct device *dev, struct touchpanel_data *ts)
     ts->wireless_charger_support = of_property_read_bool(np, "wireless_charger_support");
     ts->headset_pump_support    = of_property_read_bool(np, "headset_pump_support");
     ts->black_gesture_support   = of_property_read_bool(np, "black_gesture_support");
-    ts->black_gesture_indep_support   = true;
+    ts->black_gesture_indep_support   = of_property_read_bool(np, "black_gesture_indep_support");
     ts->single_tap_support      = of_property_read_bool(np, "single_tap_support");
     ts->gesture_test_support    = of_property_read_bool(np, "black_gesture_test_support");
     ts->fw_update_app_support   = of_property_read_bool(np, "fw_update_app_support");
@@ -7331,7 +7323,7 @@ int register_common_touch_device(struct touchpanel_data *pdata)
     ts->loading_fw = false;
     ts->is_suspended = 0;
     ts->suspend_state = TP_SPEEDUP_RESUME_COMPLETE;
-    ts->gesture_enable = 1;
+    ts->gesture_enable = 0;
     ts->es_enable = 0;
     ts->fd_enable = 0;
     ts->fp_enable = 0;
