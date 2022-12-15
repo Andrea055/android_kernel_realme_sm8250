@@ -706,22 +706,21 @@ static int gf_open(struct inode *inode, struct file *filp)
             if (gf_dev->users == 1) {
                 status = gf_parse_dts(gf_dev);
                 if (status)
-                    goto err_parse_dt;
+                    goto out;
 
                 status = irq_setup(gf_dev);
-                if (status)
-                    goto err_irq;
+                if (status) {
+                    gf_cleanup(gf_dev);
+                    goto out;
+                }
             }
         }
     } else {
         pr_info("No device for minor %d\n", iminor(inode));
     }
-    mutex_unlock(&device_list_lock);
 
-    return status;
-err_irq:
-    gf_cleanup(gf_dev);
-err_parse_dt:
+out:
+    mutex_unlock(&device_list_lock);
     return status;
 }
 

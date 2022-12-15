@@ -251,10 +251,19 @@ static int vreg_setup(struct anc_data *data, const char *name, bool enable)
 /*-----------------------------------netlink-------------------------------*/
 #ifdef ANC_USE_NETLINK
 unsigned int lasttouchmode = 0;
+typedef struct anc_netlink_msg {
+    char event;
+    uint8_t area_rate;
+    uint16_t x;
+    uint16_t y;
+}__attribute__((packed)) anc_netlink_msg_t;
 static int anc_opticalfp_tp_handler(struct fp_underscreen_info *tp_info)
 {
     int rc = 0;
-    char netlink_msg = (char)ANC_NETLINK_EVENT_INVALID;
+    anc_netlink_msg_t netlink_msg;
+    memset(&netlink_msg,0,sizeof(anc_netlink_msg_t));
+
+    netlink_msg.event = (char)ANC_NETLINK_EVENT_INVALID;
 
     pr_info("[anc] %s\n", __func__);
 
@@ -267,15 +276,19 @@ static int anc_opticalfp_tp_handler(struct fp_underscreen_info *tp_info)
 #else
     wake_lock_timeout(&g_anc_data->fp_wakelock, msecs_to_jiffies(ANC_WAKELOCK_HOLD_TIME));
 #endif
+    netlink_msg.area_rate = tp_info->area_rate;
+    netlink_msg.x = tp_info->x;
+    netlink_msg.y = tp_info->y;
+    pr_info("[anc] Netlink touch info area:%d,x:%d,y:%d",netlink_msg.area_rate,netlink_msg.x, netlink_msg.y);
     if (1 == tp_info->touch_state) {
-        netlink_msg = (char)ANC_NETLINK_EVENT_TOUCH_DOWN;
+        netlink_msg.event = (char)ANC_NETLINK_EVENT_TOUCH_DOWN;
         pr_info("[anc] Netlink touch down!");
-        netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
+        netlink_send_message_to_user((const char *)(&netlink_msg), sizeof(netlink_msg));
         lasttouchmode = tp_info->touch_state;
     } else {
-        netlink_msg = (char)ANC_NETLINK_EVENT_TOUCH_UP;
+        netlink_msg.event = (char)ANC_NETLINK_EVENT_TOUCH_UP;
         pr_info("[anc] Netlink touch up!");
-        netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
+        netlink_send_message_to_user((const char *)(&netlink_msg), sizeof(netlink_msg));
         lasttouchmode = tp_info->touch_state;
     }
 
@@ -446,7 +459,7 @@ static DEVICE_ATTR(pinctl_set, S_IWUSR, NULL, pinctl_set);
 
 static int anc_reset(struct anc_data *data)
 {
-    int rc;
+    int rc = 0;
     pr_err("anc reset\n");
     mutex_lock(&data->lock);
     gpio_direction_output(g_anc_data->rst_gpio, 0);
@@ -718,7 +731,8 @@ static int anc_gpio_init(struct device *dev, struct anc_data *data)
     struct platform_device *pdev = NULL;
     struct device_node *np = NULL;
 
-    if (np = of_find_compatible_node(NULL, NULL, "jiiov,fingerprint")) {
+    np = of_find_compatible_node(NULL, NULL, "jiiov,fingerprint");
+    if (np != NULL) {
         pdev = of_find_device_by_node(np);
         if (pdev == NULL) {
             dev_err(dev, "pdev not found\n");
@@ -1255,8 +1269,8 @@ static int __init ancfp_init(void)
 {
     int rc;
 
-    if (FP_JIIOV_0302 != (rc = get_fpsensor_type())) {
-        pr_err("%s, found not jiiov sensor rc:%d\n", __func__,rc);
+    if ((FP_JIIOV_0302 != get_fpsensor_type()) && (FP_JIIOV_0301 != get_fpsensor_type())) {
+        pr_err("%s, found not jiiov sensor\n", __func__);
         rc = -EINVAL;
         return rc;
     }
