@@ -7,5 +7,3 @@ else ifeq ($(strip $(CONFIG_OPLUS_CHG_OOS)), y)
 endif
 #endif
 obj-$(CONFIG_AW8697_HAPTIC) += aw8697.o
-obj-$(CONFIG_AW8697_HAPTIC) += haptic.o
-haptic-objs := aw8692x.o haptic_hv.o
