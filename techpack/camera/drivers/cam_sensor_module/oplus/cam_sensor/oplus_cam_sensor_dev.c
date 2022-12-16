@@ -41,6 +41,7 @@ struct cam_sensor_settings {
     struct cam_sensor_i2c_reg_setting_array ov02b10_setting;
     struct cam_sensor_i2c_reg_setting_array hi846_setting;
     struct cam_sensor_i2c_reg_setting_array ov64b_setting;
+	struct cam_sensor_i2c_reg_setting_array s5kgw1_setting;
     struct cam_sensor_i2c_reg_setting_array gc02m1b_setting;
 };
 
@@ -281,6 +282,14 @@ long oplus_cam_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 				sensor_setting.delay = sensor_settings.ov64b_setting.delay;
 				rc = camera_io_dev_write(&(s_ctrl->io_master_info), &sensor_setting);
 				CAM_ERR(CAM_SENSOR,"FTM GET ov64b setting");
+			} else if (s_ctrl->sensordata->slave_info.sensor_id == 0x971) {
+				sensor_setting.reg_setting = sensor_settings.s5kgw1_setting.reg_setting;
+				sensor_setting.addr_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
+				sensor_setting.data_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
+				sensor_setting.size = sensor_settings.s5kgw1_setting.size;
+				sensor_setting.delay = sensor_settings.s5kgw1_setting.delay;
+				rc = camera_io_dev_write(&(s_ctrl->io_master_info), &sensor_setting);
+				CAM_ERR(CAM_SENSOR, "FTM GET s5kgw1 setting");
 			} else if (s_ctrl->sensordata->slave_info.sensor_id == 0x02e0) {
 				sensor_setting.reg_setting = sensor_settings.gc02m1b_setting.reg_setting;
 				sensor_setting.addr_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
