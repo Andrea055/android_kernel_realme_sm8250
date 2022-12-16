@@ -62,6 +62,7 @@ int32_t cam_actuator_parse_dt(struct cam_actuator_ctrl_t *a_ctrl,
 		CAM_DBG(CAM_ACTUATOR, "No need-check-data defined");
 		a_ctrl->need_check_actuator_data = false;
 	} else {
+		a_ctrl->is_actuator_pid_updated = false;
 		a_ctrl->need_check_actuator_data = true;
 	}
 #endif

@@ -119,6 +119,7 @@ struct cam_actuator_ctrl_t {
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	int32_t actuator_power_enable;
 	bool need_check_actuator_data;
+	bool is_actuator_pid_updated;
 	#endif
 };
 
