@@ -185,7 +185,7 @@ static int gic_peek_irq(struct irq_data *d, u32 offset)
 	else
 		base = gic_data.dist_base;
 
-	return !!(readl_relaxed_no_log
+	return !!(readl_relaxed
 		(base + offset + (gic_irq(d) / 32) * 4) & mask);
 }
 
