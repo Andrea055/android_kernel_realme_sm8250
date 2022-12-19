@@ -1674,10 +1674,6 @@ static void dm_calculate_supported_crypto_modes(struct dm_table *t,
 	for (i = 0; i < dm_table_get_num_targets(t); i++) {
 		ti = dm_table_get_target(t, i);
 
-		if (!ti->may_passthrough_inline_crypto) {
-			keyslot_manager_intersect_modes(q->ksm, NULL);
-			return;
-		}
 		if (!ti->type->iterate_devices)
 			continue;
 		ti->type->iterate_devices(ti, device_intersect_crypto_modes,
