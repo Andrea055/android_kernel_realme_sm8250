@@ -3273,6 +3273,7 @@ static void binder_transaction(struct binder_proc *proc,
 			&& is_frozen_tg(target_proc->tsk)) {
 			hans_report(SYNC_BINDER, task_tgid_nr(proc->tsk), task_uid(proc->tsk).val, task_tgid_nr(target_proc->tsk), task_uid(target_proc->tsk).val, "SYNC_BINDER", -1);
 		}
+#endif
 		if (security_binder_transaction(proc->cred,
 						target_proc->cred) < 0) {
 			return_error = BR_FAILED_REPLY;
