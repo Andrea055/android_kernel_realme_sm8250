@@ -39,7 +39,8 @@ ssize_t pm_show_wakelocks(char *buf, bool show_active)
 {
 	struct rb_node *node;
 	struct wakelock *wl;
-	int len = 0;
+	char *str = buf;
+	char *end = buf + PAGE_SIZE;
 
 	mutex_lock(&wakelocks_lock);
 
@@ -48,10 +49,13 @@ ssize_t pm_show_wakelocks(char *buf, bool show_active)
 		if (wl->ws->active == show_active)
 			str += scnprintf(str, end - str, "%s ", wl->name);
 	}
-	len += sysfs_emit_at(buf, len, "\n");
+	if (str > buf)
+		str--;
+
+	str += scnprintf(str, end - str, "\n");
 
 	mutex_unlock(&wakelocks_lock);
-	return len;
+	return (str - buf);
 }
 
 #if CONFIG_PM_WAKELOCKS_LIMIT > 0
