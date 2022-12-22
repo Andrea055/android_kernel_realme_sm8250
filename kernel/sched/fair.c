@@ -7188,7 +7188,6 @@ static void find_best_target(struct sched_domain *sd, cpumask_t *cpus,
 			if (sysctl_prefer_silver && sysctl_sched_assist_enabled && !test_task_ux(p) && is_max_capacity_cpu(i)) {
 				if (prefer_silver_check_freq(start_cpu) && (prefer_silver_check_task_util(p) ||
 					prefer_silver_check_cpu_util(start_cpu))) {
-					skip_big_cluster = true;
 					continue;
 				}
 			}
@@ -7566,7 +7565,7 @@ static void find_best_target(struct sched_domain *sd, cpumask_t *cpus,
 			prefer_silver_check_freq(start_cpu),
 			prefer_silver_check_task_util(p),
 			prefer_silver_check_cpu_util(start_cpu),
-			skip_big_cluster);
+			0);
 	}
 #endif
 
@@ -9230,14 +9229,12 @@ redo:
 		if (sysctl_prefer_silver && sysctl_sched_assist_enabled && !test_task_ux(p) && is_max_capacity_cpu(env->dst_cpu)) {
 			if (prefer_silver_check_freq(env->src_cpu) && (prefer_silver_check_task_util(p) ||
 				prefer_silver_check_cpu_util(env->src_cpu))) {
-				skip_big_cluster = true;
-
 				trace_sched_cpu_skip(p, sysctl_prefer_silver,
 						test_task_ux(p),
 						prefer_silver_check_freq(env->src_cpu),
 						prefer_silver_check_task_util(p),
 						prefer_silver_check_cpu_util(env->src_cpu),
-						skip_big_cluster);
+						false);
 				goto next;
 			}
 		}
