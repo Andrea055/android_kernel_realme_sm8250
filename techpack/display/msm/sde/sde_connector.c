@@ -951,6 +951,46 @@ struct sde_connector_dyn_hdr_metadata *sde_connector_get_dyn_hdr_meta(
 	return &c_state->dyn_hdr_meta;
 }
 
+struct dsi_panel *sde_connector_panel(struct sde_connector *c_conn)
+{
+	struct dsi_display *display = (struct dsi_display *)c_conn->display;
+
+	return display ? display->panel : NULL;
+}
+
+static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
+{
+	struct dsi_panel *panel;
+	int level = 0;
+	bool status;
+
+	panel = sde_connector_panel(c_conn);
+	if (!panel)
+		return;
+
+	status = sde_connector_is_fod_enabled(c_conn);
+	if (status == dsi_panel_get_fod_ui(panel))
+		return;
+
+	if (status) {
+		if (panel->aod_status)
+			dsi_panel_set_nolp(panel);
+
+		level = 5;
+		oneplus_dim_status = 5;
+		finger_type = true;
+	        cpu_input_boost_kick_max(750, true);
+                devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 750, true);
+	}
+
+	if (panel->hw_type == DSI_PANEL_SAMSUNG_SOFEF03F_M && status)
+		sde_encoder_wait_for_event(c_conn->encoder,
+				MSM_ENC_VBLANK);
+
+	dsi_panel_set_hbm_mode(panel, level);
+	dsi_panel_set_fod_ui(panel, status);
+}
+
 int sde_connector_pre_kickoff(struct drm_connector *connector)
 {
 	struct sde_connector *c_conn;
