@@ -4,19 +4,21 @@
 ### AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=Horizon kernel by LibXZR (xzr467706992 @ xda-developers)
+kernel.string=Realme GT Neo 2/3T Dragon 4
 do.devicecheck=0
 do.modules=0
-do.systemless=0
+do.systemless=1
 do.cleanup=1
 do.cleanuponabort=0
+device.name1=RMX3370
+device.name2=RMX3371
 supported.versions=
 supported.patchlevels=
 '; } # end properties
 
 # shell variables
-block=boot;
-is_slot_device=1;
+block=/dev/block/bootdevice/by-name/boot;
+is_slot_device=0;
 ramdisk_compression=auto;
 patch_vbmeta_flag=auto;
 
