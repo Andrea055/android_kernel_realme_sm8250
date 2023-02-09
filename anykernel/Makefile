@@ -20,7 +20,6 @@ $(TARGET): FORCE
 	$(Q)cp -rf $(anykernel)/* $(obj)/
 	$(Q)rm -f $(obj)/Makefile
 	$(Q)cp -f arch/arm64/boot/Image.gz $(obj)/
-	$(Q)cp -f arch/arm64/boot/dtb $(obj)/
 	$(Q)cp -f arch/arm64/boot/dtbo.img $(obj)/
 	$(Q)cd $(obj);zip -r "$(NAME)" * > /dev/null
 	$(Q)mv -f "$(obj)/$(NAME)" $(objtree)
