@@ -4088,7 +4088,9 @@ void dwc3_bh_work(struct work_struct *w)
 {
 	struct dwc3 *dwc = container_of(w, struct dwc3, bh_work);
 
-	pm_runtime_get_sync(dwc->dev);
+#if 0	// This call generate a BUG report in kernel log
+	// pm_runtime_get_sync(dwc->dev);
+#endif
 	dwc3_thread_interrupt(dwc->irq, dwc->ev_buf);
 	pm_runtime_put(dwc->dev);
 }
