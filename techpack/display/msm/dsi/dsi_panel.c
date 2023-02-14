@@ -502,9 +502,6 @@ static int dsi_panel_reset(struct dsi_panel *panel)
 	struct dsi_panel_reset_config *r_config = &panel->reset_config;
 	int i;
 
-#ifdef OPLUS_BUG_STABILITY
-	pr_err("debug for dsi_panel_reset\n");
-#endif
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
 	if (iris_is_dual_supported() && panel->is_secondary)
 		return rc;
@@ -614,18 +611,6 @@ static int dsi_panel_power_on(struct dsi_panel *panel)
 {
 	int rc = 0;
 
-#ifdef OPLUS_BUG_STABILITY
-	pr_err("debug for dsi_panel_power_on\n");
-#endif
-#ifdef OPLUS_BUG_STABILITY
-	if (!strstr(panel->oplus_priv.vendor_name,"NT36672C")) {
-		rc = dsi_pwr_enable_regulator(&panel->power_info, true);
-		if (rc) {
-			DSI_ERR("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
-			goto exit;
-		}
-	}
-#endif /*OPLUS_BUG_STABILITY*/
 	if (gpio_is_valid(panel->vddr_gpio)) {
 		rc = gpio_direction_output(panel->vddr_gpio, 1);
 		DSI_ERR("enable vddr gpio\n");
@@ -864,10 +849,10 @@ int dsi_panel_tx_cmd_set(struct dsi_panel *panel,
 		&& type != DSI_CMD_READ_SAMSUNG_PANEL_REGISTER_OFF) {
 		#ifdef OPLUS_FEATURE_ADFR
 			if (type != DSI_CMD_FAKEFRAME) {
-			    pr_err("dsi_cmd %s\n", cmd_set_prop_map[type]);
+			    // pr_err("dsi_cmd %s\n", cmd_set_prop_map[type]);
 			}
 		#else
-		        pr_err("dsi_cmd %s\n", cmd_set_prop_map[type]);
+		        // pr_err("dsi_cmd %s\n", cmd_set_prop_map[type]);
 		#endif
 	}
 
@@ -1015,7 +1000,7 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 
 #ifdef OPLUS_BUG_STABILITY
 	if ((get_oplus_display_scene() == OPLUS_DISPLAY_AOD_SCENE) && ( bl_lvl == 1)) {
-		pr_err("dsi_cmd AOD mode return bl_lvl:%d\n",bl_lvl);
+		// pr_err("dsi_cmd AOD mode return bl_lvl:%d\n",bl_lvl);
 		return 0;
 	}
 
@@ -1029,7 +1014,9 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 
 	if (panel->is_hbm_enabled) {
 		if ((bl_lvl != 0)) {
+		#if 0	// Reduce logspamming
 			pr_err("backlight smooth check racing issue is_hbm_enabled\n");
+		#endif
 			return 0;
 		} else {
 			if (!strcmp(panel->name,"boe nt37800 amoled fhd+ panel with DSC")) {
@@ -1045,7 +1032,9 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 	}
 
 	if (oplus_display_get_hbm_mode()) {
+		#if 0	// Redice logspam
 		pr_err("backlight smooth check racing issue oplus_display_get_hbm_mode\n");
+		#endif
 		return rc;
 	}
 
