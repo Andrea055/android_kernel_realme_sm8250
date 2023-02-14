@@ -226,7 +226,7 @@ int oplus_usb_get_property(struct power_supply *psy,
 			val->intval = chip->usb_online;
 			break;
 		default:
-			// pr_err("get prop %d is not supported in usb\n", psp);
+			pr_err("get prop %d is not supported in usb\n", psp);
 			ret = -EINVAL;
 			break;
 	}
@@ -298,7 +298,7 @@ int oplus_ac_get_property(struct power_supply *psy,
 			val->intval = chip->ac_online;
 			break;
 		default:
-			// pr_err("get prop %d is not supported in ac\n", psp);
+			pr_err("get prop %d is not supported in ac\n", psp);
 			ret = -EINVAL;
 			break;
 	}
@@ -573,7 +573,7 @@ int oplus_battery_get_property(struct power_supply *psy,
 #endif
 
 	if (chip == NULL) {
-		// pr_err("get prop %d is not ready in batt\n", psp);
+		pr_err("get prop %d is not ready in batt\n", psp);
 		return -EINVAL;
 	}
 
@@ -672,7 +672,7 @@ int oplus_battery_get_property(struct power_supply *psy,
 			val->intval = chip->batt_fcc * 1000;
 			break;
 		default:
-			// pr_err("get prop %d is not supported in batt\n", psp);
+			pr_err("get prop %d is not supported in batt\n", psp);
 			ret = -EINVAL;
 			break;
 	}

@@ -204,9 +204,11 @@
 
 #define TEMPERATURE_INVALID	-2740
 
-#define chg_debug(fmt, ...)
+#define chg_debug(fmt, ...) \
+        printk(KERN_NOTICE "[OPLUS_CHG][%s]"fmt, __func__, ##__VA_ARGS__)
 
-#define chg_err(fmt, ...)
+#define chg_err(fmt, ...) \
+        printk(KERN_ERR "[OPLUS_CHG][%s]"fmt, __func__, ##__VA_ARGS__)
 
 enum {
 	PD_INACTIVE = 0,
