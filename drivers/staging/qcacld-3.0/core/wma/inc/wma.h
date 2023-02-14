@@ -107,8 +107,7 @@
 #define WMA_DEBUG_ALWAYS
 
 #ifdef WMA_DEBUG_ALWAYS
-#define WMA_LOGA(params ...) \
-	QDF_TRACE_FATAL_NO_FL(QDF_MODULE_ID_WMA, params)
+#define WMA_LOGA(params ...)
 #else
 #define WMA_LOGA(params ...)
 #endif
