@@ -5856,8 +5856,10 @@ static int pp_ad_invalidate_input(struct msm_fb_data_type *mfd)
 			ret, ad);
 		return ret;
 	}
+	#if 0	// Reduce log spamming
 	pr_debug("AD backlight level changed (%d), trigger update to AD\n",
 						mfd->ad_bl_level);
+	#endif
 	if (ad->cfg.mode == MDSS_AD_MODE_AUTO_BL) {
 		pr_err("AD auto backlight no longer supported.\n");
 		return -EINVAL;
