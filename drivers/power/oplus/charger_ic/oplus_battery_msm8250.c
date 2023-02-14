@@ -12799,13 +12799,13 @@ static int smb5_usb_get_prop(struct power_supply *psy,
 		break;
 
 	default:
-		pr_err("get prop %d is not supported in usb\n", psp);
+		// pr_err("get prop %d is not supported in usb\n", psp);
 		rc = -EINVAL;
 		break;
 	}
 
 	if (rc < 0) {
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+		// pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 		return -ENODATA;
 	}
 
@@ -13028,13 +13028,13 @@ static int smb5_usb_port_get_prop(struct power_supply *psy,
 		rc = smblib_get_prop_input_current_settled(chg, val);
 		break;
 	default:
-		pr_err_ratelimited("Get prop %d is not supported in pc_port\n",
-				psp);
+		// pr_err_ratelimited("Get prop %d is not supported in pc_port\n",
+		// 		psp);
 		return -EINVAL;
 	}
 
 	if (rc < 0) {
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+		// pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 		return -ENODATA;
 	}
 
@@ -13175,7 +13175,7 @@ static int smb5_usb_main_get_prop(struct power_supply *psy,
 		break;
 	}
 	if (rc < 0) {
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+		// pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 		return -ENODATA;
 	}
 
@@ -13379,7 +13379,7 @@ static int smb5_dc_get_prop(struct power_supply *psy,
 		return -EINVAL;
 	}
 	if (rc < 0) {
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+		// pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 		return -ENODATA;
 	}
 	return 0;
@@ -13732,7 +13732,7 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 	}
 
 	if (rc < 0) {
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+		// pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 		return -ENODATA;
 	}
 

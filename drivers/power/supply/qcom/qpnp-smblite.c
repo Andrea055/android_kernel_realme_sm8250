@@ -444,13 +444,13 @@ static int smblite_usb_get_prop(struct power_supply *psy,
 		val->intval = 5000000;
 		break;
 	default:
-		pr_err("get prop %d is not supported in usb\n", psp);
+		// pr_err("get prop %d is not supported in usb\n", psp);
 		rc = -EINVAL;
 		break;
 	}
 
 	if (rc < 0) {
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+		// pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 		return -ENODATA;
 	}
 
@@ -593,12 +593,12 @@ static int smblite_usb_main_get_prop(struct power_supply *psy,
 		val->intval = chg->flash_active;
 		break;
 	default:
-		pr_debug("get prop %d is not supported in usb-main\n", psp);
+		// pr_debug("get prop %d is not supported in usb-main\n", psp);
 		rc = -EINVAL;
 		break;
 	}
-	if (rc < 0)
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+	// if (rc < 0)
+	// 	pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 
 	return rc;
 }
@@ -864,7 +864,7 @@ static int smblite_batt_get_prop(struct power_supply *psy,
 	}
 
 	if (rc < 0) {
-		pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
+		// pr_debug("Couldn't get prop %d rc = %d\n", psp, rc);
 		return -ENODATA;
 	}
 
