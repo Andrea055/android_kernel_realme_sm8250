@@ -270,7 +270,7 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 #ifdef OPLUS_BUG_STABILITY
 	if ((bl_lvl > 1) && (readcount == 0) && (get_oplus_display_power_status() == OPLUS_DISPLAY_POWER_ON)) {
 		panel->panel_id2 = oplus_display_panel_get_id2();
-		// pr_err("dsi_cmd oplus_display_panel_get_id2 %d\n",panel->panel_id2);
+		pr_err("dsi_cmd oplus_display_panel_get_id2 %d\n",panel->panel_id2);
 		readcount = 1;
 	}
 #endif
