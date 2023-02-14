@@ -30,17 +30,17 @@ static struct timeval start, end;
 
 /****************** Start of Log Tag Declear and level define*******************************/
 #define TPD_DEVICE "novatek,nf_nt36525b"
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE ": " a, ##arg)
+#define TPD_INFO(a, arg...) 
 #define TPD_DEBUG(a, arg...)\
     do{\
         if (LEVEL_DEBUG == tp_debug)\
-            pr_err("[TP]"TPD_DEVICE ": " a, ##arg);\
+           ;\
     }while(0)
 
 #define TPD_DETAIL(a, arg...)\
     do{\
         if (LEVEL_BASIC != tp_debug)\
-            pr_err("[TP]"TPD_DEVICE ": " a, ##arg);\
+           ;\
     }while(0)
 
 #define TPD_DEBUG_NTAG(a, arg...)\

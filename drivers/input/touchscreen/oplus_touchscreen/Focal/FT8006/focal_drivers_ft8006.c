@@ -30,17 +30,17 @@
 
 /****************** Start of Log Tag Declear and level define*******************************/
 #define TPD_DEVICE "focal-ft8006"
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE ": " a, ##arg)
+#define TPD_INFO(a, arg...) 
 #define TPD_DEBUG(a, arg...)\
     do{\
         if (LEVEL_DEBUG == tp_debug)\
-            pr_err("[TP]"TPD_DEVICE ": " a, ##arg);\
+           ;\
     }while(0)
 
 #define TPD_DETAIL(a, arg...)\
     do{\
         if (LEVEL_BASIC != tp_debug)\
-            pr_err("[TP]"TPD_DEVICE ": " a, ##arg);\
+           ;\
     }while(0)
 
 #define TPD_DEBUG_NTAG(a, arg...)\
@@ -1134,7 +1134,7 @@ int focal_erase_flash(void *chip_data)
     msleep(1350);
 
     for (i = 0; i < 15; i++) {
-        /*get the erase app status, if get 0xF0AA£¬erase flash success*/
+        /*get the erase app status, if get 0xF0AAï¿½ï¿½erase flash success*/
         auc_i2c_write_buf[0] = 0x6a;
         reg_val[0] = reg_val[1] = 0x00;
         touch_i2c_read(chip_info->client, auc_i2c_write_buf, 1, reg_val, 2);

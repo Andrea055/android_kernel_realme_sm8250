@@ -26,17 +26,17 @@
 #define TPD_DEVICE "td4330"
 #define UPDATE_DISPLAY_CONFIG
 
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE ": " a, ##arg)
+#define TPD_INFO(a, arg...) 
 #define TPD_DEBUG(a, arg...)\
     do{\
         if (LEVEL_DEBUG == tp_debug)\
-            pr_err("[TP]"TPD_DEVICE ": " a, ##arg);\
+           ;\
     }while(0)
 
 #define TPD_DETAIL(a, arg...)\
     do{\
         if (LEVEL_BASIC != tp_debug)\
-            pr_err("[TP]"TPD_DEVICE ": " a, ##arg);\
+           ;\
     }while(0)
 
 #define TPD_DEBUG_NTAG(a, arg...)\
