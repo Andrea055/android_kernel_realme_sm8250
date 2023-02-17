@@ -122,7 +122,7 @@ enum {
 
 /*this debug value is just for oplus debug*/
 #define TPD_DEVICE "ilitek,ili9881h"
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE "(%s, %d): " a, __func__, __LINE__, ##arg)
+#define TPD_INFO(a, arg...)  pr_err_once("[TP]"TPD_DEVICE "(%s, %d): " a, __func__, __LINE__, ##arg)
 #define TPD_DEBUG(a, arg...)\
             do{\
                 if (LEVEL_DEBUG == tp_debug)\

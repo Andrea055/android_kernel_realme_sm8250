@@ -126,7 +126,7 @@
 #define SPI_MODE			SPI_SLAVE_MODE
 #define SPI_MODE_DELAY			mdelay(1)
 
-#define TPD_INFO(fmt, arg...) pr_err("[TP]"TPD_DEVICE ": " fmt, ##arg)
+#define TPD_INFO(fmt, arg...) pr_err_once("[TP]"TPD_DEVICE ": " fmt, ##arg)
 #define TPD_DEBUG(a, arg...)\
 do{\
     if (LEVEL_DEBUG == tp_debug || ipio_debug_level)\

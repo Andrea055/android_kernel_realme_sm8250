@@ -61,7 +61,7 @@
 #undef CONFIG_SYNAPTIC_RED
 
 #define TPD_DEVICE "synaptics-s1302"
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE ": " a, ##arg)
+#define TPD_INFO(a, arg...)  pr_err_once("[TP]"TPD_DEVICE ": " a, ##arg)
 #define TPD_DEBUG(a, arg...)\
     do{\
         if (tp_debug)\

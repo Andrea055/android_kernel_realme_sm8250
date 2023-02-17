@@ -34,7 +34,7 @@ static struct chip_data_s4322 *g_chip_info = NULL;
 
 /*******Part0:LOG TAG Declear********************/
 #define TPD_DEVICE "synaptics-s4322"
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE ": " a, ##arg)
+#define TPD_INFO(a, arg...)  pr_err_once("[TP]"TPD_DEVICE ": " a, ##arg)
 #define TPD_DEBUG(a, arg...)\
     do{\
         if (LEVEL_DEBUG == tp_debug)\

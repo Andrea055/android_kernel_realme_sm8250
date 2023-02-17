@@ -17,7 +17,7 @@
 #include "../gtx8_tools.h"
 
 #define TPD_DEVICE "Goodix-gt9886"
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE ": " a, ##arg)
+#define TPD_INFO(a, arg...)  pr_err_once("[TP]"TPD_DEVICE ": " a, ##arg)
 #define TPD_DEBUG(a, arg...)\
         do {\
                 if (LEVEL_DEBUG == tp_debug) {\

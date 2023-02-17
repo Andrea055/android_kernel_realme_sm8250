@@ -25,7 +25,7 @@ struct chip_data_gt5688 *g_chip_info = NULL;
 unsigned long timeout = 0;
 
 #define TPD_DEVICE "Goodix-gt5688"
-#define TPD_INFO(fmt, arg...)        pr_err("[TP]"TPD_DEVICE ": " fmt, ##arg)
+#define TPD_INFO(fmt, arg...)        pr_err_once("[TP]"TPD_DEVICE ": " fmt, ##arg)
 #define TPD_DEBUG(fmt, arg...)       do{\
     if (tp_debug)\
     pr_err("[TP]"TPD_DEVICE ": " fmt, ##arg);\

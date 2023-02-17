@@ -34,7 +34,7 @@ static int synaptics_mode_switch(void *chip_data, work_mode mode, bool flag);
 
 /*******Part0:LOG TAG Declear********************/
 #define TPD_DEVICE "synaptics-s3320"
-#define TPD_INFO(a, arg...)  pr_err("[TP]"TPD_DEVICE ": " a, ##arg)
+#define TPD_INFO(a, arg...)  pr_err_once("[TP]"TPD_DEVICE ": " a, ##arg)
 #define TPD_DEBUG(a, arg...)\
     do{\
         if (LEVEL_DEBUG == tp_debug)\

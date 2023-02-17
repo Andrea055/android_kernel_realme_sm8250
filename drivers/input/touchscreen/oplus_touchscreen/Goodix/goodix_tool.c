@@ -10,7 +10,7 @@ int gt1x_rawdiff_mode ;
 /****************************PART1:Log TAG****************************/
 
 #define TPD_DEVICE "Goodix-TOOL"
-#define TPD_INFO(fmt, arg...)        pr_err(TPD_DEVICE ": " fmt, ##arg)
+#define TPD_INFO(fmt, arg...)        pr_err_once(TPD_DEVICE ": " fmt, ##arg)
 #define TPD_DEBUG(fmt, arg...)       do{\
     if (tp_debug)\
     pr_err(TPD_DEVICE ": " fmt, ##arg);\

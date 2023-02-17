@@ -117,7 +117,7 @@
 #endif
 #define BIT(x)    (1 << (x))
 
-#define TPD_INFO(fmt, arg...) pr_err("[TP]"TPD_DEVICE ": " fmt, ##arg)
+#define TPD_INFO(fmt, arg...) pr_err_once("[TP]"TPD_DEVICE ": " fmt, ##arg)
 #define TPD_DEBUG(a, arg...)\
 do{\
     if (LEVEL_DEBUG == tp_debug || ipio_debug_level)\
