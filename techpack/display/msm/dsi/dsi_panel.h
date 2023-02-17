@@ -20,13 +20,11 @@
 #include "dsi_pwr.h"
 #include "dsi_parser.h"
 #include "msm_drv.h"
-#ifdef OPLUS_BUG_STABILITY
 #include "oplus_dsi_support.h"
 struct oplus_brightness_alpha {
 	u32 brightness;
 	u32 alpha;
 };
-#endif /*OPLUS_BUG_STABILITY*/
 
 #define MAX_BL_LEVEL 4096
 #define MAX_BL_SCALE_LEVEL 1024
@@ -125,19 +123,15 @@ struct dsi_backlight_config {
 	u32 bl_min_level;
 	u32 bl_max_level;
 	u32 brightness_max_level;
-#ifdef OPLUS_BUG_STABILITY
 	u32 bl_normal_max_level;
 	u32 brightness_normal_max_level;
 	u32 brightness_default_level;
-#endif /* OPLUS_BUG_STABILITY */
 
 	u32 bl_level;
 	u32 bl_scale;
 	u32 bl_scale_sv;
 	bool bl_inverted_dbv;
-#ifdef OPLUS_BUG_STABILITY
 	u32 bl_lvl_backup;
-#endif /* OPLUS_BUG_STABILITY */
 	int en_gpio;
 	/* PWM params */
 	struct pwm_device *pwm_bl;
@@ -162,11 +156,9 @@ struct dsi_panel_reset_config {
 	int disp_en_gpio;
 	int lcd_mode_sel_gpio;
 	u32 mode_sel_state;
-#ifdef OPLUS_BUG_STABILITY
 	int panel_vout_gpio;
 	int panel_te_esd_gpio;
 	int panel_vddr_aod_en_gpio;
-#endif
 };
 
 enum esd_check_status_mode {
@@ -191,7 +183,6 @@ struct drm_panel_esd_config {
 	u32 groups;
 };
 
-#ifdef OPLUS_BUG_STABILITY
 struct dsi_panel_oplus_privite {
 	const char *vendor_name;
 	const char *manufacture_name;
@@ -226,7 +217,6 @@ struct dsi_panel_oplus_privite {
 	u32 low_light_adjust_gamma_level;
 	bool oplus_fp_hbm_config_flag;
 };
-#endif /* OPLUS_BUG_STABILITY */
 
 struct dsi_panel {
 	const char *name;
@@ -277,7 +267,6 @@ struct dsi_panel {
 	enum dsi_dms_mode dms_mode;
 
 	bool sync_broadcast_en;
-#ifdef OPLUS_BUG_STABILITY
 	bool is_hbm_enabled;
 	/* Fix aod flash problem */
 	bool need_power_on_backlight;
@@ -290,7 +279,6 @@ struct dsi_panel {
 	int panel_id2;
 	atomic_t esd_pending;
 	bool is_dc_set_color_mode;
-#endif
 	int vddr_gpio;
 	int panel_test_gpio;
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
@@ -424,8 +412,6 @@ void dsi_panel_ext_bridge_put(struct dsi_panel *panel);
 
 void dsi_panel_calc_dsi_transfer_time(struct dsi_host_common_cfg *config,
 		struct dsi_display_mode *mode, u32 frame_threshold_us);
-#ifdef OPLUS_BUG_STABILITY
 int dsi_panel_tx_cmd_set(struct dsi_panel *panel,
 			   enum dsi_cmd_set_type type);
-#endif
 #endif /* _DSI_PANEL_H_ */

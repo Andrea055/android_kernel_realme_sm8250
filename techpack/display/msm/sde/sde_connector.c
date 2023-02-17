@@ -16,20 +16,16 @@
 #include "dsi_display.h"
 #include "sde_crtc.h"
 #include "sde_rm.h"
-#ifdef OPLUS_BUG_STABILITY
 #include "oplus_display_private_api.h"
 #include "oplus_dc_diming.h"
-#endif
 #ifdef OPLUS_FEATURE_ADFR
 #include "oplus_adfr.h"
 #endif
 
-#ifdef OPLUS_BUG_STABILITY
 #include "sde_trace.h"
 
 extern u32 g_new_bk_level;
 static DEFINE_SPINLOCK(g_bk_lock);
-#endif
 
 
 #define BL_NODE_NAME_SIZE 32
@@ -81,10 +77,6 @@ static const struct drm_prop_enum_list e_frame_trigger_mode[] = {
 	{FRAME_DONE_WAIT_POSTED_START, "posted_start"},
 };
 
-#ifdef OPLUS_BUG_STABILITY
-extern int oplus_debug_max_brightness;
-extern int oplus_seed_backlight;
-#endif
 
 static int sde_backlight_device_update_status(struct backlight_device *bd)
 {
@@ -94,9 +86,6 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 	int bl_lvl;
 	struct drm_event event;
 	int rc = 0;
-#ifdef OPLUS_BUG_STABILITY
-	SDE_ATRACE_BEGIN("debug_io_issue_for_backlight_smooth");
-#endif
 
 	brightness = bd->props.brightness;
 
@@ -110,47 +99,9 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 	if (brightness > display->panel->bl_config.bl_max_level)
 		brightness = display->panel->bl_config.bl_max_level;
 
-#ifndef OPLUS_BUG_STABILITY
-	/* map UI brightness into driver backlight level with rounding */
+ 	/* map UI brightness into driver backlight level with rounding */
 	bl_lvl = mult_frac(brightness, display->panel->bl_config.bl_max_level,
 			display->panel->bl_config.brightness_max_level);
-#else
-	if (oplus_debug_max_brightness) {
-		bl_lvl = mult_frac(brightness, oplus_debug_max_brightness,
-			display->panel->bl_config.brightness_max_level);
-	} else if (brightness == 0) {
-		bl_lvl = 0;
-	} else {
-		if (display->panel->oplus_priv.bl_remap && display->panel->oplus_priv.bl_remap_count) {
-			int i = 0;
-			int count = display->panel->oplus_priv.bl_remap_count;
-			struct oplus_brightness_alpha *lut = display->panel->oplus_priv.bl_remap;
-
-			for (i = 0; i < display->panel->oplus_priv.bl_remap_count; i++){
-				if (display->panel->oplus_priv.bl_remap[i].brightness >= brightness)
-					break;
-			}
-
-			if (i == 0)
-				bl_lvl = lut[0].alpha;
-			else if (i == count)
-				bl_lvl = lut[count - 1].alpha;
-			else
-				bl_lvl = interpolate(brightness, lut[i-1].brightness,
-						lut[i].brightness, lut[i-1].alpha,
-						lut[i].alpha, display->panel->oplus_priv.bl_interpolate_nosub);
-		} else if (brightness > display->panel->bl_config.brightness_normal_max_level) {
-			bl_lvl = interpolate(brightness,
-					display->panel->bl_config.brightness_normal_max_level,
-					display->panel->bl_config.brightness_max_level,
-					display->panel->bl_config.bl_normal_max_level,
-					display->panel->bl_config.bl_max_level, false);
-		} else {
-			bl_lvl = mult_frac(brightness, display->panel->bl_config.bl_normal_max_level,
-					display->panel->bl_config.brightness_normal_max_level);
-		}
-	}
-#endif
 
 	if (!bl_lvl && brightness)
 		bl_lvl = 1;
@@ -160,7 +111,6 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 		return 0;
 	}
 
-#ifndef OPLUS_BUG_STABILITY
 		if (c_conn->ops.set_backlight) {
 			/* skip notifying user space if bl is 0 */
 			if (brightness != 0) {
@@ -173,40 +123,6 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 				c_conn->display, bl_lvl);
 			c_conn->unset_bl_level = 0;
 		}
-#else
-		if (c_conn->ops.set_backlight) {
-			/* skip notifying user space if bl is 0 */
-			if (brightness != 0) {
-				event.type = DRM_EVENT_SYS_BACKLIGHT;
-				event.length = sizeof(u32);
-				msm_mode_object_event_notify(&c_conn->base.base,
-					c_conn->base.dev, &event, (u8 *)&brightness);
-			}
-
-		if (is_support_panel_backlight_smooths(display->panel->oplus_priv.vendor_name)) {
-				if ((bl_lvl >= 2) && (bl_lvl <= 200)) {
-					spin_lock(&g_bk_lock);
-					g_new_bk_level = bl_lvl;
-					spin_unlock(&g_bk_lock);
-				} else {
-					spin_lock(&g_bk_lock);
-					g_new_bk_level = bl_lvl;
-					spin_unlock(&g_bk_lock);
-					rc = c_conn->ops.set_backlight(&c_conn->base,
-					c_conn->display, bl_lvl);
-					c_conn->unset_bl_level = 0;
-				}
-		} else {
-					rc = c_conn->ops.set_backlight(&c_conn->base,
-					c_conn->display, bl_lvl);
-					c_conn->unset_bl_level = 0;
-				}
-		}
-#endif
-
-#ifdef OPLUS_BUG_STABILITY
-	SDE_ATRACE_END("debug_io_issue_for_backlight_smooth");
-#endif
 
 	return rc;
 }
@@ -244,11 +160,7 @@ static int sde_backlight_setup(struct sde_connector *c_conn,
 	display = (struct dsi_display *) c_conn->display;
 	bl_config = &display->panel->bl_config;
 	props.max_brightness = bl_config->brightness_max_level;
-#ifndef OPLUS_BUG_STABILITY
 	props.brightness = bl_config->brightness_max_level;
-#else
-	props.brightness = bl_config->brightness_default_level;
-#endif
 	snprintf(bl_node_name, BL_NODE_NAME_SIZE, "panel%u-backlight",
 							display_count);
 	c_conn->bl_device = backlight_device_register(bl_node_name, dev->dev,
@@ -700,10 +612,6 @@ static int _sde_connector_update_bl_scale(struct sde_connector *c_conn)
 	struct dsi_backlight_config *bl_config;
 	int rc = 0;
 
-#ifdef OPLUS_BUG_STABILITY
-	struct backlight_device *bd;
-#endif /* OPLUS_BUG_STABILITY */
-
 	if (!c_conn) {
 		SDE_ERROR("Invalid params sde_connector null\n");
 		return -EINVAL;
@@ -717,30 +625,19 @@ static int _sde_connector_update_bl_scale(struct sde_connector *c_conn)
 		return -EINVAL;
 	}
 
-#ifdef OPLUS_BUG_STABILITY
-	bd = c_conn->bl_device;
-	if (!bd) {
-		SDE_ERROR("Invalid params backlight_device null\n");
-		return -EINVAL;
-	}
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 	/* In order to don't block crtc_commit when ramless panel, there is no need lock(ALM2962682) */
 	if (!dsi_display->panel->oplus_priv.is_aod_ramless)
 #endif
-		mutex_lock(&bd->update_lock);
-#endif /* OPLUS_BUG_STABILITY */
 
 	bl_config = &dsi_display->panel->bl_config;
 
 	if (!c_conn->allow_bl_update) {
 		c_conn->unset_bl_level = bl_config->bl_level;
-#ifdef OPLUS_BUG_STABILITY
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 		/* In order to don't block crtc_commit when ramless panel, there is no need lock(ALM2962682) */
 		if (!dsi_display->panel->oplus_priv.is_aod_ramless)
 #endif
-			mutex_unlock(&bd->update_lock);
-#endif /* OPLUS_BUG_STABILITY */
 		return 0;
 	}
 
@@ -772,23 +669,17 @@ static int _sde_connector_update_bl_scale(struct sde_connector *c_conn)
 
 	c_conn->unset_bl_level = 0;
 
-#ifdef OPLUS_BUG_STABILITY
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 	/* In order to don't block crtc_commit when ramless panel, there is no need lock(ALM2962682) */
 	if (!dsi_display->panel->oplus_priv.is_aod_ramless)
 #endif
-		mutex_unlock(&bd->update_lock);
-
-#endif /* OPLUS_BUG_STABILITY */
 
 	return rc;
 }
-#ifdef OPLUS_BUG_STABILITY
 int _sde_connector_update_bl_scale_(struct sde_connector *c_conn)
 {
 	return _sde_connector_update_bl_scale(c_conn);
 }
-#endif
 
 void sde_connector_set_colorspace(struct sde_connector *c_conn)
 {
@@ -1014,14 +905,11 @@ int sde_connector_pre_kickoff(struct drm_connector *connector)
 	if (c_conn->connector_type == DRM_MODE_CONNECTOR_DSI) {
 		display = (struct dsi_display *)c_conn->display;
 		display->queue_cmd_waits = true;
-	#ifdef OPLUS_BUG_STABILITY
 		if (display->config.panel_mode == DSI_OP_VIDEO_MODE)
 			display->queue_cmd_waits = false;
-	#endif /* OPLUS_BUG_STABILITY */
 	}
 
 	rc = _sde_connector_update_dirty_properties(connector);
-	#ifdef OPLUS_BUG_STABILITY
 	if (c_conn->connector_type == DRM_MODE_CONNECTOR_DSI) {
 		display = (struct dsi_display *)c_conn->display;
 		if(display && display->panel && display->panel->oplus_priv.vendor_name) {
@@ -1031,7 +919,6 @@ int sde_connector_pre_kickoff(struct drm_connector *connector)
 			}
 		}
 	}
-	#endif /* OPLUS_BUG_STABILITY */
 	if (rc) {
 		SDE_EVT32(connector->base.id, SDE_EVTLOG_ERROR);
 		goto end;
@@ -2811,10 +2698,8 @@ static int _sde_connector_install_properties(struct drm_device *dev,
 				CONNECTOR_PROP_CMD_FRAME_TRIGGER_MODE);
 	}
 
-#ifdef OPLUS_BUG_STABILITY
 	msm_property_install_range(&c_conn->property_info,"CONNECTOR_CUST",
 		0x0, 0, INT_MAX, 0, CONNECTOR_PROP_CUSTOM);
-#endif
 
 	msm_property_install_range(&c_conn->property_info, "bl_scale",
 		0x0, 0, MAX_BL_SCALE_LEVEL, MAX_BL_SCALE_LEVEL,

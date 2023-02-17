@@ -41,7 +41,6 @@
 #include "sde_power_handle.h"
 #include "sde_core_perf.h"
 #include "sde_trace.h"
-#ifdef OPLUS_BUG_STABILITY
 #include <linux/msm_drm_notify.h>
 #include <linux/notifier.h>
 #include "oplus_display_private_api.h"
@@ -52,7 +51,6 @@ extern int oplus_dimlayer_fingerprint_failcount;
 extern int oplus_underbrightness_alpha;
 extern int msm_drm_notifier_call_chain(unsigned long val, void *v);
 extern int oplus_request_power_status;
-#endif
 
 #ifdef OPLUS_FEATURE_ADFR
 #include "oplus_adfr.h"
@@ -131,12 +129,10 @@ static inline struct sde_kms *_sde_crtc_get_kms(struct drm_crtc *crtc)
 	return to_sde_kms(priv->kms);
 }
 
-#ifdef OPLUS_BUG_STABILITY
 struct sde_kms *_sde_crtc_get_kms_(struct drm_crtc *crtc)
 {
 	return _sde_crtc_get_kms(crtc);
 }
-#endif
 
 /**
  * sde_crtc_calc_fps() - Calculates fps value.
@@ -502,10 +498,8 @@ static void _sde_crtc_setup_blend_cfg(struct sde_crtc_mixer *mixer,
 
 	/* default to opaque blending */
 	fg_alpha = sde_plane_get_property(pstate, PLANE_PROP_ALPHA);
-	#ifdef OPLUS_BUG_STABILITY
 	if (pstate->is_skip)
 		fg_alpha = 0;
-	#endif /* OPLUS_BUG_STABILITY */
 	bg_alpha = 0xFF - fg_alpha;
 	blend_op = SDE_BLEND_FG_ALPHA_FG_CONST | SDE_BLEND_BG_ALPHA_BG_CONST;
 	blend_type = sde_plane_get_property(pstate, PLANE_PROP_BLEND_OP);
@@ -1497,8 +1491,6 @@ static void _sde_crtc_blend_setup_mixer(struct drm_crtc *crtc,
 		for (i = 0; i < cstate->num_dim_layers; i++)
 			_sde_crtc_setup_dim_layer_cfg(crtc, sde_crtc,
 					mixer, &cstate->dim_layer[i]);
-
-#ifdef OPLUS_BUG_STABILITY
 		if (cstate->fingerprint_dim_layer) {
 			bool is_dim_valid = true;
 			uint32_t zpos_max = 0;
@@ -1526,7 +1518,6 @@ static void _sde_crtc_blend_setup_mixer(struct drm_crtc *crtc,
 			}
 	}
 
-#endif
 	}
 
 	_sde_crtc_program_lm_output_roi(crtc);
@@ -2509,10 +2500,8 @@ static void sde_crtc_frame_event_work(struct kthread_work *work)
 	spin_unlock_irqrestore(&sde_crtc->spin_lock, flags);
 	SDE_ATRACE_END("crtc_frame_event");
 }
-#ifdef OPLUS_BUG_STABILITY
 extern u32 oplus_onscreenfp_vblank_count;
 extern ktime_t oplus_onscreenfp_pressed_time;
-#endif /* OPLUS_BUG_STABILITY */
 void sde_crtc_complete_commit(struct drm_crtc *crtc,
 		struct drm_crtc_state *old_state)
 {
@@ -2527,7 +2516,6 @@ void sde_crtc_complete_commit(struct drm_crtc *crtc,
 	SDE_EVT32_VERBOSE(DRMID(crtc));
 
 	sde_core_perf_crtc_update(crtc, 0, false);
-#ifdef OPLUS_BUG_STABILITY
 	{
 		struct sde_crtc_state *old_cstate;
 		struct sde_crtc_state *cstate;
@@ -2578,13 +2566,10 @@ void sde_crtc_complete_commit(struct drm_crtc *crtc,
 							msecs_to_jiffies(17));
 				}
 			}
-			pr_err("fingerprint status: %s",
-			       blank ? "pressed" : "up");
 			msm_drm_notifier_call_chain(MSM_DRM_ONSCREENFINGERPRINT_EVENT,
 					&notifier_data);
 		}
 	}
-#endif /* OPLUS_BUG_STABILITY */
 }
 
 /**
@@ -3379,9 +3364,7 @@ static void sde_crtc_atomic_flush(struct drm_crtc *crtc,
 	struct sde_crtc_state *cstate;
 	struct sde_kms *sde_kms;
 	int idle_time = 0;
-#ifdef OPLUS_BUG_STABILITY
 	struct dsi_display *display = get_main_display();
-#endif /*OPLUS_BUG_STABILITY*/
 
 	if (!crtc || !crtc->dev || !crtc->dev->dev_private) {
 		SDE_ERROR("invalid crtc\n");
@@ -3419,14 +3402,12 @@ static void sde_crtc_atomic_flush(struct drm_crtc *crtc,
 
 	event_thread = &priv->event_thread[crtc->index];
 	idle_time = sde_crtc_get_property(cstate, CRTC_PROP_IDLE_TIMEOUT);
-#ifdef OPLUS_BUG_STABILITY
 	if (display && display->panel) {
 		if (display->panel->oplus_priv.dfps_idle_off)
 			idle_time = 0;
 	} else {
 		pr_err("%s : display or display->panel is NULL\n", __func__);
 	}
-#endif /*OPLUS_BUG_STABILITY*/
 
 	/*
 	 * If no mixers has been allocated in sde_crtc_atomic_check(),
@@ -4704,7 +4685,6 @@ static int _sde_crtc_check_secure_state(struct drm_crtc *crtc,
 	return 0;
 }
 
-#ifdef OPLUS_BUG_STABILITY
 extern int lcd_closebl_flag_fp;
 extern int oplus_dimlayer_hbm;
 extern int oplus_dimlayer_bl_alpha_value;
@@ -4898,7 +4878,6 @@ static int sde_crtc_onscreenfinger_atomic_check(struct sde_crtc_state *cstate,
 
 	return 0;
 }
-#endif /* OPLUS_BUG_STABILITY */
 
 static int _sde_crtc_check_get_pstates(struct drm_crtc *crtc,
 		struct drm_crtc_state *state,
@@ -5120,7 +5099,6 @@ static int _sde_crtc_atomic_check_pstates(struct drm_crtc *crtc,
 	if (rc)
 		return rc;
 
-#ifdef OPLUS_BUG_STABILITY
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 	rc = oplus_ramless_panel_display_atomic_check(crtc, state);
 	if (rc)
@@ -5130,7 +5108,6 @@ static int _sde_crtc_atomic_check_pstates(struct drm_crtc *crtc,
 	rc = sde_crtc_onscreenfinger_atomic_check(cstate, pstates, cnt);
 	if (rc)
 		return rc;
-#endif
 	/* assign mixer stages based on sorted zpos property */
 	rc = _sde_crtc_check_zpos(state, sde_crtc, pstates, cstate, mode, cnt);
 	if (rc)
@@ -5429,10 +5406,8 @@ static void sde_crtc_install_properties(struct drm_crtc *crtc,
 				ARRAY_SIZE(e_cwb_data_points),
 				CRTC_PROP_CAPTURE_OUTPUT);
 
-#ifdef OPLUS_BUG_STABILITY
 	msm_property_install_range(&sde_crtc->property_info,"CRTC_CUST",
 		0x0, 0, INT_MAX, 0, CRTC_PROP_CUSTOM);
-#endif
 
 	msm_property_install_blob(&sde_crtc->property_info, "capabilities",
 		DRM_MODE_PROP_IMMUTABLE, CRTC_PROP_INFO);
@@ -5450,13 +5425,7 @@ static void sde_crtc_install_properties(struct drm_crtc *crtc,
 	if (catalog->has_dim_layer) {
 		msm_property_install_volatile_range(&sde_crtc->property_info,
 			"dim_layer_v1", 0x0, 0, ~0, 0, CRTC_PROP_DIM_LAYER_V1);
-#ifdef OPLUS_BUG_STABILITY
-		sde_kms_info_add_keyint(info, "dim_layer_v1_max_layers",
-				SDE_MAX_DIM_LAYERS - 1);
-#else
-		sde_kms_info_add_keyint(info, "dim_layer_v1_max_layers",
-				SDE_MAX_DIM_LAYERS);
-#endif /* OPLUS_BUG_STABILITY */
+		sde_kms_info_add_keyint(info, "dim_layer_v1_max_layers", SDE_MAX_DIM_LAYERS - 1);
 	}
 
 	sde_kms_info_add_keyint(info, "hw_version", catalog->hwversion);

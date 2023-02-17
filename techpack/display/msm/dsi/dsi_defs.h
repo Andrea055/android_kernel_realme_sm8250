@@ -52,12 +52,6 @@
 #define DSI_DEBUG(fmt, ...)	DRM_DEV_DEBUG(NULL, "[msm-dsi-debug]: "fmt, \
 								##__VA_ARGS__)
 
-#ifdef OPLUS_BUG_STABILITY
-#define DSI_MM_ERR(fmt, ...)	\
-	do { \
-		DRM_DEV_ERROR(NULL, "[msm-dsi-error]: " fmt, ##__VA_ARGS__); \
-	} while(0)
-#endif /* OPLUS_BUG_STABILITY */
 
 /**
  * enum dsi_pixel_format - DSI pixel formats
@@ -315,7 +309,6 @@ enum dsi_cmd_set_type {
 	DSI_CMD_SET_POST_TIMING_SWITCH,
 	DSI_CMD_SET_QSYNC_ON,
 	DSI_CMD_SET_QSYNC_OFF,
-#ifdef OPLUS_BUG_STABILITY
 	DSI_CMD_POST_ON_BACKLIGHT,
 	DSI_CMD_AOD_ON,
 	DSI_CMD_AOD_OFF,
@@ -388,7 +381,6 @@ enum dsi_cmd_set_type {
 	DSI_CMD_DIMMING_GAMMA,
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
 	DSI_CMD_SET_ABYP,
-#endif
 #endif
 
 #ifdef OPLUS_FEATURE_ADFR
@@ -730,10 +722,8 @@ struct dsi_display_mode_priv_info {
 	struct msm_display_dsc_info dsc;
 	bool dsc_enabled;
 	struct msm_roi_caps roi_caps;
-#ifdef OPLUS_BUG_STABILITY
 	int fod_on_vblank;
 	int fod_off_vblank;
-#endif /* OPLUS_BUG_STABILITY */
 
 #ifdef OPLUS_FEATURE_ADFR
 	u32 qsync_min_fps_sets_size;

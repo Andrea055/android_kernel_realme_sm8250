@@ -104,10 +104,6 @@
 #define Y_INDEX                            0
 #define UV_INDEX                           1
 
-#ifdef OPLUS_BUG_STABILITY
-extern u32 g_oplus_save_pcc;
-#endif
-
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
 int igc_lut_update = 0;
 #endif
@@ -1300,12 +1296,6 @@ void reg_dmav1_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 		data[i + 15] = coeffs->rb;
 		data[i + 18] = coeffs->gb;
 		data[i + 21] = coeffs->rgb;
-#ifdef OPLUS_BUG_STABILITY
-		if(i == 0) {
-			g_oplus_save_pcc = coeffs->r;
-			pr_debug("backlight smooth for g_oplus_save_pcc = %d, %d, %d", coeffs->r,coeffs->g,coeffs->b);
-		}
-#endif
 	}
 
 	REG_DMA_SETUP_OPS(dma_write_cfg,

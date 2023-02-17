@@ -56,8 +56,6 @@ extern bool is_fulldump_enable(void);
 
 static inline bool need_flush_device_cache(void)
 {
-	if (is_fulldump_enable())
-		return false;
 	return true;
 }
 

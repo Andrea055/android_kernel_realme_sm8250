@@ -494,9 +494,7 @@ int msm_vidc_get_num_ref_frames(struct msm_vidc_inst *inst)
 	layer_ctrl = get_ctrl(inst,
 		V4L2_CID_MPEG_VIDC_VIDEO_HEVC_MAX_HIER_CODING_LAYER);
 	num_hp_layers = layer_ctrl->val;
-#ifndef OPLUS_BUG_STABILITY
-	codec = get_v4l2_codec(inst);
-#endif /*OPLUS_BUG_STABILITY */
+
 	if (num_hp_layers > 1) {
 		/* LTR and B - frame not supported with hybrid HP */
 		if (inst->hybrid_hp)

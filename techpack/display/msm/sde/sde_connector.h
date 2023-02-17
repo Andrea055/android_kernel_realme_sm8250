@@ -991,8 +991,6 @@ int sde_connector_get_panel_vfp(struct drm_connector *connector,
  */
 int sde_connector_esd_status(struct drm_connector *connector);
 
-#ifdef OPLUS_BUG_STABILITY
 int _sde_connector_update_bl_scale_(struct sde_connector *c_conn);
-#endif
 
 #endif /* _SDE_CONNECTOR_H_ */

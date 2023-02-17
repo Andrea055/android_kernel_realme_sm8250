@@ -16,10 +16,8 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <drm/drm_panel.h>
-#ifdef OPLUS_BUG_STABILITY
 #include <linux/msm_drm_notify.h>
 #include <linux/notifier.h>
-#endif /* OPLUS_BUG_STABILITY */
 
 #include "msm_drv.h"
 #include "msm_gem.h"
@@ -37,7 +35,6 @@ struct msm_commit {
 	struct kthread_work commit_work;
 };
 
-#ifdef OPLUS_BUG_STABILITY
 static BLOCKING_NOTIFIER_HEAD(msm_drm_notifier_list);
 
 /**
@@ -81,7 +78,6 @@ int msm_drm_notifier_call_chain(unsigned long val, void *v)
 					    v);
 }
 EXPORT_SYMBOL(msm_drm_notifier_call_chain);
-#endif /* OPLUS_BUG_STABILITY */
 
 static inline bool _msm_seamless_for_crtc(struct drm_device *dev,
 					struct drm_atomic_state *state,

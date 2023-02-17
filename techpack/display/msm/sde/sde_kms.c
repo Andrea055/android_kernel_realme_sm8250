@@ -59,10 +59,8 @@
 
 #define CREATE_TRACE_POINTS
 #include "sde_trace.h"
-#ifdef OPLUS_BUG_STABILITY
 #include "oplus_display_private_api.h"
 #include "oplus_onscreenfingerprint.h"
-#endif
 
 #ifdef OPLUS_FEATURE_ADFR
 #include "oplus_adfr.h"
@@ -995,9 +993,6 @@ static void sde_kms_prepare_commit(struct msm_kms *kms,
 	rc = pm_runtime_get_sync(sde_kms->dev->dev);
 	if (rc < 0) {
 		SDE_ERROR("failed to enable power resources %d\n", rc);
-		#ifdef OPLUS_BUG_STABILITY
-		SDE_MM_ERROR("DisplayDriverID@@407$$failed to enable power resources %d\n", rc);
-		#endif /* OPLUS_BUG_STABILITY */
 		SDE_EVT32(rc, SDE_EVTLOG_ERROR);
 		goto end;
 	}
@@ -1452,11 +1447,11 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.soft_reset   = dsi_display_soft_reset,
 		.pre_kickoff  = dsi_conn_pre_kickoff,
 		.clk_ctrl = dsi_display_clk_ctrl,
-#ifdef OPLUS_BUG_STABILITY
-		.set_power = dsi_display_oplus_set_power,
-#else
+// #ifdef OPLUS_BUG_STABILITY
+		// .set_power = dsi_display_oplus_set_power,
+// #else
 		.set_power = dsi_display_set_power,
-#endif
+// #endif
 		.get_mode_info = dsi_conn_get_mode_info,
 		.get_dst_format = dsi_display_get_dst_format,
 		.post_kickoff = dsi_conn_post_kickoff,

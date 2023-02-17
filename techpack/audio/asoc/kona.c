@@ -44,10 +44,6 @@
 #include "../../../../oplus/kernel_4.19/audio/codecs/sia81xx/sia81xx_aux_dev_if.h"
 #endif /* OPLUS_SND_SOC_SIA81XX */
 
-#ifdef OPLUS_BUG_COMPATIBILITY
-#include <linux/regulator/consumer.h>
-#endif /* OPLUS_BUG_COMPATIBILITY */
-
 #ifdef OPLUS_FEATURE_AUDIO_FTM
 #include "dailink_extends.h"
 #endif /* OPLUS_FEATURE_AUDIO_FTM */
@@ -400,10 +396,6 @@ static u32 mi2s_ebit_clk[MI2S_MAX] = {
 };
 
 static struct mi2s_conf mi2s_intf_conf[MI2S_MAX];
-
-#ifdef OPLUS_BUG_COMPATIBILITY
-static struct regulator *kona_bob_regulator = NULL;
-#endif /* OPLUS_BUG_COMPATIBILITY */
 
 /* Default configuration of TDM channels */
 static struct dev_config tdm_rx_cfg[TDM_INTERFACE_MAX][TDM_PORT_MAX] = {
@@ -1045,110 +1037,6 @@ static void param_set_mask(struct snd_pcm_hw_params *p, int n,
 		m->bits[bit >> 5] |= (1 << (bit & 31));
 	}
 }
-
-
-#ifdef OPLUS_BUG_COMPATIBILITY
-static int g_bob_mode = REGULATOR_MODE_NORMAL;
-static char const *pmic_bob_ctrl_text[] = {
-	"MODE_NORMAL", "MODE_FAST", "MODE_IDLE", "MODE_STANDBY"
-};
-static const struct soc_enum pmic_bob_ctl_enum[] = {
-	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(pmic_bob_ctrl_text), pmic_bob_ctrl_text),
-};
-
-static int kona_bob_regulator_set_mode(unsigned int mode)
-{
-	int ua_load = 0;
-	int ret = 0;
-
-	if (!kona_bob_regulator) {
-		pr_err("%s: bob regulator null", __func__);
-		return -1;
-	}
-
-	switch (mode) {
-		case REGULATOR_MODE_FAST:
-			ua_load = 2000000;
-			ret = regulator_set_load(kona_bob_regulator, ua_load);
-			if (ret) {
-				pr_err("%s: failed to set bob mode to %d", __func__, mode);
-			}
-			break;
-		case REGULATOR_MODE_NORMAL:
-			ua_load = 0;
-			ret = regulator_set_load(kona_bob_regulator, ua_load);
-			if (ret) {
-				pr_err("%s: failed to set bob mode to %d", __func__, mode);
-			}
-			break;
-		default:
-			pr_err("%s: invalid mode %d", __func__, mode);
-	}
-
-	return ret;
-}
-
-static int bob_regulator_mode_switch_get(struct snd_kcontrol *kcontrol,
-					struct snd_ctl_elem_value *ucontrol)
-{
-	switch (g_bob_mode) {
-	case REGULATOR_MODE_NORMAL:
-		ucontrol->value.integer.value[0] = 0;
-		break;
-	case REGULATOR_MODE_FAST:
-		ucontrol->value.integer.value[0] = 1;
-		break;
-	case REGULATOR_MODE_IDLE:
-		ucontrol->value.integer.value[0] = 2;
-		break;
-	case REGULATOR_MODE_STANDBY:
-		ucontrol->value.integer.value[0] = 3;
-		break;
-	default:
-		pr_err("%s: invalid g_bob_mode = 0x%x\n", __func__, g_bob_mode);
-		break;
-	}
-
-	pr_info("%s: get g_bob_mode = 0x%x\n", __func__, g_bob_mode);
-	return 0;
-}
-
-static int bob_regulator_mode_switch_set(struct snd_kcontrol *kcontrol,
-					struct snd_ctl_elem_value *ucontrol)
-{
-	int new_bob_mode;
-
-	switch (ucontrol->value.integer.value[0]) {
-	case 0:
-		new_bob_mode = REGULATOR_MODE_NORMAL;
-		break;
-	case 1:
-		new_bob_mode = REGULATOR_MODE_FAST;
-		break;
-	case 2:
-		new_bob_mode = REGULATOR_MODE_IDLE;
-		break;
-	case 3:
-		new_bob_mode = REGULATOR_MODE_STANDBY;
-		break;
-	default:
-		pr_info("%s: set g_bob_mode to default.\n", __func__);
-		new_bob_mode = REGULATOR_MODE_NORMAL;
-		break;
-	}
-
-	if (g_bob_mode != new_bob_mode) {
-		g_bob_mode = new_bob_mode;
-
-		pr_info("%s: set g_bob_mode = 0x%x\n", __func__, g_bob_mode);
-		kona_bob_regulator_set_mode(g_bob_mode);
-	} else {
-		pr_info("%s: already in mode 0x%x\n", __func__, g_bob_mode);
-	}
-
-	return 0;
-}
-#endif /* OPLUS_BUG_COMPATIBILITY */
 
 static int usb_audio_rx_sample_rate_get(struct snd_kcontrol *kcontrol,
 					struct snd_ctl_elem_value *ucontrol)
@@ -4264,11 +4152,6 @@ static const struct snd_kcontrol_new msm_mi2s_snd_controls[] = {
 			msm_mi2s_tx_ch_get, msm_mi2s_tx_ch_put),
 	SOC_ENUM_EXT("SEN_MI2S_TX Channels", sen_mi2s_tx_chs,
 			msm_mi2s_tx_ch_get, msm_mi2s_tx_ch_put),
-	#ifdef OPLUS_BUG_COMPATIBILITY
-	SOC_ENUM_EXT("Bob Regulator Mode Switch", pmic_bob_ctl_enum[0],
-			bob_regulator_mode_switch_get,
-			bob_regulator_mode_switch_set),
-	#endif /* OPLUS_BUG_COMPATIBILITY */
 };
 
 static const struct snd_kcontrol_new msm_snd_controls[] = {
@@ -8992,18 +8875,6 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 		goto err;
 	}
 
-	#ifdef OPLUS_BUG_COMPATIBILITY
-	if (of_get_property(card->dev->of_node, "snd_bob-supply", NULL)) {
-		kona_bob_regulator = devm_regulator_get(card->dev, "snd_bob");
-		if (IS_ERR(kona_bob_regulator)) {
-			pr_err("%s: failed to get bob regulator", __func__);
-			kona_bob_regulator = NULL;
-		}
-	} else {
-		pr_err("%s: no snd_bob of prop found", __func__);
-	}
-	#endif /* OPLUS_BUG_COMPATIBILITY */
-
 	ret = msm_init_aux_dev(pdev, card);
 	if (ret)
 		goto err;
@@ -9165,10 +9036,6 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 
 	is_initial_boot = true;
 
-#ifdef OPLUS_BUG_DEBUG
-	pr_warning("%s, %d, Successfully!\n", __func__, __LINE__);
-#endif /* OPLUS_BUG_DEBUG */
-
 	return 0;
 err:
 	devm_kfree(&pdev->dev, pdata);
@@ -9182,10 +9049,6 @@ static int msm_asoc_machine_remove(struct platform_device *pdev)
 	snd_event_master_deregister(&pdev->dev);
 	snd_soc_unregister_card(card);
 	msm_i2s_auxpcm_deinit();
-
-	#ifdef OPLUS_BUG_STABILITY
-	kona_bob_regulator = NULL;
-	#endif /* OPLUS_BUG_STABILITY */
 
 	return 0;
 }

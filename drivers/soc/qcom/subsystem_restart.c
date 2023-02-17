@@ -37,15 +37,6 @@
 #include <linux/proc_fs.h>
 
 #include "peripheral-loader.h"
-#ifdef OPLUS_BUG_STABILITY
-/*Add for disable dump for subsys crash*/
-#include <soc/oplus/system/oplus_project.h>
-extern bool oem_is_fulldump(void);
-bool delay_panic = false;
-#endif
-#ifdef OPLUS_BUG_STABILITY
-bool direct_panic = false;
-#endif
 
 #define DISABLE_SSR 0x9889deed
 /* If set to 0x9889deed, call to subsystem_restart_dev() returns immediately */
@@ -309,16 +300,7 @@ static ssize_t restart_level_store(struct device *dev,
 		if (!strncasecmp(buf, restart_levels[i], count)) {
 			pil_ipc("[%s]: change restart level to %d\n",
 				subsys->desc->name, i);
-                        //#ifdef OPLUS_BUG_STABILITY
-			if(PREVERSION == get_eng_version()){
-				pr_info("preversion \n");
-				subsys->restart_level = RESET_SUBSYS_COUPLED;
-			} else {
-				subsys->restart_level = i;
-			}
-                        //#else
-                        //subsys->restart_level = i;
-                        //#endif /*OPLUS_BUG_STABILITY*/
+        	subsys->restart_level = i;
 			return orig_count;
 		}
 	return -EPERM;
@@ -911,30 +893,6 @@ struct subsys_device *find_subsys_device(const char *str)
 }
 EXPORT_SYMBOL(find_subsys_device);
 
-#ifdef OPLUS_BUG_STABILITY
-int op_restart_modem(struct subsys_device *subsys)
-{
-	int restart_level;
-
-	if (!subsys) {
-		return -ENODEV;
-	}
-
-	pr_err("%s\n", __func__);
-
-	restart_level = subsys->restart_level;
-	subsys->restart_level = RESET_SUBSYS_COUPLED;
-	if (subsys->desc->force_reset) {
-		subsys->desc->force_reset(subsys->desc);
-	}
-
-	subsys->restart_level = restart_level;
-
-	return 0;
-}
-EXPORT_SYMBOL(op_restart_modem);
-#endif /* OPLUS_BUG_STABILITY */
-
 static int subsys_start(struct subsys_device *subsys)
 {
 	int ret;
@@ -1419,23 +1377,8 @@ int subsystem_restart_dev(struct subsys_device *dev)
 		__subsystem_restart_dev(dev);
 		break;
 	case RESET_SOC:
-	#ifdef VENDOR_EDIT
-		if (!strcmp(name, "esoc0") && oem_is_fulldump()) {
-			if (!direct_panic) {
-				delay_panic = true;
-			}
-			direct_panic = false;
-			__subsystem_restart_dev(dev);
-			break;
-		} else {
-			direct_panic = false;
-			__pm_stay_awake(dev->ssr_wlock);
-			schedule_work(&dev->device_restart_work);
-		}
-	#else
 		__pm_stay_awake(dev->ssr_wlock);
 		schedule_work(&dev->device_restart_work);
-	#endif
 		return 0;
 	default:
 		panic("subsys-restart: Unknown restart level!\n");
@@ -2004,10 +1947,6 @@ struct subsys_device *subsys_register(struct subsys_desc *desc)
 	subsys->dev.bus = &subsys_bus_type;
 	subsys->dev.release = subsys_device_release;
 	subsys->notif_state = -1;
-#ifdef OPLUS_BUG_STABILITY
-	if(!oplus_daily_build() && !(get_eng_version() == AGING))
-		subsys->restart_level = RESET_SUBSYS_COUPLED;
-#endif /*OPLUS_BUG_STABILITY */
 	subsys->desc->sysmon_pid = -1;
 	subsys->desc->state = NULL;
 	strlcpy(subsys->desc->fw_name, desc->name,
@@ -2199,8 +2138,6 @@ static ssize_t force_rst_write(struct file *file,
 #endif
 		ts_wait_error = false;
 		ts_send_error = false;
-		pr_err("force to reset modem\n");
-		op_restart_modem(subsys);
 	}
 
 	return count;

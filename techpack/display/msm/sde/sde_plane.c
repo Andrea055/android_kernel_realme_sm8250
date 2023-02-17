@@ -36,9 +36,7 @@
 #include "sde_vbif.h"
 #include "sde_plane.h"
 #include "sde_color_processing.h"
-#ifdef OPLUS_BUG_STABILITY
 #include "oplus_display_private_api.h"
-#endif
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
 #include "iris/dsi_iris5_api.h"
 #endif
@@ -2863,9 +2861,7 @@ static void _sde_plane_map_prop_to_dirty_bits(void)
 	/* no special action required */
 	plane_prop_array[PLANE_PROP_INFO] =
 	plane_prop_array[PLANE_PROP_ALPHA] =
-#ifdef OPLUS_BUG_STABILITY
 	plane_prop_array[PLANE_PROP_CUSTOM] =
-#endif /* OPLUS_BUG_STABILITY */
 	plane_prop_array[PLANE_PROP_INPUT_FENCE] =
 	plane_prop_array[PLANE_PROP_BLEND_OP] = 0;
 
@@ -3580,10 +3576,8 @@ static void _sde_plane_install_properties(struct drm_plane *plane,
 	msm_property_install_range(&psde->property_info, "zpos",
 		0x0, 0, zpos_max, zpos_def, PLANE_PROP_ZPOS);
 
-#ifdef OPLUS_BUG_STABILITY
 	msm_property_install_range(&psde->property_info,"PLANE_CUST",
 		0x0, 0, INT_MAX, 0, PLANE_PROP_CUSTOM);
-#endif
 
 	msm_property_install_range(&psde->property_info, "alpha",
 		0x0, 0, 255, 255, PLANE_PROP_ALPHA);

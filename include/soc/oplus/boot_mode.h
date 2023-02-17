@@ -24,13 +24,9 @@ enum{
 };
 
 extern int get_boot_mode(void);
-#ifdef OPLUS_BUG_STABILITY
 /*add for charge*/
 extern bool qpnp_is_power_off_charging(void);
-#endif
-#ifdef OPLUS_BUG_STABILITY
 extern bool qpnp_is_charger_reboot(void);
-#endif /*OPLUS_BUG_STABILITY*/
 #endif  /*_OPLUS_BOOT_H*/
 
 /* Add for kernel monitor whole bootup*/

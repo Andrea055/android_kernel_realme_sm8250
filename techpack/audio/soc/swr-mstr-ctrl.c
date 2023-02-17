@@ -626,12 +626,8 @@ static int swr_master_bulk_write(struct swr_mstr_ctrl *swrm, u32 *reg_addr,
 		 * Reduce sleep from 100us to 50us to meet KPIs
 		 * This still meets the hardware spec
 		 */
-			#ifndef OPLUS_BUG_STABILITY
 			// overflow/underflow causing headset det issues
 			usleep_range(10, 12);
-			#else
-			usleep_range(50, 55);
-			#endif /* OPLUS_BUG_STABILITY */
 			swr_master_write(swrm, reg_addr[i], val[i]);
 		}
 		usleep_range(100, 110);
@@ -1749,7 +1745,6 @@ static void swrm_enable_slave_irq(struct swr_mstr_ctrl *swrm)
 {
 	int i;
 	int status = 0;
-	u32 temp;
 
 	status = swr_master_read(swrm, SWRM_MCP_SLV_STATUS);
 	if (!status) {
@@ -1759,22 +1754,9 @@ static void swrm_enable_slave_irq(struct swr_mstr_ctrl *swrm)
 	}
 	dev_dbg(swrm->dev, "%s: slave status: 0x%x\n", __func__, status);
 	for (i = 0; i < (swrm->master.num_dev + 1); i++) {
-		#ifndef OPLUS_BUG_STABILITY
 		if (status & SWRM_MCP_SLV_STATUS_MASK)
 			swrm_cmd_fifo_wr_cmd(swrm, 0x4, i, 0x0,
 						SWRS_SCP_INT_STATUS_MASK_1);
-		#else /* OPLUS_BUG_STABILITY */
-		if (status & SWRM_MCP_SLV_STATUS_MASK) {
-			if (!swrm->clk_stop_wakeup) {
-				swrm_cmd_fifo_rd_cmd(swrm, &temp, i, 0x0,
-					SWRS_SCP_INT_STATUS_CLEAR_1, 1);
-				swrm_cmd_fifo_wr_cmd(swrm, 0xFF, i, 0x0,
-					SWRS_SCP_INT_STATUS_CLEAR_1);
-			}
-			swrm_cmd_fifo_wr_cmd(swrm, 0x4, i, 0x0,
-					SWRS_SCP_INT_STATUS_MASK_1);
-		}
-		#endif /* OPLUS_BUG_STABILITY */
 		status >>= 2;
 	}
 }
@@ -2183,13 +2165,7 @@ handle_irq:
 				 * re-enable Host IRQ and process slave pending
 				 * interrupts, if any.
 				 */
-				#ifndef OPLUS_BUG_STABILITY
 				swrm_enable_slave_irq(swrm);
-				#else
-				swrm->clk_stop_wakeup = true;
-				swrm_enable_slave_irq(swrm);
-				swrm->clk_stop_wakeup = false;
-				#endif /* OPLUS_BUG_STABILITY */
 			}
 			break;
 		default:
@@ -2761,9 +2737,6 @@ static int swrm_probe(struct platform_device *pdev)
 	swrm->state = SWR_MSTR_UP;
 	swrm->ipc_wakeup = false;
 	swrm->enable_slave_irq = false;
-	#ifdef OPLUS_BUG_STABILITY
-	swrm->clk_stop_wakeup = false;
-	#endif /* OPLUS_BUG_STABILITY */
 	swrm->ipc_wakeup_triggered = false;
 	swrm->disable_div2_clk_switch = FALSE;
 	init_completion(&swrm->reset);
@@ -3011,9 +2984,6 @@ static int swrm_runtime_resume(struct device *dev)
 	bool aud_core_err = false;
 	struct swr_master *mstr = &swrm->master;
 	struct swr_device *swr_dev;
-	#ifdef OPLUS_BUG_STABILITY
-	u32 temp = 0;
-	#endif /* OPLUS_BUG_STABILITY */
 
 	dev_dbg(dev, "%s: pm_runtime: resume, state:%d\n",
 		__func__, swrm->state);
@@ -3096,13 +3066,6 @@ static int swrm_runtime_resume(struct device *dev)
 				mutex_lock(&swrm->reslock);
 			}
 		} else {
-			#ifdef OPLUS_BUG_STABILITY
-			if (swrm->swrm_hctl_reg) {
-				temp = ioread32(swrm->swrm_hctl_reg);
-				temp &= 0xFFFFFFFD;
-				iowrite32(temp, swrm->swrm_hctl_reg);
-			}
-			#endif /* OPLUS_BUG_STABILITY */
 			/*wake up from clock stop*/
 			swr_master_write(swrm, SWRM_MCP_BUS_CTRL_ADDR, 0x2);
 			/* clear and enable bus clash interrupt */

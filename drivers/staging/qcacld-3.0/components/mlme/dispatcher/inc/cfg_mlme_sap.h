@@ -281,17 +281,6 @@
  *
  * </ini>
  */
- //ifndef OPLUS_BUG_COMPATIBILITY
- //Modify for set default SoftAP client count to 10
- /*#define CFG_SAP_MAX_NO_PEERS CFG_INI_UINT( \
-			"gSoftApMaxPeers", \
-			1, \
-			32, \
-			32, \
-			CFG_VALUE_OR_DEFAULT, \
-			"max no of peers")
- */
- //else
  #define CFG_SAP_MAX_NO_PEERS CFG_INI_UINT( \
 			"gSoftApMaxPeers", \
 			1, \
@@ -299,7 +288,6 @@
 			10, \
 			CFG_VALUE_OR_DEFAULT, \
 			"max no of peers")
-//endif /* OPLUS_BUG_COMPATIBILITY */
 /*
  * <ini>
  * gMaxOffloadPeers - Set max offload peers

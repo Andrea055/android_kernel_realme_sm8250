@@ -45,13 +45,6 @@
 #define DSI_CTRL_WARN(c, fmt, ...)	DRM_WARN("[msm-dsi-warn]: %s: " fmt,\
 		c ? c->name : "inv", ##__VA_ARGS__)
 
-#ifdef OPLUS_BUG_STABILITY
-#define DSI_CTRL_MM_ERR(c, fmt, ...) \
-	do { \
-		DRM_DEV_ERROR(NULL, "[msm-dsi-error]: %s: "\
-				fmt, c ? c->name : "inv", ##__VA_ARGS__); \
-	} while(0)
-#endif /* OPLUS_BUG_STABILITY */
 
 struct dsi_ctrl_list_item {
 	struct dsi_ctrl *ctrl;
@@ -347,11 +340,7 @@ static void dsi_ctrl_dma_cmd_wait_for_done(struct work_struct *work)
 					status);
 			DSI_CTRL_WARN(dsi_ctrl,
 					"dma_tx done but irq not triggered\n");
-			#ifdef OPLUS_BUG_STABILITY
-			DSI_CTRL_MM_ERR(dsi_ctrl, "DisplayDriverID@@416$$dma_tx done but irq not triggered\n");
-			#endif
 
-#ifdef OPLUS_BUG_STABILITY
 			if (dsi_ctrl->irq_info.irq_num != -1) {
 				struct irq_desc *desc = irq_to_desc(dsi_ctrl->irq_info.irq_num);
 				unsigned long flags;
@@ -375,13 +364,9 @@ static void dsi_ctrl_dma_cmd_wait_for_done(struct work_struct *work)
 				dsi_ctrl_disable_status_interrupt(dsi_ctrl,
 						DSI_SINT_CMD_MODE_DMA_DONE);
 			}
-#endif
 		} else {
 			DSI_CTRL_ERR(dsi_ctrl,
 					"Command transfer failed\n");
-			#ifdef OPLUS_BUG_STABILITY
-			DSI_CTRL_MM_ERR(dsi_ctrl, "DisplayDriverID@@401$$Command transfer failed\n");
-			#endif
 		}
 		dsi_ctrl_disable_status_interrupt(dsi_ctrl,
 					DSI_SINT_CMD_MODE_DMA_DONE);
@@ -1046,9 +1031,6 @@ static int dsi_ctrl_enable_supplies(struct dsi_ctrl *dsi_ctrl, bool enable)
 		if (rc < 0) {
 			DSI_CTRL_ERR(dsi_ctrl,
 				"Power resource enable failed, rc=%d\n", rc);
-			#ifdef OPLUS_BUG_STABILITY
-			DSI_CTRL_MM_ERR(dsi_ctrl, "DisplayDriverID@@406$$Power resource enable failed, rc=%d\n", rc);
-			#endif
 			goto error;
 		}
 
@@ -1057,9 +1039,6 @@ static int dsi_ctrl_enable_supplies(struct dsi_ctrl *dsi_ctrl, bool enable)
 				&dsi_ctrl->pwr_info.host_pwr, true);
 			if (rc) {
 				DSI_CTRL_ERR(dsi_ctrl, "failed to enable host power regs\n");
-				#ifdef OPLUS_BUG_STABILITY
-				DSI_CTRL_MM_ERR(dsi_ctrl, "DisplayDriverID@@406$$failed to enable host power regs\n");
-				#endif
 				goto error_get_sync;
 			}
 		}
@@ -1476,10 +1455,8 @@ static int dsi_message_tx(struct dsi_ctrl *dsi_ctrl,
 	u32 cnt = 0;
 	u8 *cmdbuf;
 	
-	/*#ifdef OPLUS_BUG_STABILITY*/
 	if (dsi_cmd_log_enable)
 		print_cmd_desc(dsi_ctrl, msg);
-	/*#endif*/
 
 	/* Select the tx mode to transfer the command */
 	dsi_message_setup_tx_mode(dsi_ctrl, msg->tx_len, flags);
@@ -3341,18 +3318,12 @@ int dsi_ctrl_cmd_transfer(struct dsi_ctrl *dsi_ctrl,
 		if (rc <= 0) {
 			DSI_CTRL_ERR(dsi_ctrl, "read message failed read length, rc=%d\n",
 					rc);
-			#ifdef OPLUS_BUG_STABILITY
-			DSI_CTRL_MM_ERR(dsi_ctrl, "read message failed read length, rc=%d\n",rc);
-			#endif
 		}
 	} else {
 		rc = dsi_message_tx(dsi_ctrl, msg, flags);
 		if (rc) {
 			DSI_CTRL_ERR(dsi_ctrl, "command msg transfer failed, rc = %d\n",
 					rc);
-			#ifdef OPLUS_BUG_STABILITY
-			DSI_CTRL_MM_ERR(dsi_ctrl, "command msg transfer failed, rc = %d\n",rc);
-			#endif
 		}
 	}
 

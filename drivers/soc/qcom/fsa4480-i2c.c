@@ -39,13 +39,6 @@
 #endif /* OPLUS_ARCH_EXTENDS */
 #define FSA4480_RESET           0x1E
 
-#ifdef OPLUS_BUG_STABILITY
-/*
- * 0x1~0xff == 100us~25500us
- */
-#define DEFAULT_SWITCH_DELAY		0x12
-#endif /* OPLUS_BUG_STABILITY */
-
 #ifdef OPLUS_ARCH_EXTENDS
 #undef dev_dbg
 #define dev_dbg dev_info
@@ -77,20 +70,13 @@ static const struct regmap_config fsa4480_regmap_config = {
 };
 
 static const struct fsa4480_reg_val fsa_reg_i2c_defaults[] = {
-        #ifdef OPLUS_BUG_STABILITY
-	{FSA4480_SWITCH_CONTROL, 0x18},
-	#endif /* OPLUS_BUG_STABILITY */
 	{FSA4480_SLOW_L, 0x00},
 	{FSA4480_SLOW_R, 0x00},
 	{FSA4480_SLOW_MIC, 0x00},
 	{FSA4480_SLOW_SENSE, 0x00},
 	{FSA4480_SLOW_GND, 0x00},
 	{FSA4480_DELAY_L_R, 0x00},
-#ifdef OPLUS_BUG_STABILITY
-	{FSA4480_DELAY_L_MIC, DEFAULT_SWITCH_DELAY},
-#else
 	{FSA4480_DELAY_L_MIC, 0x00},
-#endif /* OPLUS_BUG_STABILITY */
 	{FSA4480_DELAY_L_SENSE, 0x00},
 	{FSA4480_DELAY_L_AGND, 0x09},
 	{FSA4480_SWITCH_SETTINGS, 0x98},
@@ -109,9 +95,6 @@ static void fsa4480_usbc_update_settings(struct fsa4480_priv *fsa_priv,
 	/* FSA4480 chip hardware requirement */
 	usleep_range(50, 55);
 	regmap_write(fsa_priv->regmap, FSA4480_SWITCH_SETTINGS, switch_enable);
-#ifdef OPLUS_BUG_STABILITY
-	usleep_range(DEFAULT_SWITCH_DELAY*100, DEFAULT_SWITCH_DELAY*100+50);
-#endif /* OPLUS_BUG_STABILITY */
 }
 
 static int fsa4480_usbc_event_changed(struct notifier_block *nb,
