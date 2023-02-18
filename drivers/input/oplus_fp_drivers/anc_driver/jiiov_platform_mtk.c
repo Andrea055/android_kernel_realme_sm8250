@@ -159,24 +159,18 @@ extern void mt_spi_disable_master_clk(struct spi_device *spidev);
 void spi_clk_enable(u8 bonoff)
 {
     if (NULL == g_mtk_spi_device) {
-        pr_err("[anc] g_mtk_spi_device is NULL!\n");
         return;
     }
     if (bonoff) {
         if (0 == is_spi_clk_open) {
-            pr_info("[anc] enable spi clk\n");
             mt_spi_enable_master_clk(g_mtk_spi_device);
             is_spi_clk_open = 1;
         } else {
-            pr_info("[anc] spi clk already enable\n");
         }
     } else {
         if (1 == is_spi_clk_open) {
-            pr_info("[anc] disable spi clk\n");
             mt_spi_disable_master_clk(g_mtk_spi_device);
             is_spi_clk_open = 0;
-        } else {
-            pr_info("[anc] spi clk alrady disable");
         }
     }
 }
@@ -265,8 +259,6 @@ static int anc_opticalfp_tp_handler(struct fp_underscreen_info *tp_info)
 
     netlink_msg.event = (char)ANC_NETLINK_EVENT_INVALID;
 
-    pr_info("[anc] %s\n", __func__);
-
     g_anc_data->fp_tpinfo = *tp_info;
     if(tp_info->touch_state == lasttouchmode){
         return rc;
@@ -279,15 +271,12 @@ static int anc_opticalfp_tp_handler(struct fp_underscreen_info *tp_info)
     netlink_msg.area_rate = tp_info->area_rate;
     netlink_msg.x = tp_info->x;
     netlink_msg.y = tp_info->y;
-    pr_info("[anc] Netlink touch info area:%d,x:%d,y:%d",netlink_msg.area_rate,netlink_msg.x, netlink_msg.y);
     if (1 == tp_info->touch_state) {
         netlink_msg.event = (char)ANC_NETLINK_EVENT_TOUCH_DOWN;
-        pr_info("[anc] Netlink touch down!");
         netlink_send_message_to_user((const char *)(&netlink_msg), sizeof(netlink_msg));
         lasttouchmode = tp_info->touch_state;
     } else {
         netlink_msg.event = (char)ANC_NETLINK_EVENT_TOUCH_UP;
-        pr_info("[anc] Netlink touch up!");
         netlink_send_message_to_user((const char *)(&netlink_msg), sizeof(netlink_msg));
         lasttouchmode = tp_info->touch_state;
     }
@@ -304,51 +293,24 @@ static int anc_fb_state_chg_callback(struct notifier_block *nb,
     char netlink_msg = (char)ANC_NETLINK_EVENT_INVALID;
     int rc = 0;
 
-    pr_info("[anc] %s\n", __func__);
-
     anc_data = container_of(nb, struct anc_data, notifier);
 
     if (val == MTK_ONSCREENFINGERPRINT_EVENT) {
         uint8_t op_mode = 0x0;
         op_mode = *(uint8_t *)evdata->data;
-        pr_info("[anc] op_mode = %d\n", op_mode);
 
         switch (op_mode) {
             case ANC_UI_DISAPPREAR:
-                pr_info("[anc] UI disappear\n");
                 break;
             case ANC_UI_READY:
-                pr_info("[anc] UI ready\n");
                 netlink_msg = ANC_NETLINK_EVENT_UI_READY;
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             default:
-                pr_err("[anc] Unknown MSM_DRM_ONSCREENFINGERPRINT_EVENT!\n");
                 break;
         }
         return rc;
     }
-
-    /*if (evdata && evdata->data && val == FB_EARLY_EVENT_BLANK && anc_data) {
-        blank = *(int *)(evdata->data);
-        switch (blank) {
-            case FB_BLANK_POWERDOWN:
-                    anc_data->fb_black = 1;
-                    msg = JIIOV_NET_EVENT_SCR_OFF;
-                    pr_err("[anc] NET SCREEN OFF!\n");
-                    netlink_send_message_to_user(&msg, length);
-                break;
-            case FB_BLANK_UNBLANK:
-                    anc_data->fb_black = 0;
-                    msg = JIIOV_NET_EVENT_SCR_ON;
-                    pr_err("[anc] NET SCREEN ON!\n");
-                    netlink_send_message_to_user(&msg, length);
-                break;
-            default:
-                pr_err("[anc] Unknown screen state!\n");
-                break;
-        }
-    }*/
 
    if (evdata && evdata->data && (val == FB_EARLY_EVENT_BLANK) && anc_data) {
         blank = *(int *)(evdata->data);
@@ -356,17 +318,14 @@ static int anc_fb_state_chg_callback(struct notifier_block *nb,
             case FB_BLANK_POWERDOWN:
                 anc_data->fb_black = 1;
                 netlink_msg = ANC_NETLINK_EVENT_SCR_OFF;
-                pr_info("[anc] NET SCREEN OFF!\n");
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             case FB_BLANK_UNBLANK:
                 anc_data->fb_black = 0;
                 netlink_msg = ANC_NETLINK_EVENT_SCR_ON;
-                pr_info("[anc] NET SCREEN ON!\n");
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             default:
-                pr_err("[anc] Unknown screen state!\n");
                 break;
         }
     }
@@ -1234,7 +1193,6 @@ int anc_mtk_spi_probe(struct spi_device *spi)
 {
     int error = 0;
     struct anc_mtk_data_t *anc_mtk = NULL;
-    pr_info("[anc] %s enter\n", __func__);
     anc_mtk = kzalloc(sizeof(struct anc_mtk_data_t), GFP_KERNEL);
     if (!anc_mtk) {
         return -ENOMEM;
@@ -1242,14 +1200,12 @@ int anc_mtk_spi_probe(struct spi_device *spi)
     pr_info("%s\n", __func__);
     spi_set_drvdata(spi, anc_mtk);
     g_mtk_spi_device = spi;
-    pr_info("[anc] %s is successful\n", __func__);
     return error;
 }
 
 int anc_mtk_spi_remove(struct spi_device *spi)
 {
     struct anc_mtk_data_t *anc_mtk = spi_get_drvdata(spi);
-    pr_info("[anc]%s\n", __func__);
     kfree(anc_mtk);
     return 0;
 }

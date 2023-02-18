@@ -170,24 +170,18 @@ extern void mt_spi_disable_master_clk(struct spi_device *spidev);
 void spi_clk_enable(u8 bonoff)
 {
     if (NULL == g_mtk_spi_device) {
-        pr_err("[anc] g_mtk_spi_device is NULL!\n");
         return;
     }
     if (bonoff) {
         if (0 == is_spi_clk_open) {
-            pr_info("[anc] enable spi clk\n");
             mt_spi_enable_master_clk(g_mtk_spi_device);
             is_spi_clk_open = 1;
         } else {
-            pr_info("[anc] spi clk already enable\n");
         }
     } else {
         if (1 == is_spi_clk_open) {
-            pr_info("[anc] disable spi clk \n");
             mt_spi_disable_master_clk(g_mtk_spi_device);
             is_spi_clk_open = 0;
-        } else {
-            pr_info("[anc] spi clk already disable \n");
         }
     }
 }
@@ -270,7 +264,6 @@ static int anc_fb_state_chg_callback(struct notifier_block *nb, unsigned long va
     char netlink_msg = (char)ANC_NETLINK_EVENT_INVALID;
     int rc = 0;
 
-    pr_info("[anc] %s\n", __func__);
 
     anc_data = container_of(nb, struct anc_data, notifier);
 
@@ -280,17 +273,14 @@ static int anc_fb_state_chg_callback(struct notifier_block *nb, unsigned long va
             case FB_BLANK_POWERDOWN:
                 anc_data->fb_black = 1;
                 netlink_msg = ANC_NETLINK_EVENT_SCR_OFF;
-                pr_info("[anc] NET SCREEN OFF!\n");
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             case FB_BLANK_UNBLANK:
                 anc_data->fb_black = 0;
                 netlink_msg = ANC_NETLINK_EVENT_SCR_ON;
-                pr_info("[anc] NET SCREEN ON!\n");
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             default:
-                pr_err("[anc] Unknown screen state!\n");
                 break;
         }
     }
@@ -1189,7 +1179,6 @@ static anc_driver_t anc_driver = {
 int anc_mtk_spi_probe(struct spi_device *spi) {
     int error = 0;
     struct anc_mtk_data_t *anc_mtk = NULL;
-    pr_info("[anc] %s enter \n", __func__);
     anc_mtk = kzalloc(sizeof(struct anc_mtk_data_t), GFP_KERNEL);
     if (!anc_mtk) {
         return -ENOMEM;
@@ -1197,14 +1186,12 @@ int anc_mtk_spi_probe(struct spi_device *spi) {
     pr_info("%s\n", __func__);
     spi_set_drvdata(spi, anc_mtk);
     g_mtk_spi_device = spi;
-    pr_info("[anc] %s is sucessful\n", __func__);
 
     return error;
 }
 
 int anc_mtk_spi_remove(struct spi_device *spi) {
     struct anc_mtk_data_t *anc_mtk = spi_get_drvdata(spi);
-    pr_info("[anc]%s\n", __func__);
     kfree(anc_mtk);
     return 0;
 }

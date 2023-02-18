@@ -211,7 +211,6 @@ static int anc_opticalfp_tp_handler(struct fp_underscreen_info *tp_info)
     int rc = 0;
     char netlink_msg = (char)ANC_NETLINK_EVENT_INVALID;
 
-    pr_info("[anc] %s\n", __func__);
 
     g_anc_data->fp_tpinfo = *tp_info;
     if(tp_info->touch_state == lasttouchmode){
@@ -224,12 +223,10 @@ static int anc_opticalfp_tp_handler(struct fp_underscreen_info *tp_info)
 #endif
     if (1 == tp_info->touch_state) {
         netlink_msg = (char)ANC_NETLINK_EVENT_TOUCH_DOWN;
-        pr_info("[anc] Netlink touch down!");
         netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
         lasttouchmode = tp_info->touch_state;
     } else {
         netlink_msg = (char)ANC_NETLINK_EVENT_TOUCH_UP;
-        pr_info("[anc] Netlink touch up!");
         netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
         lasttouchmode = tp_info->touch_state;
     }
@@ -246,51 +243,25 @@ static int anc_fb_state_chg_callback(struct notifier_block *nb,
     char netlink_msg = (char)ANC_NETLINK_EVENT_INVALID;
     int rc = 0;
 
-    pr_info("[anc] %s\n", __func__);
 
     anc_data = container_of(nb, struct anc_data, notifier);
 
     if (val == MSM_DRM_ONSCREENFINGERPRINT_EVENT) {
         uint8_t op_mode = 0x0;
         op_mode = *(uint8_t *)evdata->data;
-        pr_info("[anc] op_mode = %d\n", op_mode);
 
         switch (op_mode) {
             case ANC_UI_DISAPPREAR:
-                pr_info("[anc] UI disappear\n");
                 break;
             case ANC_UI_READY:
-                pr_info("[anc] UI ready\n");
                 netlink_msg = ANC_NETLINK_EVENT_UI_READY;
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             default:
-                pr_err("[anc] Unknown MSM_DRM_ONSCREENFINGERPRINT_EVENT!\n");
                 break;
         }
         return rc;
     }
-
-    /*if (evdata && evdata->data && val == FB_EARLY_EVENT_BLANK && anc_data) {
-        blank = *(int *)(evdata->data);
-        switch (blank) {
-            case FB_BLANK_POWERDOWN:
-                    anc_data->fb_black = 1;
-                    msg = JIIOV_NET_EVENT_SCR_OFF;                 
-                    pr_err("[anc] NET SCREEN OFF!\n");
-                    netlink_send_message_to_user(&msg, length);
-                break;
-            case FB_BLANK_UNBLANK:
-                    anc_data->fb_black = 0;
-                    msg = JIIOV_NET_EVENT_SCR_ON;
-                    pr_err("[anc] NET SCREEN ON!\n");
-                    netlink_send_message_to_user(&msg, length);
-                break;
-            default:
-                pr_err("[anc] Unknown screen state!\n");
-                break;
-        }
-    }*/
 	
    if (evdata && evdata->data && (val == MSM_DRM_EARLY_EVENT_BLANK) && anc_data) {
         blank = *(int *)(evdata->data);
@@ -298,17 +269,14 @@ static int anc_fb_state_chg_callback(struct notifier_block *nb,
             case MSM_DRM_BLANK_POWERDOWN:
                 anc_data->fb_black = 1;
                 netlink_msg = ANC_NETLINK_EVENT_SCR_OFF;
-                pr_info("[anc] NET SCREEN OFF!\n");
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             case MSM_DRM_BLANK_UNBLANK:
                 anc_data->fb_black = 0;
                 netlink_msg = ANC_NETLINK_EVENT_SCR_ON;
-                pr_info("[anc] NET SCREEN ON!\n");
                 netlink_send_message_to_user(&netlink_msg, sizeof(netlink_msg));
                 break;
             default:
-                pr_err("[anc] Unknown screen state!\n");
                 break;
         }
     }
