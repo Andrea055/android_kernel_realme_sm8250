@@ -1489,100 +1489,6 @@ static u8 nvt_trigger_reason(void *chip_data, int gesture_enable, int is_suspend
     return IRQ_TOUCH;
 }
 
-#ifdef CONFIG_OPLUS_TP_APK
-static void nova_write_log_buf(struct chip_data_nt36672c *chip_info, u8 main_id, u8 sec_id)
-{
-    log_buf_write(chip_info->ts, main_id);
-    sec_id = sec_id | 0x80;
-    log_buf_write(chip_info->ts, sec_id);
-}
-
-
-static void nova_debug_info(struct chip_data_nt36672c *chip_info, u8 *buf)
-{
-    static struct nvt_fw_debug_info debug_last;
-
-    chip_info->nvt_fw_debug_info.rek_info = (uint8_t) (buf[0] >> 4) & 0x07;
-    chip_info->nvt_fw_debug_info.rst_info = (uint8_t) (buf[0]) & 0x07;
-
-    chip_info->nvt_fw_debug_info.esd      = (uint8_t) (buf[1] >> 5) & 0x01;
-    chip_info->nvt_fw_debug_info.palm     = (uint8_t) (buf[1] >> 4) & 0x01;
-    chip_info->nvt_fw_debug_info.bending  = (uint8_t) (buf[1] >> 3) & 0x01;
-    chip_info->nvt_fw_debug_info.water    = (uint8_t) (buf[1] >> 2) & 0x01;
-    chip_info->nvt_fw_debug_info.gnd      = (uint8_t) (buf[1] >> 1) & 0x01;
-    chip_info->nvt_fw_debug_info.er       = (uint8_t) (buf[1]) & 0x01;
-
-    chip_info->nvt_fw_debug_info.hopping  = (uint8_t) (buf[2] >> 4) & 0x0F;
-    chip_info->nvt_fw_debug_info.fog      = (uint8_t) (buf[2] >> 2) & 0x01;
-    chip_info->nvt_fw_debug_info.film     = (uint8_t) (buf[2] >> 1) & 0x01;
-    chip_info->nvt_fw_debug_info.notch    = (uint8_t) (buf[2]) & 0x01;
-
-    if (debug_last.rek_info != chip_info->nvt_fw_debug_info.rek_info) {
-        nova_write_log_buf(chip_info, 1, chip_info->nvt_fw_debug_info.rek_info);
-
-    }
-    if (debug_last.rst_info != chip_info->nvt_fw_debug_info.rst_info) {
-        nova_write_log_buf(chip_info, 2, chip_info->nvt_fw_debug_info.rst_info);
-
-    }
-    if (debug_last.esd != chip_info->nvt_fw_debug_info.esd) {
-        log_buf_write(chip_info->ts, 3 + chip_info->nvt_fw_debug_info.esd);
-    }
-    if (debug_last.palm != chip_info->nvt_fw_debug_info.palm) {
-        log_buf_write(chip_info->ts, 5 + chip_info->nvt_fw_debug_info.palm);
-    }
-    if (debug_last.bending != chip_info->nvt_fw_debug_info.bending) {
-        log_buf_write(chip_info->ts, 7 + chip_info->nvt_fw_debug_info.bending);
-    }
-    if (debug_last.water != chip_info->nvt_fw_debug_info.water) {
-        log_buf_write(chip_info->ts, 9 + chip_info->nvt_fw_debug_info.water);
-    }
-    if (debug_last.gnd != chip_info->nvt_fw_debug_info.gnd) {
-        log_buf_write(chip_info->ts, 11 + chip_info->nvt_fw_debug_info.gnd);
-    }
-    if (debug_last.er != chip_info->nvt_fw_debug_info.er) {
-        log_buf_write(chip_info->ts, 13 + chip_info->nvt_fw_debug_info.er);
-    }
-    if (debug_last.hopping != chip_info->nvt_fw_debug_info.hopping) {
-        nova_write_log_buf(chip_info, 15, chip_info->nvt_fw_debug_info.hopping);
-    }
-    if (debug_last.fog != chip_info->nvt_fw_debug_info.fog) {
-        log_buf_write(chip_info->ts, 17 + chip_info->nvt_fw_debug_info.fog);
-    }
-    if (debug_last.film != chip_info->nvt_fw_debug_info.film) {
-        log_buf_write(chip_info->ts, 19 + chip_info->nvt_fw_debug_info.film);
-    }
-    if (debug_last.notch != chip_info->nvt_fw_debug_info.notch) {
-        log_buf_write(chip_info->ts, 21 + chip_info->nvt_fw_debug_info.notch);
-    }
-
-    memcpy(&debug_last, &chip_info->nvt_fw_debug_info, sizeof(debug_last));
-
-    //msleep(2000);
-    if (tp_debug > 0) {
-        pr_err("REK_INFO:0x%02X, RST_INFO:0x%02X\n",
-               chip_info->nvt_fw_debug_info.rek_info,
-               chip_info->nvt_fw_debug_info.rst_info);
-
-        pr_err("ESD:0x%02X, PALM:0x%02X, BENDING:0x%02X, WATER:0x%02X, GND:0x%02X, ER:0x%02X\n",
-               chip_info->nvt_fw_debug_info.esd,
-               chip_info->nvt_fw_debug_info.palm,
-               chip_info->nvt_fw_debug_info.bending,
-               chip_info->nvt_fw_debug_info.water,
-               chip_info->nvt_fw_debug_info.gnd,
-               chip_info->nvt_fw_debug_info.er);
-
-        pr_err("HOPPING:0x%02X, FOG:0x%02X, FILM:0x%02X, NOTCH:0x%02X\n\n",
-               chip_info->nvt_fw_debug_info.hopping,
-               chip_info->nvt_fw_debug_info.fog,
-               chip_info->nvt_fw_debug_info.film,
-               chip_info->nvt_fw_debug_info.notch);
-
-    }
-}
-
-#endif // end of CONFIG_OPLUS_TP_APK
-
 static int32_t nvt_ts_point_data_checksum(uint8_t *buf, uint8_t length)
 {
     uint8_t checksum = 0;
@@ -1692,12 +1598,6 @@ static int nvt_get_touch_points(void *chip_data, struct point_info *points, int 
             points[pointid].status = 1;
         }
     }
-
-#ifdef CONFIG_OPLUS_TP_APK
-    if (chip_info->debug_mode_sta) {
-        nova_debug_info(chip_info, &point_data[76]);
-    }
-#endif // end of CONFIG_OPLUS_TP_APK
     return obj_attention;
 }
 
@@ -1794,132 +1694,6 @@ static void nvt_ts_wakeup_gesture_coordinate(uint8_t *data, uint8_t max_num)
     }
 }
 
-#ifdef CONFIG_OPLUS_TP_APK
-
-static void nvt_read_debug_gesture_coordinate_buffer(struct chip_data_nt36672c *chip_info,
-        uint32_t xdata_addr, u8 *xdata, int32_t xdata_len)
-{
-    int32_t i = 0;
-    int32_t j = 0;
-    int32_t k = 0;
-    uint8_t buf[SPI_TANSFER_LENGTH + 2] = {0};
-    uint32_t head_addr = 0;
-    int32_t dummy_len = 0;
-    //int32_t data_len = 128;	/* max buffer size 1024 */
-    int32_t residual_len = 0;
-    uint8_t *xdata_tmp = NULL;
-
-    //---set xdata sector xdata_addr & length---
-    head_addr = xdata_addr - (xdata_addr % XDATA_SECTOR_SIZE);
-    dummy_len = xdata_addr - head_addr;
-    residual_len = (head_addr + dummy_len + xdata_len) % XDATA_SECTOR_SIZE;
-
-    /*if (xdata_len/sizeof(int32_t) < data_len) {
-    	TPD_INFO("xdata read buffer(%d) less than max data size(%d), return\n", xdata_len, data_len);
-    	return;
-    }*/
-
-    //malloc buffer space
-    xdata_tmp = kzalloc(2048, GFP_KERNEL);
-    if (xdata_tmp == NULL) {
-        TPD_INFO("%s malloc memory failed\n", __func__);
-        return;
-    }
-
-    //read xdata : step 1
-    for (i = 0; i < ((dummy_len + xdata_len) / XDATA_SECTOR_SIZE); i++) {
-        //---read xdata by SPI_TANSFER_LENGTH
-
-        for (j = 0; j < (XDATA_SECTOR_SIZE / SPI_TANSFER_LENGTH); j++) {
-            //---change xdata index---
-            nvt_set_page(chip_info, head_addr + (XDATA_SECTOR_SIZE * i) + (SPI_TANSFER_LENGTH * j));
-
-            //---read data---
-            buf[0] = SPI_TANSFER_LENGTH * j;
-            CTP_SPI_READ(chip_info->s_client, buf, SPI_TANSFER_LENGTH + 1);
-
-            //---copy buf to xdata_tmp---
-            for (k = 0; k < SPI_TANSFER_LENGTH; k++) {
-
-                xdata_tmp[XDATA_SECTOR_SIZE * i + SPI_TANSFER_LENGTH * j + k] = buf[k + 1];
-                //printk("0x%02X, 0x%04X\n", buf[k+1], (XDATA_SECTOR_SIZE*i + SPI_TANSFER_LENGTH*j + k));
-            }
-
-        }
-        //printk("addr=0x%05X\n", (head_addr+XDATA_SECTOR_SIZE*i));
-    }
-
-    //read xdata : step2
-    if (residual_len != 0) {
-        //---read xdata by SPI_TANSFER_LENGTH
-
-        for (j = 0; j < (residual_len / SPI_TANSFER_LENGTH + 1); j++) {
-            //---change xdata index---
-
-            nvt_set_page(chip_info, xdata_addr + xdata_len - residual_len + (SPI_TANSFER_LENGTH * j));
-
-            //---read data---
-            buf[0] = SPI_TANSFER_LENGTH * j;
-            CTP_SPI_READ(chip_info->s_client, buf, SPI_TANSFER_LENGTH + 1);
-
-            //---copy buf to xdata_tmp---
-            for (k = 0; k < SPI_TANSFER_LENGTH; k++) {
-                xdata_tmp[(dummy_len + xdata_len - residual_len) + SPI_TANSFER_LENGTH * j + k] = buf[k + 1];
-                //printk("0x%02X, 0x%04x\n", buf[k+1], ((dummy_len+data_len-residual_len) + SPI_TANSFER_LENGTH*j + k));
-            }
-
-        }
-        //printk("addr=0x%05X\n", (xdata_addr+data_len-residual_len));
-    }
-
-    //---remove dummy data---
-    pr_cont("nova read gesture xdata\n");
-    for (i = 0; i < xdata_len ; i++) {
-        xdata[i] = xdata_tmp[dummy_len + i];
-        pr_cont("0x%02X,", xdata[i]);
-    }
-    pr_cont("\n");
-    //---set xdata index to EVENT BUF ADDR---
-    nvt_set_page(chip_info, chip_info->trim_id_table.mmap->EVENT_BUF_ADDR);
-
-    kfree(xdata_tmp);
-}
-
-static void nvt_dbg_gesture_record_coor_read(struct chip_data_nt36672c *chip_info, u8 pointdata)
-{
-    u8 *xdata = NULL;
-    uint32_t buf_len = 0;
-    uint8_t points_num[2] = {0};
-    uint8_t data_len[2] = {0};
-
-    buf_len = 512;
-    xdata = kzalloc(buf_len, GFP_KERNEL);
-    if (!xdata) {
-        TPD_INFO("%s, malloc memory failed\n", __func__);
-        return;
-    }
-
-    nvt_read_debug_gesture_coordinate_buffer(chip_info, NVT_MMAP_DEBUG_FINGER_DOWN_DIFFDATA,
-            xdata, buf_len);
-    points_num[0] = xdata[0];
-    data_len[0] = 3 * points_num[0];
-    memcpy(&chip_info->ts->gesture_buf[2], &xdata[1], data_len[0] * sizeof(int32_t));
-
-    nvt_read_debug_gesture_coordinate_buffer(chip_info, NVT_MMAP_DEBUG_STATUS_CHANGE_DIFFDATA,
-            xdata, buf_len);
-    points_num[1] = xdata[0];
-    data_len[1] = 3 * points_num[1];
-    memcpy(&chip_info->ts->gesture_buf[2 + data_len[0]], &xdata[1], data_len[1] * sizeof(int32_t));
-
-    chip_info->ts->gesture_buf[0] = pointdata;
-    chip_info->ts->gesture_buf[1] = points_num[0] + points_num[1];
-
-    if(xdata) {
-        kfree(xdata);
-    }
-}
-#endif // end of CONFIG_OPLUS_TP_APK
-
 static int nvt_get_gesture_info(void *chip_data, struct gesture_info *gesture)
 {
     uint8_t gesture_id = 0;
@@ -1955,16 +1729,6 @@ static int nvt_get_gesture_info(void *chip_data, struct gesture_info *gesture)
         TPD_INFO("invalid gesture id= %d, no gesture event\n", gesture_id);
         return 0;
     }
-
-#ifdef CONFIG_OPLUS_TP_APK
-    TPD_INFO("gesture id is %d,data[1] %d,data[2] %d,data[3] %d\n",
-             gesture_id, point_data[1], point_data[2], point_data[3]);
-    if (chip_info->debug_gesture_sta) {
-        if (chip_info->ts->gesture_buf) {
-            nvt_dbg_gesture_record_coor_read(chip_info, gesture_id);
-        }
-    }
-#endif // end of CONFIG_OPLUS_TP_APK
 
     if ((gesture_id > 0) && (gesture_id <= max_num)) {
         nvt_ts_wakeup_gesture_coordinate(point_data, max_num);
@@ -2142,58 +1906,10 @@ static int nvt_reset(void *chip_data)
             TPD_INFO("g_fw_buf update failed!\n");
         }
     }
-    /*
-    if(chip_info->g_fw != NULL) {
-        release_firmware(chip_info->g_fw);
-    }
-    */
-#ifdef CONFIG_OPLUS_TP_APK
-    if(chip_info->debug_mode_sta) {
-        if(ts->apk_op && ts->apk_op->apk_debug_set) {
-            ts->apk_op->apk_debug_set(ts->chip_data, true);
-        }
-    }
-#endif // end of CONFIG_OPLUS_TP_APK
-
     chip_info->is_sleep_writed = false;
     mutex_unlock(&chip_info->mutex_testing);
     return 0;
 }
-
-#ifdef CONFIG_OPLUS_TP_APK
-static __maybe_unused int nvt_enable_debug_gesture_coordinate_record_mode(struct chip_data_nt36672c *chip_info, bool enable)
-{
-    int8_t ret = -1;
-
-    TPD_INFO("%s:enable = %d, chip_info->is_sleep_writed = %d\n", __func__,
-             enable, chip_info->is_sleep_writed);
-
-    if (enable) {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_WKG_COORD_RECORD_ON);
-    } else {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_WKG_COORD_RECORD_OFF);
-    }
-
-    return ret;
-}
-
-static __maybe_unused int nvt_enable_debug_gesture_coordinate_mode(struct chip_data_nt36672c *chip_info, bool enable)
-{
-    int8_t ret = -1;
-
-    TPD_INFO("%s:enable = %d, chip_info->is_sleep_writed = %d\n", __func__,
-             enable, chip_info->is_sleep_writed);
-
-    if (enable) {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_WKG_COORD_ON);
-    } else {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_WKG_COORD_OFF);
-    }
-
-    return ret;
-}
-
-#endif // end of CONFIG_OPLUS_TP_APK
 
 static int nvt_enable_black_gesture(struct chip_data_nt36672c *chip_info, bool enable)
 {
@@ -2212,16 +1928,6 @@ static int nvt_enable_black_gesture(struct chip_data_nt36672c *chip_info, bool e
 
 
     if (enable) {
- //       if (get_lcd_status() > 0) {
- //           TPD_INFO("Will power on soon!");
- //           return ret;
- //       }
-#ifdef CONFIG_OPLUS_TP_APK
-        if (chip_info->debug_gesture_sta) {
-            nvt_enable_debug_gesture_coordinate_record_mode(chip_info, true);
-        }
-#endif // end of CONFIG_OPLUS_TP_APK
-
         ret = nvt_cmd_store(chip_info, CMD_OPEN_BLACK_GESTURE);
         TPD_INFO("%s: enable gesture %s !\n", __func__, (ret < 0) ? "failed" : "success");
     } else {
@@ -2300,80 +2006,6 @@ static int nvt_enable_headset_mode(struct chip_data_nt36672c *chip_info, bool en
 
     return ret;
 }
-
-#ifdef CONFIG_OPLUS_TP_APK
-static __maybe_unused int nvt_enable_hopping_polling_mode(struct chip_data_nt36672c *chip_info, bool enable)
-{
-    int8_t ret = -1;
-
-    TPD_INFO("%s:enable = %d, chip_info->is_sleep_writed = %d\n", __func__,
-             enable, chip_info->is_sleep_writed);
-
-    nvt_esd_check_update_timer(chip_info);
-
-    if (enable)
-        ret = nvt_cmd_store(chip_info, EVENTBUFFER_HOPPING_POLLING_ON);
-    else
-        ret = nvt_cmd_store(chip_info, EVENTBUFFER_HOPPING_POLLING_OFF);
-
-    return ret;
-}
-
-static __maybe_unused int nvt_enable_hopping_fix_freq_mode(struct chip_data_nt36672c *chip_info, bool enable)
-{
-    int8_t ret = -1;
-
-    TPD_INFO("%s:enable = %d, chip_info->is_sleep_writed = %d\n", __func__,
-             enable, chip_info->is_sleep_writed);
-
-    nvt_esd_check_update_timer(chip_info);
-
-    if (enable)
-        ret = nvt_cmd_store(chip_info, EVENTBUFFER_HOPPING_FIX_FREQ_ON);
-    else
-        ret = nvt_cmd_store(chip_info, EVENTBUFFER_HOPPING_FIX_FREQ_OFF);
-
-    return ret;
-}
-
-static __maybe_unused int nvt_enable_debug_msg_diff_mode(struct chip_data_nt36672c *chip_info, bool enable)
-{
-    int8_t ret = -1;
-
-    TPD_INFO("%s:enable = %d, chip_info->is_sleep_writed = %d\n", __func__,
-             enable, chip_info->is_sleep_writed);
-
-    nvt_esd_check_update_timer(chip_info);
-
-    if (enable) {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_MSG_DIFF_ON);
-    } else {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_MSG_DIFF_OFF);
-    }
-
-    return ret;
-}
-
-static __maybe_unused int nvt_enable_water_polling_mode(struct chip_data_nt36672c *chip_info, bool enable)
-{
-    int8_t ret = -1;
-
-    TPD_INFO("%s:enable = %d, chip_info->is_sleep_writed = %d\n", __func__,
-             enable, chip_info->is_sleep_writed);
-
-
-    nvt_esd_check_update_timer(chip_info);
-
-
-    if (enable) {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_WATER_POLLING_ON);
-    } else {
-        ret = nvt_extend_cmd_store(chip_info, EVENTBUFFER_EXT_CMD, EVENTBUFFER_EXT_DBG_WATER_POLLING_OFF);
-    }
-
-    return ret;
-}
-#endif // end of CONFIG_OPLUS_TP_APK
 
 static int nvt_mode_switch(void *chip_data, work_mode mode, bool flag)
 {
@@ -2729,90 +2361,6 @@ static void nvt_read_mdata(struct chip_data_nt36672c *chip_info, uint32_t xdata_
 
     kfree(xdata_tmp);
 }
-
-#ifdef CONFIG_OPLUS_TP_APK
-static void nvt_read_debug_mdata(struct chip_data_nt36672c *chip_info,
-                                 uint32_t xdata_addr, int32_t *xdata, int32_t xdata_len)
-{
-    int32_t i = 0;
-    int32_t j = 0;
-    int32_t k = 0;
-    uint8_t buf[SPI_TANSFER_LENGTH + 2] = {0};
-    uint32_t head_addr = 0;
-    int32_t dummy_len = 0;
-    int32_t data_len = 0;
-    int32_t residual_len = 0;
-    uint8_t *xdata_tmp = NULL;
-
-    //---set xdata sector address & length---
-    head_addr = xdata_addr - (xdata_addr % XDATA_SECTOR_SIZE);
-    dummy_len = xdata_addr - head_addr;
-    data_len = chip_info->hw_res->TX_NUM * chip_info->hw_res->RX_NUM;
-    residual_len = (head_addr + dummy_len + data_len) % XDATA_SECTOR_SIZE;
-
-    if (xdata_len / sizeof(int32_t) < data_len) {
-        TPD_INFO("xdata read buffer(%d) less than max data size(%d), return\n", xdata_len, data_len);
-        return;
-    }
-
-    //malloc buffer space
-    xdata_tmp = kzalloc(2048, GFP_KERNEL);
-    if (xdata_tmp == NULL) {
-        TPD_INFO("%s malloc memory failed\n", __func__);
-        return;
-    }
-
-    //read xdata : step 1
-    for (i = 0; i < ((dummy_len + data_len) / XDATA_SECTOR_SIZE); i++) {
-        //---read xdata by SPI_TANSFER_LENGTH
-        for (j = 0; j < (XDATA_SECTOR_SIZE / SPI_TANSFER_LENGTH); j++) {
-            //---change xdata index---
-            nvt_set_page(chip_info, head_addr + (XDATA_SECTOR_SIZE * i) + (SPI_TANSFER_LENGTH * j));
-
-            //---read data---
-            buf[0] = SPI_TANSFER_LENGTH * j;
-            CTP_SPI_READ(chip_info->s_client, buf, SPI_TANSFER_LENGTH + 1);
-
-            //---copy buf to xdata_tmp---
-            for (k = 0; k < SPI_TANSFER_LENGTH; k++) {
-                xdata_tmp[XDATA_SECTOR_SIZE * i + SPI_TANSFER_LENGTH * j + k] = buf[k + 1];
-                //printk("0x%02X, 0x%04X\n", buf[k+1], (XDATA_SECTOR_SIZE*i + SPI_TANSFER_LENGTH*j + k));
-            }
-        }
-        //printk("addr=0x%05X\n", (head_addr+XDATA_SECTOR_SIZE*i));
-    }
-
-    //read xdata : step2
-    if (residual_len != 0) {
-        //---read xdata by SPI_TANSFER_LENGTH
-        for (j = 0; j < (residual_len / SPI_TANSFER_LENGTH + 1); j++) {
-            //---change xdata index---
-            nvt_set_page(chip_info, xdata_addr + data_len - residual_len + (SPI_TANSFER_LENGTH * j));
-
-            //---read data---
-            buf[0] = SPI_TANSFER_LENGTH * j;
-            CTP_SPI_READ(chip_info->s_client, buf, SPI_TANSFER_LENGTH + 1);
-
-            //---copy buf to xdata_tmp---
-            for (k = 0; k < SPI_TANSFER_LENGTH; k++) {
-                xdata_tmp[(dummy_len + data_len - residual_len) + SPI_TANSFER_LENGTH * j + k] = buf[k + 1];
-                //printk("0x%02X, 0x%04x\n", buf[k+1], ((dummy_len+data_len-residual_len) + SPI_TANSFER_LENGTH*j + k));
-            }
-        }
-        //printk("addr=0x%05X\n", (xdata_addr+data_len-residual_len));
-    }
-
-    //---remove dummy data and scaling data (*8)---
-    for (i = 0; i < (data_len); i++) {
-        xdata[i] = (int16_t) (((int8_t) xdata_tmp[dummy_len + i]) * 8);
-    }
-
-    //---set xdata index to EVENT BUF ADDR---
-    nvt_set_page(chip_info, chip_info->trim_id_table.mmap->EVENT_BUF_ADDR);
-
-    kfree(xdata_tmp);
-}
-#endif // end of CONFIG_OPLUS_TP_APK
 
 static int32_t nvt_polling_hand_shake_status(struct chip_data_nt36672c *chip_info)
 {
@@ -4184,56 +3732,6 @@ static void nvt_data_read(struct seq_file *s, struct chip_data_nt36672c *chip_in
     kfree(xdata);
 }
 
-#ifdef CONFIG_OPLUS_TP_APK
-static void nvt_debug_data_read(struct seq_file *s, struct chip_data_nt36672c *chip_info, DEBUG_READ_TYPE read_type)
-{
-    int ret = -1;
-    int i, j;
-    //uint8_t pipe;
-    int32_t *xdata = NULL;
-    int32_t buf_len = 0;
-
-    TPD_INFO("nvt get fw info start");
-    ret = nvt_get_fw_info_noflash(chip_info);
-    if (ret < 0) {
-        TPD_INFO("get_fw_info error, return\n");
-        return;
-    }
-
-    buf_len = chip_info->hw_res->TX_NUM * chip_info->hw_res->RX_NUM * sizeof(int32_t);
-    xdata = kzalloc(buf_len, GFP_KERNEL);
-    if (!xdata) {
-        TPD_INFO("%s, malloc memory failed\n", __func__);
-        return;
-    }
-
-    switch (read_type) {
-    case NVT_DEBUG_FINGER_DOWN_DIFFDATA:
-        seq_printf(s, "debug finger down diff data:\n");
-        nvt_read_debug_mdata(chip_info, NVT_MMAP_DEBUG_FINGER_DOWN_DIFFDATA, xdata, buf_len);
-        break;
-
-    case NVT_DEBUG_STATUS_CHANGE_DIFFDATA:
-        seq_printf(s, "debug status change diff data:\n");
-        nvt_read_debug_mdata(chip_info, NVT_MMAP_DEBUG_STATUS_CHANGE_DIFFDATA, xdata, buf_len);
-        break;
-    default:
-        break;
-    }
-
-    //print all data
-    for (i = 0; i < chip_info->hw_res->RX_NUM; i++) {
-        seq_printf(s, "[%2d]", i);
-        for (j = 0; j < chip_info->hw_res->TX_NUM; j++) {
-            seq_printf(s, "%5d, ", xdata[i * chip_info->hw_res->TX_NUM + j]);
-        }
-        seq_printf(s, "\n");
-    }
-
-    kfree(xdata);
-}
-#endif // end of CONFIG_OPLUS_TP_APK
-
 static void nvt_delta_read(struct seq_file *s, void *chip_data)
 {
     struct chip_data_nt36672c *chip_info = (struct chip_data_nt36672c *)chip_data;
@@ -4241,12 +3739,6 @@ static void nvt_delta_read(struct seq_file *s, void *chip_data)
     nvt_esd_check_update_timer(chip_info);
 
     nvt_data_read(s, chip_info, NVT_DIFFDATA);
-
-#ifdef CONFIG_OPLUS_TP_APK
-    if (chip_info->debug_mode_sta) {
-        nvt_debug_data_read(s, chip_info, NVT_DEBUG_FINGER_DOWN_DIFFDATA);
-    }
-#endif // end of CONFIG_OPLUS_TP_APK
 }
 
 static void nvt_baseline_read(struct seq_file *s, void *chip_data)
@@ -4258,22 +3750,6 @@ static void nvt_baseline_read(struct seq_file *s, void *chip_data)
     nvt_data_read(s, chip_info, NVT_BASEDATA);
     nvt_data_read(s, chip_info, NVT_RAWDATA);
 }
-
-#ifdef CONFIG_OPLUS_TP_APK
-static __maybe_unused void nvt_dbg_diff_finger_down_read(struct seq_file *s, void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    nvt_debug_data_read(s, chip_info, NVT_DEBUG_FINGER_DOWN_DIFFDATA);
-}
-
-static __maybe_unused void nvt_dbg_diff_status_change_read(struct seq_file *s, void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    nvt_debug_data_read(s, chip_info, NVT_DEBUG_STATUS_CHANGE_DIFFDATA);
-}
-#endif // end of CONFIG_OPLUS_TP_APK
 
 static void nvt_read_fw_history(struct seq_file *s, void *chip_data, uint32_t NVT_MMAP_HISTORY_ADDR)
 {
@@ -5380,299 +4856,6 @@ static struct nvt_proc_operations nvt_proc_ops = {
     .auto_test     = nvt_auto_test,
 };
 
-#ifdef CONFIG_OPLUS_TP_APK
-
-static void nova_apk_game_set(void *chip_data, bool on_off)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    nvt_mode_switch(chip_data, MODE_GAME, on_off);
-    chip_info->lock_point_status = on_off;
-}
-
-static bool nova_apk_game_get(void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    return chip_info->lock_point_status;
-}
-
-static void nova_apk_debug_set(void *chip_data, bool on_off)
-{
-    //u8 cmd[1];
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    nvt_enable_debug_msg_diff_mode(chip_info, on_off);
-    chip_info->debug_mode_sta = on_off;
-}
-
-static bool nova_apk_debug_get(void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    return chip_info->debug_mode_sta;
-}
-
-static void nova_apk_gesture_debug(void *chip_data, bool on_off)
-{
-
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    //get_gesture_fail_reason(on_off);
-    chip_info->debug_gesture_sta = on_off;
-}
-
-static bool  nova_apk_gesture_get(void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    return chip_info->debug_gesture_sta;
-}
-
-static int  nova_apk_gesture_info(void *chip_data, char *buf, int len)
-{
-    int ret = 0;
-    int i;
-    int num;
-    u8 temp;
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    if(len < 2) {
-        return 0;
-    }
-    buf[0] = 255;
-
-    temp = chip_info->ts->gesture_buf[0];
-
-    switch (temp) {   //judge gesture type
-    case RIGHT_SLIDE_DETECT :
-        buf[0]  = Left2RightSwip;
-        break;
-
-    case LEFT_SLIDE_DETECT :
-        buf[0]  = Right2LeftSwip;
-        break;
-
-    case DOWN_SLIDE_DETECT  :
-        buf[0]  = Up2DownSwip;
-        break;
-
-    case UP_SLIDE_DETECT :
-        buf[0]  = Down2UpSwip;
-        break;
-
-    case DTAP_DETECT:
-        buf[0]  = DouTap;
-        break;
-
-    case UP_VEE_DETECT :
-        buf[0]  = UpVee;
-        break;
-
-    case DOWN_VEE_DETECT :
-        buf[0]  = DownVee;
-        break;
-
-    case LEFT_VEE_DETECT:
-        buf[0] = LeftVee;
-        break;
-
-    case RIGHT_VEE_DETECT :
-        buf[0]  = RightVee;
-        break;
-
-    case CIRCLE_DETECT  :
-        buf[0] = Circle;
-        break;
-
-    case DOUSWIP_DETECT  :
-        buf[0]  = DouSwip;
-        break;
-
-    case M_DETECT  :
-        buf[0]  = Mgestrue;
-        break;
-
-    case W_DETECT :
-        buf[0]  = Wgestrue;
-        break;
-
-    default:
-        buf[0] = temp | 0x80;
-        break;
-    }
-
-    //buf[0] = gesture_buf[0];
-    num = chip_info->ts->gesture_buf[1];
-
-    if(num > 208) {
-        num = 208;
-    }
-    ret = 2;
-
-    buf[1] = num;
-    //print all data
-    for (i = 0; i < num; i++) {
-        int x;
-        int y;
-        x = chip_info->ts->gesture_buf[i * 3 + 2] << 4;
-        x = x + (chip_info->ts->gesture_buf[i * 3 + 4] >> 4);
-        //x = x * (chip_info->resolution_x) ;
-
-        y = chip_info->ts->gesture_buf[i * 3 + 3] << 4;
-        y = y + (chip_info->ts->gesture_buf[i * 3 + 4] & 0x0F);
-        //y = y * (chip_info->resolution_y) / ( 2);
-
-        //TPD_INFO("nova_apk_gesture_info:gesture x is %d,y is %d.\n", x, y);
-
-        if (len < i * 4 + 2) {
-            break;
-        }
-        buf[i * 4 + 2] = x & 0xFF;
-        buf[i * 4 + 3] = (x >> 8) & 0xFF;
-        buf[i * 4 + 4] = y & 0xFF;
-        buf[i * 4 + 5] = (y >> 8) & 0xFF;
-        ret += 4;
-
-    }
-
-    return ret;
-}
-
-
-static void nova_apk_earphone_set(void *chip_data, bool on_off)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    nvt_mode_switch(chip_data, MODE_HEADSET, on_off);
-    chip_info->earphone_sta = on_off;
-}
-
-static bool nova_apk_earphone_get(void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    return chip_info->earphone_sta;
-}
-
-static void nova_apk_charger_set(void *chip_data, bool on_off)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    nvt_mode_switch(chip_data, MODE_CHARGE, on_off);
-    chip_info->plug_status = on_off;
-
-
-}
-
-static bool nova_apk_charger_get(void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    return chip_info->plug_status;
-
-}
-
-static void nova_apk_noise_set(void *chip_data, bool on_off)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    //ilitek_mode_switch(chip_data, MODE_CHARGE, on_off);
-    nvt_enable_hopping_polling_mode(chip_info, on_off);
-
-    chip_info->noise_sta = on_off;
-
-}
-
-static bool nova_apk_noise_get(void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    return chip_info->noise_sta;
-
-}
-
-static void nova_apk_water_set(void *chip_data, int type)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    //ilitek_mode_switch(chip_data, MODE_CHARGE, on_off);
-    if (type > 0) {
-        nvt_enable_water_polling_mode(chip_info, true);
-    } else {
-        nvt_enable_water_polling_mode(chip_info, false);
-    }
-
-    chip_info->water_sta = type;
-
-}
-
-static int nova_apk_water_get(void *chip_data)
-{
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-
-    return chip_info->water_sta;
-
-}
-
-static int  nova_apk_tp_info_get(void *chip_data, char *buf, int len)
-{
-    int ret;
-    struct chip_data_nt36672c *chip_info;
-    chip_info = (struct chip_data_nt36672c *)chip_data;
-    ret = snprintf(buf, len, "IC:NOVA%04X\nFW_VER:0x%02X\nCH:%dX%d\n",
-                   0x672C,
-                   chip_info->fw_ver,
-                   chip_info->hw_res->TX_NUM,
-                   chip_info->hw_res->RX_NUM);
-    if (ret > len) {
-        ret = len;
-    }
-
-    return ret;
-}
-
-static void nova_init_oplus_apk_op(struct touchpanel_data *ts)
-{
-    ts->apk_op = kzalloc(sizeof(APK_OPERATION), GFP_KERNEL);
-    if(ts->apk_op) {
-        ts->apk_op->apk_game_set = nova_apk_game_set;
-        ts->apk_op->apk_game_get = nova_apk_game_get;
-        ts->apk_op->apk_debug_set = nova_apk_debug_set;
-        ts->apk_op->apk_debug_get = nova_apk_debug_get;
-        //apk_op->apk_proximity_set = ili_apk_proximity_set;
-        //apk_op->apk_proximity_dis = ili_apk_proximity_dis;
-        ts->apk_op->apk_noise_set = nova_apk_noise_set;
-        ts->apk_op->apk_noise_get = nova_apk_noise_get;
-        ts->apk_op->apk_gesture_debug = nova_apk_gesture_debug;
-        ts->apk_op->apk_gesture_get = nova_apk_gesture_get;
-        ts->apk_op->apk_gesture_info = nova_apk_gesture_info;
-        ts->apk_op->apk_earphone_set = nova_apk_earphone_set;
-        ts->apk_op->apk_earphone_get = nova_apk_earphone_get;
-        ts->apk_op->apk_charger_set = nova_apk_charger_set;
-        ts->apk_op->apk_charger_get = nova_apk_charger_get;
-        ts->apk_op->apk_tp_info_get = nova_apk_tp_info_get;
-        ts->apk_op->apk_water_set = nova_apk_water_set;
-        ts->apk_op->apk_water_get = nova_apk_water_get;
-        //apk_op->apk_data_type_set = ili_apk_data_type_set;
-        //apk_op->apk_rawdata_get = ili_apk_rawdata_get;
-        //apk_op->apk_diffdata_get = ili_apk_diffdata_get;
-        //apk_op->apk_basedata_get = ili_apk_basedata_get;
-        //ts->apk_op->apk_backdata_get = nova_apk_backdata_get;
-        //apk_op->apk_debug_info = ili_apk_debug_info;
-
-    } else {
-        TPD_INFO("Can not kzalloc apk op.\n");
-    }
-}
-#endif // end of CONFIG_OPLUS_TP_APK
-
 //#ifdef OPLUS_FEATURE_TP_BASIC
 static int nt36672c_parse_dts(struct chip_data_nt36672c *chip_info, struct spi_device *client)
 {
@@ -5817,9 +5000,6 @@ int __maybe_unused nvt_tp_probe(struct spi_device *client)
     nvt_create_proc(ts, &nvt_proc_ops);
 
     chip_info->ts = ts;
-#ifdef CONFIG_OPLUS_TP_APK
-    nova_init_oplus_apk_op(ts);
-#endif // end of CONFIG_OPLUS_TP_APK
 	if (ts->cs_gpio_need_pull) {
 		nvt_cs_gpio_control(chip_info, true);
 	}

@@ -641,14 +641,6 @@ int ilitek_tddi_fw_upgrade(void)
         ilitek_tddi_ic_get_core_ver();
         ilitek_tddi_ic_get_tp_info();
         ilitek_tddi_ic_get_panel_info();
-
-#ifdef CONFIG_OPLUS_TP_APK
-        if(idev->debug_mode_sta && idev->actual_tp_mode != P5_X_FW_GESTURE_MODE) {
-            if(idev->ts->apk_op && idev->ts->apk_op->apk_debug_set) {
-                idev->ts->apk_op->apk_debug_set((void *)idev, true);
-            }
-        }
-#endif // end of CONFIG_OPLUS_TP_APK
     }
 out:
     ipio_vfree((void **)&pfw);

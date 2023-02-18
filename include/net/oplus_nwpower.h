@@ -50,8 +50,4 @@ extern void oplus_match_tcp_output(struct sock *sk);
 extern void oplus_match_tcp_input_retrans(struct sock *sk);
 extern void oplus_match_tcp_output_retrans(struct sock *sk);
 
-//#ifdef OPLUS_FEATURE_NWPOWER_NETCONTROLLER
-extern bool oplus_check_socket_in_blacklist(int is_input, struct socket *sock);
-//#endif /* OPLUS_FEATURE_NWPOWER_NETCONTROLLER */
-
 #endif /* __OPLUS_NWPOWER_H_ */

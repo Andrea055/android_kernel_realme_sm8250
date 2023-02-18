@@ -645,61 +645,6 @@ struct fp_underscreen_info {
     uint16_t y;
 };
 
-//#define CONFIG_OPLUS_TP_APK please define this in arch/arm64/configs
-#ifdef CONFIG_OPLUS_TP_APK
-
-typedef enum {
-    APK_NULL       = 0,
-    APK_CHARGER    = 'C',
-    APK_DATA       = 'D',
-    APK_EARPHONE   = 'E',
-    APK_GESTURE    = 'G',
-    APK_INFO       = 'I',
-    APK_NOISE      = 'N',
-    APK_PROXIMITY  = 'P',
-    APK_WATER      = 'W',
-    APK_DEBUG_MODE = 'd',
-    APK_GAME_MODE  = 'g'
-} APK_SWITCH_TYPE;
-
-typedef enum {
-    DATA_NULL   = 0,
-    BASE_DATA   = 'B',
-    DIFF_DATA   = 'D',
-    DEBUG_INFO  = 'I',
-    RAW_DATA    = 'R',
-    BACK_DATA   = 'T'
-} APK_DATA_TYPE;
-
-typedef struct apk_proc_operations {
-    void (*apk_game_set)(void *chip_data, bool on_off);
-    bool (*apk_game_get)(void *chip_data);
-    void (*apk_debug_set)(void *chip_data, bool on_off);
-    bool (*apk_debug_get)(void *chip_data);
-    void (*apk_noise_set)(void *chip_data, bool on_off);
-    bool (*apk_noise_get)(void *chip_data);
-    void (*apk_water_set)(void *chip_data, int type);
-    int (*apk_water_get)(void *chip_data);
-    void (*apk_proximity_set)(void *chip_data, bool on_off);
-    int  (*apk_proximity_dis)(void *chip_data);
-    void (*apk_gesture_debug)(void *chip_data, bool on_off);
-    bool  (*apk_gesture_get)(void *chip_data);
-    int  (*apk_gesture_info)(void *chip_data, char *buf, int len);
-    void (*apk_earphone_set)(void *chip_data, bool on_off);
-    bool (*apk_earphone_get)(void *chip_data);
-    void (*apk_charger_set)(void *chip_data, bool on_off);
-    bool (*apk_charger_get)(void *chip_data);
-    int  (*apk_tp_info_get)(void *chip_data, char *buf, int len);
-    void (*apk_data_type_set)(void *chip_data, int type);
-    int  (*apk_rawdata_get)(void *chip_data, char *buf, int len);
-    int  (*apk_diffdata_get)(void *chip_data, char *buf, int len);
-    int  (*apk_basedata_get)(void *chip_data, char *buf, int len);
-    int  (*apk_backdata_get)(void *chip_data, char *buf, int len);
-} APK_OPERATION;
-
-
-#endif // end of CONFIG_OPLUS_TP_APK
-
 struct aging_test_proc_operations;
 struct debug_info_proc_operations;
 struct earsense_proc_operations;
@@ -898,15 +843,6 @@ struct touchpanel_data {
 
 	int stop_filter_set;
 
-#ifdef CONFIG_OPLUS_TP_APK
-    APK_OPERATION *apk_op;
-    APK_SWITCH_TYPE type_now;
-    APK_DATA_TYPE data_now;
-    u8 *log_buf;
-    u8 *gesture_buf;
-    bool gesture_debug_sta;
-#endif // end of CONFIG_OPLUS_TP_APK
-
 #ifdef CONFIG_TOUCHPANEL_ALGORITHM
     struct touch_algorithm_info *algo_info;
 #endif
@@ -926,10 +862,6 @@ struct touchpanel_data {
 	bool project_info;				/*different project using different parameter*/
 	bool oos_edge_limit_support;    /*oos system edge_limit support feature*/
 };
-
-#ifdef CONFIG_OPLUS_TP_APK
-void log_buf_write(struct touchpanel_data *ts, u8 value);
-#endif // end of CONFIG_OPLUS_TP_APK
 
 
 struct oplus_touchpanel_operations {

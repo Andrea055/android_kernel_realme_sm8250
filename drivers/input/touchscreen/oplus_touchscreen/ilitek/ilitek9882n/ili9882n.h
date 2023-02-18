@@ -688,16 +688,6 @@ struct ilitek_ts_data {
     atomic_t cmd_int_check;
     atomic_t esd_stat;
 
-#ifdef CONFIG_OPLUS_TP_APK
-    bool plug_status;
-    bool lock_point_status;
-    bool debug_mode_sta;
-    bool debug_gesture_sta;
-    bool earphone_sta;
-    bool charger_sta;
-    bool noise_sta;
-#endif //end of CONFIG_OPLUS_TP_APK
-
     int (*spi_write_then_read)(struct spi_device *spi,
                                const void *txbuf,
                                unsigned n_tx, void *rxbuf, unsigned n_rx);

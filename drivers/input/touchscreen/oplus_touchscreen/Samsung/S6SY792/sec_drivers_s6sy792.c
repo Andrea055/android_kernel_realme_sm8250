@@ -116,14 +116,6 @@ static int sec_enable_black_gesture(struct chip_data_s6sy792 *chip_info, bool en
             if (0x01 == ret)
                 break;
         }
-#ifdef CONFIG_OPLUS_TP_APK
-        if (chip_info->debug_gesture_sta) {
-            chip_info->in_gesture = true;
-            chip_info->geture_points_count = 0;
-            chip_info->debug_gesture_type = 0;
-            touch_i2c_write_byte(chip_info->client, SEC_CMD_GESTURE_DEBUG, 0x01);
-        }
-#endif // end of CONFIG_OPLUS_TP_APK
     } else {
         touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0x0000);
         if (chip_info->fp_info.touch_state != FINGERPRINT_DOWN_DETECT || *chip_info->in_suspend
@@ -136,13 +128,6 @@ static int sec_enable_black_gesture(struct chip_data_s6sy792 *chip_info, bool en
                     break;
             }
         }
-#ifdef CONFIG_OPLUS_TP_APK
-        if (chip_info->debug_gesture_sta) {
-            chip_info->in_gesture = false;
-            touch_i2c_write_byte(chip_info->client, SEC_CMD_GESTURE_DEBUG, 0x00);
-        }
-#endif // end of CONFIG_OPLUS_TP_APK
-
     }
 
     if (i >= 20) {
@@ -1187,19 +1172,6 @@ static int sec_get_touch_points(void *chip_data, struct point_info *points, int 
         points[t_id].rx_er = p_event_coord->xer;
 
         obj_attention = obj_attention | (1 << t_id);    //set touch bit
-
-
-#ifdef CONFIG_OPLUS_TP_APK
-        if (chip_info->debug_gesture_sta && chip_info->in_gesture) {
-            if (chip_info->geture_points_count < 1000 && t_id < 3) {
-                chip_info->gesture_buf[chip_info->geture_points_count * 4] = t_id;
-                chip_info->gesture_buf[chip_info->geture_points_count * 4 + 1] = chip_info->first_event[1];
-                chip_info->gesture_buf[chip_info->geture_points_count * 4 + 2] = chip_info->first_event[2];
-                chip_info->gesture_buf[chip_info->geture_points_count * 4 + 3] = chip_info->first_event[3];
-                chip_info->geture_points_count++;
-            }
-        }
-#endif // end of CONFIG_OPLUS_TP_APK
     }
 
     left_event = chip_info->first_event[8] & 0x3F;
@@ -1236,19 +1208,6 @@ static int sec_get_touch_points(void *chip_data, struct point_info *points, int 
             points[t_id].rx_er = p_event_coord->xer;
 
             obj_attention = obj_attention | (1 << t_id);    //set touch bit
-
-#ifdef CONFIG_OPLUS_TP_APK
-            if (chip_info->debug_gesture_sta && chip_info->in_gesture) {
-                if (chip_info->geture_points_count < 1000 && t_id < 3) {
-                    chip_info->gesture_buf[chip_info->geture_points_count * 4] = t_id;
-                    chip_info->gesture_buf[chip_info->geture_points_count * 4 + 1] = event_buff[i][1];
-                    chip_info->gesture_buf[chip_info->geture_points_count * 4 + 2] = event_buff[i][2];
-                    chip_info->gesture_buf[chip_info->geture_points_count * 4 + 3] = event_buff[i][3];
-                    chip_info->geture_points_count++;
-                }
-            }
-#endif // end of CONFIG_OPLUS_TP_APK
-
         }
     }
 
@@ -1483,9 +1442,6 @@ static int sec_get_gesture_info(void *chip_data, struct gesture_info *gesture)
         gesture->gesture_type = UnkownGesture;
         break;
     }
-#ifdef CONFIG_OPLUS_TP_APK
-    chip_info->debug_gesture_type = gesture->gesture_type;
-#endif
     TPD_INFO("%s, gesture_id: 0x%x, gesture_type: %d, clockwise: %d, points: (%d, %d)(%d, %d)(%d, %d)(%d, %d)(%d, %d)(%d, %d)\n", \
              __func__, p_event_gesture->gestureId, gesture->gesture_type, gesture->clockwise, \
              gesture->Point_start.x, gesture->Point_start.y, \
@@ -3520,242 +3476,6 @@ static struct sec_proc_operations sec_proc_ops = {
     .set_kernel_grip_para = sec_set_kernel_grip_para,
 };
 
-#ifdef CONFIG_OPLUS_TP_APK
-
-static void sec_apk_game_set(void *chip_data, bool on_off)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    sec_mode_switch(chip_data, MODE_GAME, on_off);
-    chip_info->lock_point_status = on_off;
-}
-
-static bool sec_apk_game_get(void *chip_data)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    return chip_info->lock_point_status;
-}
-
-static void sec_apk_gesture_debug(void *chip_data, bool on_off)
-{
-
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    //get_gesture_fail_reason(on_off);
-    if (on_off) {
-        if (chip_info->gesture_buf == NULL) {
-            chip_info->gesture_buf = kzalloc(4096, GFP_KERNEL);
-        }
-        if (chip_info->gesture_buf == NULL) {
-            chip_info->debug_gesture_sta = false;
-            return;
-
-        }
-    }
-    chip_info->debug_gesture_sta = on_off;
-}
-
-static bool  sec_apk_gesture_get(void *chip_data)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    return chip_info->debug_gesture_sta;
-}
-
-static int  sec_apk_gesture_info(void *chip_data, char *buf, int len)
-{
-    int ret = 0;
-    int i;
-    int j;
-    int num;
-    int delta_index = 0;
-    int count = 0;
-    struct chip_data_s6sy792 *chip_info;
-
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-
-    if(len < 2) {
-        return 0;
-    }
-    buf[0] = 255;
-
-    if (chip_info->debug_gesture_type != 0) {
-        buf[0] = chip_info->debug_gesture_type;
-    }
-
-    num = chip_info->geture_points_count;
-
-    ret = 2;
-
-    buf[1] = 0;
-
-    if (num > 127) {
-        delta_index = (num + 1) / 128;
-    }
-    //print all data
-    for (i = 0; i < 3; i++) {
-        int temp;
-        temp = delta_index;
-        for (j = 0; j < num; j++) {
-            if (chip_info->gesture_buf[j * 4] == i) {
-                int x;
-                int y;
-
-                x = (chip_info->gesture_buf[j * 4 + 1] << 4) | (chip_info->gesture_buf[j * 4 + 3] >> 4);
-
-                y = (chip_info->gesture_buf[j * 4 + 2] << 4) | (chip_info->gesture_buf[j * 4 + 3] & 0x0F);
-
-
-                //TPD_INFO("nova_apk_gesture_info:gesture x is %d,y is %d.\n", x, y);
-
-                if (len < i * 4 + 2) {
-                    break;
-                }
-                buf[count * 4 + 2] = x & 0xFF;
-                buf[count * 4 + 3] = (x >> 8) & 0xFF;
-                buf[count * 4 + 4] = y & 0xFF;
-                buf[count * 4 + 5] = (y >> 8) & 0xFF;
-                temp++;
-                if(temp > delta_index) {
-                    temp = 0;
-                    count++;
-                    ret += 4;
-                }
-            }
-        }
-        if (temp != 0) {
-            count++;
-            ret += 4;
-        }
-    }
-    buf[1] = count;
-
-    return ret;
-}
-
-
-static void sec_apk_earphone_set(void *chip_data, bool on_off)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    sec_mode_switch(chip_data, MODE_HEADSET, on_off);
-    chip_info->earphone_sta = on_off;
-}
-
-static bool sec_apk_earphone_get(void *chip_data)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    return chip_info->earphone_sta;
-}
-
-static void sec_apk_charger_set(void *chip_data, bool on_off)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    sec_mode_switch(chip_data, MODE_CHARGE, on_off);
-    chip_info->plug_status = on_off;
-
-
-}
-
-static bool sec_apk_charger_get(void *chip_data)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-
-    return chip_info->plug_status;
-
-}
-
-static void sec_apk_water_set(void *chip_data, int type)
-{
-    struct chip_data_s6sy792 *chip_info;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-
-    if (type > 0) {
-        touch_i2c_write_byte(chip_info->client, SEC_CMD_WET_SWITCH, 3);
-    } else {
-        touch_i2c_write_byte(chip_info->client, SEC_CMD_WET_SWITCH, 0);
-    }
-
-    //chip_info->water_sta = type;
-
-}
-
-static int sec_apk_water_get(void *chip_data)
-{
-    struct chip_data_s6sy792 *chip_info;
-    int ret = -1;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    ret = touch_i2c_read_byte(chip_info->client, SEC_CMD_WET_SWITCH);
-
-    if (ret == 3) {
-        return 1;
-    }
-
-    return 0;
-}
-
-static int  sec_apk_tp_info_get(void *chip_data, char *buf, int len)
-{
-    int ret;
-    struct chip_data_s6sy792 *chip_info;
-    unsigned char data[5];
-    int fw_ver;
-    chip_info = (struct chip_data_s6sy792 *)chip_data;
-    memset(data, 0, 5);
-    touch_i2c_read_block(chip_info->client, SEC_READ_IMG_VERSION, 4, data);
-    fw_ver = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
-    ret = snprintf(buf, len, "IC:S6SY%03X\nFW_VER:0x%02X\nCH:%dX%d\n",
-                   0x792,
-                   fw_ver,
-                   chip_info->hw_res->TX_NUM,
-                   chip_info->hw_res->RX_NUM);
-    if (ret > len) {
-        ret = len;
-    }
-
-    return ret;
-}
-
-static void sec_init_oplus_apk_op(struct touchpanel_data *ts)
-{
-    ts->apk_op = kzalloc(sizeof(APK_OPERATION), GFP_KERNEL);
-    if(ts->apk_op) {
-        ts->apk_op->apk_game_set = sec_apk_game_set;
-        ts->apk_op->apk_game_get = sec_apk_game_get;
-        //ts->apk_op->apk_debug_set = sec_apk_debug_set;
-        //ts->apk_op->apk_debug_get = sec_apk_debug_get;
-        //apk_op->apk_proximity_set = sec_apk_proximity_set;
-        //apk_op->apk_proximity_dis = sec_apk_proximity_dis;
-        //ts->apk_op->apk_noise_set = sec_apk_noise_set;
-        //ts->apk_op->apk_noise_get = sec_apk_noise_get;
-        ts->apk_op->apk_gesture_debug = sec_apk_gesture_debug;
-        ts->apk_op->apk_gesture_get = sec_apk_gesture_get;
-        ts->apk_op->apk_gesture_info = sec_apk_gesture_info;
-        ts->apk_op->apk_earphone_set = sec_apk_earphone_set;
-        ts->apk_op->apk_earphone_get = sec_apk_earphone_get;
-        ts->apk_op->apk_charger_set = sec_apk_charger_set;
-        ts->apk_op->apk_charger_get = sec_apk_charger_get;
-        ts->apk_op->apk_tp_info_get = sec_apk_tp_info_get;
-        ts->apk_op->apk_water_set = sec_apk_water_set;
-        ts->apk_op->apk_water_get = sec_apk_water_get;
-        //apk_op->apk_data_type_set = sec_apk_data_type_set;
-        //apk_op->apk_rawdata_get = sec_apk_rawdata_get;
-        //apk_op->apk_diffdata_get = sec_apk_diffdata_get;
-        //apk_op->apk_basedata_get = sec_apk_basedata_get;
-        //ts->apk_op->apk_backdata_get = sec_apk_backdata_get;
-        //apk_op->apk_debug_info = sec_apk_debug_info;
-
-    } else {
-        TPD_INFO("Can not kzalloc apk op.\n");
-    }
-}
-#endif // end of CONFIG_OPLUS_TP_APK
-
-
 /*********** Start of I2C Driver and Implementation of it's callbacks*************************/
 static int sec_tp_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
@@ -3822,10 +3542,6 @@ static int sec_tp_probe(struct i2c_client *client, const struct i2c_device_id *i
     /* 6. create debug interface*/
     sec_raw_device_init(ts);
     sec_create_proc(ts, &sec_proc_ops);
-
-#ifdef CONFIG_OPLUS_TP_APK
-    sec_init_oplus_apk_op(ts);
-#endif // end of CONFIG_OPLUS_TP_APK
 
     /* 7. kernel grip interface init*/
     if (ts->grip_info) {

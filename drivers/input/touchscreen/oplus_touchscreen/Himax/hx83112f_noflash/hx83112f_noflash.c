@@ -1403,14 +1403,6 @@ void himax_mcu_0f_operation(struct work_struct *work)
     msleep (10);
     TPD_INFO("%s:End \n", __func__);
 
-#ifdef CONFIG_OPLUS_TP_APK
-    if(g_chip_info->debug_mode_sta) {
-        if(private_ts->apk_op && private_ts->apk_op->apk_debug_set) {
-            private_ts->apk_op->apk_debug_set(private_ts->chip_data, true);
-        }
-    }
-#endif // end of CONFIG_OPLUS_TP_APK
-
     hx83112f_enable_interrupt(g_chip_info, true);
 
     g_f_0f_updat = 0;
@@ -4777,236 +4769,6 @@ static size_t hx83112f_proc_vendor_read(struct file *file, char *buf,
     return ret;
 }
 
-#ifdef CONFIG_OPLUS_TP_APK
-static void himax_gesture_debug_mode_set(bool on_off)
-{
-    uint8_t tmp_addr[4] = {0};
-    uint8_t tmp_data[4] = {0};
-    char buf[80] = {0};
-    tmp_addr[3] = 0x10;
-    tmp_addr[2] = 0x00;
-    tmp_addr[1] = 0x7F;
-    tmp_addr[0] = 0xF8;
-
-    if (on_off) {
-        switch_algo = buf[0];
-        check_point_format = 1;
-        tmp_data[3] = 0xA1;
-        tmp_data[2] = 0x1A;
-        tmp_data[1] = 0xA1;
-        tmp_data[0] = 0x1A;
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-        TPD_INFO("%s: Report 40 trajectory coordinate points .\n", __func__);
-    }  else {
-        switch_algo = 0;
-        check_point_format = 0;
-        tmp_data[3] = 0x00;
-        tmp_data[2] = 0x00;
-        tmp_data[1] = 0x00;
-        tmp_data[0] = 0x00;
-
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-        TPD_INFO("%s: close FW enter algorithm switch.\n", __func__);
-    }
-}
-
-
-static void himax_debug_mode_set(bool on_off)
-{
-    uint8_t tmp_addr[4] = {0};
-    uint8_t tmp_data[4] = {0};
-    char buf[80] = {0};
-    tmp_addr[3] = 0x10;
-    tmp_addr[2] = 0x00;
-    tmp_addr[1] = 0x7F;
-    tmp_addr[0] = 0xF8;
-
-    if (on_off) {
-        switch_algo = buf[0];
-        check_point_format = 0;
-        tmp_data[3] = 0xA5;
-        tmp_data[2] = 0x5A;
-        tmp_data[1] = 0xA5;
-        tmp_data[0] = 0x5A;
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-        TPD_INFO("%s: open FW enter algorithm switch.\n", __func__);
-    }  else {
-        switch_algo = 0;
-        check_point_format = 0;
-        tmp_data[3] = 0x00;
-        tmp_data[2] = 0x00;
-        tmp_data[1] = 0x00;
-        tmp_data[0] = 0x00;
-
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-        TPD_INFO("%s: close FW enter algorithm switch.\n", __func__);
-    }
-}
-
-static void himax_debug_sta_judge(struct chip_data_hx83112f *chip_info)
-{
-    static struct himax_fw_debug_info last_sta;
-    struct himax_fw_debug_info sta;
-
-    memcpy(&sta, &hx_touch_data->hx_state_info[3], sizeof(sta));
-
-    if (last_sta.recal0 != sta.recal0) {
-        if (sta.recal0) {
-            log_buf_write(private_ts, 1);
-        } else {
-            log_buf_write(private_ts, 2);
-        }
-
-    }
-
-    if (last_sta.recal1 != sta.recal1) {
-        if (sta.recal1) {
-            log_buf_write(private_ts, 4);
-        } else {
-            log_buf_write(private_ts, 3);
-        }
-
-    }
-
-    if (last_sta.paseline != sta.paseline) {
-        if (sta.paseline) {
-            log_buf_write(private_ts, 5);
-        } else {
-            //log_buf_write(private_ts, 4);
-        }
-
-    }
-
-    if (last_sta.palm != sta.palm) {
-        if (sta.palm) {
-            log_buf_write(private_ts, 7);
-        } else {
-            log_buf_write(private_ts, 6);
-        }
-
-    }
-    if (last_sta.idle != sta.idle) {
-        if (sta.idle) {
-            log_buf_write(private_ts, 9);
-        } else {
-            log_buf_write(private_ts, 8);
-        }
-
-    }
-
-    if (last_sta.water != sta.water) {
-        if (sta.water) {
-            log_buf_write(private_ts, 11);
-        } else {
-            log_buf_write(private_ts, 10);
-        }
-
-    }
-
-    if (last_sta.hopping != sta.hopping) {
-        if (sta.hopping) {
-            log_buf_write(private_ts, 13);
-        } else {
-            log_buf_write(private_ts, 12);
-        }
-
-    }
-
-    if (last_sta.noise != sta.noise) {
-        if (sta.noise) {
-            log_buf_write(private_ts, 15);
-        } else {
-            log_buf_write(private_ts, 14);
-        }
-
-    }
-
-    if (last_sta.glove != sta.glove) {
-        if (sta.glove) {
-            log_buf_write(private_ts, 17);
-        } else {
-            log_buf_write(private_ts, 16);
-        }
-
-    }
-
-    if (last_sta.border != sta.border) {
-        if (sta.border) {
-            log_buf_write(private_ts, 19);
-        } else {
-            log_buf_write(private_ts, 18);
-        }
-
-    }
-
-    if (last_sta.vr != sta.vr) {
-        if (sta.vr) {
-            log_buf_write(private_ts, 21);
-        } else {
-            log_buf_write(private_ts, 20);
-        }
-
-    }
-
-    if (last_sta.big_small != sta.big_small) {
-        if (sta.big_small) {
-            log_buf_write(private_ts, 23);
-        } else {
-            log_buf_write(private_ts, 22);
-        }
-
-    }
-
-    if (last_sta.one_block != sta.one_block) {
-        if (sta.one_block) {
-            log_buf_write(private_ts, 25);
-        } else {
-            log_buf_write(private_ts, 24);
-        }
-
-    }
-
-    if (last_sta.blewing != sta.blewing) {
-        if (sta.blewing) {
-            log_buf_write(private_ts, 27);
-        } else {
-            log_buf_write(private_ts, 26);
-        }
-
-    }
-
-    if (last_sta.thumb_flying != sta.thumb_flying) {
-        if (sta.thumb_flying) {
-            log_buf_write(private_ts, 29);
-        } else {
-            log_buf_write(private_ts, 28);
-        }
-
-    }
-
-    if (last_sta.border_extend != sta.border_extend) {
-        if (sta.border_extend) {
-            log_buf_write(private_ts, 31);
-        } else {
-            log_buf_write(private_ts, 30);
-        }
-
-    }
-
-    memcpy(&last_sta, &sta, sizeof(last_sta));
-
-    if (tp_debug > 0) {
-        TPD_INFO("The sta  is = 0x%02X,0x%02X\n",
-                 hx_touch_data->hx_state_info[3],
-                 hx_touch_data->hx_state_info[4]);
-    }
-
-    return;
-}
-
-
-#endif
-
 static int hx83112f_get_touch_points(void *chip_data, struct point_info *points, int max_num)
 {
     int i, x, y, z = 1, obj_attention = 0;
@@ -5066,11 +4828,6 @@ static int hx83112f_get_touch_points(void *chip_data, struct point_info *points,
         memcpy(hx_touch_data->hx_coord_buf, &buf[0], hx_touch_data->touch_info_size);
         if(buf[hx_state_info_pos] != 0xFF && buf[hx_state_info_pos + 1] != 0xFF) {
             memcpy(hx_touch_data->hx_state_info, &buf[hx_state_info_pos], 5);
-#ifdef CONFIG_OPLUS_TP_APK
-            if (chip_info->debug_mode_sta) {
-                himax_debug_sta_judge(chip_info);
-            }
-#endif
         } else {
             memset(hx_touch_data->hx_state_info, 0x00, sizeof(hx_touch_data->hx_state_info));
         }
@@ -5523,12 +5280,6 @@ static int hx83112f_enable_black_gesture(struct chip_data_hx83112f *chip_info, b
                 himax_hx83112f_reload_to_active();
                 hx83112f_enable_interrupt(chip_info, true);
             }
-
-#ifdef CONFIG_OPLUS_TP_APK
-            if (chip_info->debug_gesture_sta) {
-                himax_gesture_debug_mode_set(true);
-            }
-#endif
         } else {
             p_sensor_rec = true;
             himax_ultra_enter();
@@ -6023,20 +5774,15 @@ static int hx83112f_get_gesture_info(void *chip_data, struct gesture_info *gestu
                 gesture_sign = buf[i];
             } else {
                 check_FC = 0;
-                //TPD_DEBUG("ID START at %x , value = %x skip the event\n", i, buf[i]);
                 break;
             }
         } else {
             if (buf[i] != gesture_sign) {
                 check_FC = 0;
-                //TPD_DEBUG("ID NOT the same %x != %x So STOP parse event\n", buf[i], gesture_sign);
                 break;
             }
         }
-        //TPD_DEBUG("0x%2.2X ", buf[i]);
     }
-    //TPD_DEBUG("Himax gesture_sign= %x\n",gesture_sign );
-    //TPD_DEBUG("Himax check_FC is %d\n", check_FC);
 
     if (buf[GEST_PTLG_ID_LEN] != GEST_PTLG_HDR_ID1 ||
         buf[GEST_PTLG_ID_LEN + 1] != GEST_PTLG_HDR_ID2) {
@@ -6053,10 +5799,6 @@ static int hx83112f_get_gesture_info(void *chip_data, struct gesture_info *gestu
 
         i = 0;
         gest_pt_cnt = 0;
-        //TPD_DEBUG("gest doornidate start  %s\n",__func__);
-#ifdef CONFIG_OPLUS_TP_APK
-        if(check_point_format == 0) {
-#endif
             while (i < (gest_len + 1) / 2) {
 
                 if (i == 6) {
@@ -6066,49 +5808,9 @@ static int hx83112f_get_gesture_info(void *chip_data, struct gesture_info *gestu
                 }
                 gest_pt_y[gest_pt_cnt] = buf[GEST_PTLG_ID_LEN + 4 + i * 2 + 1] * private_ts->resolution_info.max_y / 255;
                 i++;
-                //TPD_DEBUG("gest_pt_x[%d]=%d \n",gest_pt_cnt,gest_pt_x[gest_pt_cnt]);
-                //TPD_DEBUG("gest_pt_y[%d]=%d \n",gest_pt_cnt,gest_pt_y[gest_pt_cnt]);
                 gest_pt_cnt += 1;
 
             }
-#ifdef CONFIG_OPLUS_TP_APK
-        } else {
-            int j = 0;
-            int nn;
-            int n = 24;
-            int m = 26;
-            int pt_num;
-            gest_pt_cnt = 40;
-            if (private_ts->gesture_buf) {
-
-                pt_num = gest_len + buf[126];
-                if (pt_num > 104) {
-                    pt_num = 104;
-                }
-                private_ts->gesture_buf[0] = gesture_sign;
-                private_ts->gesture_buf[1] = buf[127];
-
-                if (private_ts->gesture_buf[0] == 0x07) {
-                    for(j = 0; j < gest_len * 2; j = j + 2) {
-                        private_ts->gesture_buf[3 + j] = buf[n];
-                        private_ts->gesture_buf[3 + j + 1] = buf[n + 1];
-                        n = n + 4;
-                    }
-
-                    for(nn = 0; nn < (pt_num - gest_len)   * 2 ; nn = nn + 2) {
-                        private_ts->gesture_buf[3 + j + nn] = buf[m];
-                        private_ts->gesture_buf[3 + j + nn + 1] = buf[m + 1];
-                        m = m + 4;
-                    }
-                    private_ts->gesture_buf[2] = pt_num;
-                } else {
-                    private_ts->gesture_buf[2] = gest_len;
-                    memcpy(&private_ts->gesture_buf[3], &buf[24], 80);
-                }
-
-            }
-        }
-#endif
 
         if (gest_pt_cnt) {
             gesture->gesture_type = gesture_sign;/* id */
@@ -6125,12 +5827,8 @@ static int hx83112f_get_gesture_info(void *chip_data, struct gesture_info *gestu
             gesture->Point_4th.x = gest_pt_x[5];/* 4 */
             gesture->Point_4th.y = gest_pt_y[5];
             gesture->clockwise = gest_pt_x[6]; /*  1, 0 */
-            //TPD_DEBUG("gesture->gesture_type = %d \n", gesture->gesture_type);
-            /*for (i = 0; i < 6; i++)
-               TPD_DEBUG("%d [ %d  %d ]\n", i, gest_pt_x[i], gest_pt_y[i]);*/
         }
     }
-    //TPD_DETAIL("%s, gesture_type = %d\n", __func__, gesture->gesture_type);
 
 RET_OUT:
     if (buf) {
@@ -6139,7 +5837,6 @@ RET_OUT:
     return 0;
 
 err_workqueue_out:
-    //himax_ic_reset(chip_info, false, true);
     return -1;
 }
 
@@ -6518,11 +6215,6 @@ static void hx83112f_delta_read(struct seq_file *s, void *chip_data)
     struct chip_data_hx83112f *chip_info;
     chip_info = (struct chip_data_hx83112f *)chip_data;
     hx83112f_read_debug_data(s, chip_data, DEBUG_DATA_DELTA);
-#ifdef CONFIG_OPLUS_TP_APK
-    if (chip_info->debug_mode_sta) {
-        hx83112f_read_debug_data(s, chip_data, DEBUG_DATA_DOWN);
-    }
-#endif // end of CONFIG_OPLUS_TP_APK
     return;
 }
 
@@ -6768,272 +6460,6 @@ static struct debug_info_proc_operations debug_info_proc_ops = {
     .reserve_read = hx83112f_reserve_read,
 };
 
-#ifdef CONFIG_OPLUS_TP_APK
-
-static void himax_enter_hopping_write(bool on_off)
-{
-    uint8_t tmp_addr[4] = {0};
-    uint8_t tmp_data[4] = {0};
-
-
-    if (on_off) {
-        tmp_addr[3] = 0x10;
-        tmp_addr[2] = 0x00;
-        tmp_addr[1] = 0x7F;
-        tmp_addr[0] = 0xF8;
-
-        tmp_data[3] = 0xA5;
-        tmp_data[2] = 0x5A;
-        tmp_data[1] = 0xA5;
-        tmp_data[0] = 0x5A;
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-
-        tmp_addr[3] = 0x10;
-        tmp_addr[2] = 0x00;
-        tmp_addr[1] = 0x7F;
-        tmp_addr[0] = 0xC4;
-
-        tmp_data[3] = 0xA1;
-        tmp_data[2] = 0x1A;
-        tmp_data[1] = 0xA1;
-        tmp_data[0] = 0x1A;
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-        TPD_INFO("%s: open himax enter hopping write.\n", __func__);
-    } else {
-        tmp_addr[3] = 0x10;
-        tmp_addr[2] = 0x00;
-        tmp_addr[1] = 0x7F;
-        tmp_addr[0] = 0xF8;
-
-        tmp_data[3] = 0;
-        tmp_data[2] = 0;
-        tmp_data[1] = 0;
-        tmp_data[0] = 0;
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-
-        tmp_addr[3] = 0x10;
-        tmp_addr[2] = 0x00;
-        tmp_addr[1] = 0x7F;
-        tmp_addr[0] = 0xC4;
-
-        tmp_data[3] = 0;
-        tmp_data[2] = 0;
-        tmp_data[1] = 0;
-        tmp_data[0] = 0;
-        himax_register_write(tmp_addr, 4, tmp_data, 0);
-
-        TPD_INFO("%s: close himax hopping write.\n", __func__);
-    }
-
-}
-
-
-static void himax_apk_game_set(void *chip_data, bool on_off)
-{
-    hx83112f_mode_switch(chip_data, MODE_GAME, on_off);
-}
-
-static bool himax_apk_game_get(void *chip_data)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    return chip_info->lock_point_status;
-}
-
-static void himax_apk_debug_set(void *chip_data, bool on_off)
-{
-    //u8 cmd[1];
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-
-    himax_debug_mode_set(on_off);
-    chip_info->debug_mode_sta = on_off;
-}
-
-static bool himax_apk_debug_get(void *chip_data)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-
-    return chip_info->debug_mode_sta;
-}
-
-static void himax_apk_gesture_debug(void *chip_data, bool on_off)
-{
-
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    //get_gesture_fail_reason(on_off);
-    chip_info->debug_gesture_sta = on_off;
-}
-
-static bool  himax_apk_gesture_get(void *chip_data)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    return chip_info->debug_gesture_sta;
-}
-
-static int  himax_apk_gesture_info(void *chip_data, char *buf, int len)
-{
-    int ret = 0;
-    int i;
-    int num;
-    u8 temp;
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-
-    if(len < 2) {
-        return 0;
-    }
-    buf[0] = 255;
-
-    temp = private_ts->gesture_buf[0];
-    if (temp == 0x00) {
-        temp = private_ts->gesture_buf[1] | 0x80;
-    }
-    buf[0] = temp;
-
-    //buf[0] = gesture_buf[0];
-    num = private_ts->gesture_buf[2];
-
-    if(num > 40) {
-        num = 40;
-    }
-    ret = 2;
-
-    buf[1] = num;
-    //print all data
-    for (i = 0; i < num; i++) {
-        int x;
-        int y;
-        x = private_ts->gesture_buf[i * 2 + 3];
-        x = x * private_ts->resolution_info.max_x / 255;
-
-        y = private_ts->gesture_buf[i * 2 + 4];
-        y = y * private_ts->resolution_info.max_y / 255;
-
-
-        //TPD_INFO("nova_apk_gesture_info:gesture x is %d,y is %d.\n", x, y);
-
-        if (len < i * 4 + 2) {
-            break;
-        }
-        buf[i * 4 + 2] = x & 0xFF;
-        buf[i * 4 + 3] = (x >> 8) & 0xFF;
-        buf[i * 4 + 4] = y & 0xFF;
-        buf[i * 4 + 5] = (y >> 8) & 0xFF;
-        ret += 4;
-
-    }
-
-    return ret;
-}
-
-
-static void himax_apk_earphone_set(void *chip_data, bool on_off)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    hx83112f_mode_switch(chip_data, MODE_HEADSET, on_off);
-    chip_info->earphone_sta = on_off;
-}
-
-static bool himax_apk_earphone_get(void *chip_data)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    return chip_info->earphone_sta;
-}
-
-static void himax_apk_charger_set(void *chip_data, bool on_off)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    hx83112f_mode_switch(chip_data, MODE_CHARGE, on_off);
-    chip_info->plug_status = on_off;
-
-
-}
-
-static bool himax_apk_charger_get(void *chip_data)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-
-    return chip_info->plug_status;
-
-}
-
-static void himax_apk_noise_set(void *chip_data, bool on_off)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    himax_enter_hopping_write(on_off);
-    chip_info->noise_sta = on_off;
-
-}
-
-static bool himax_apk_noise_get(void *chip_data)
-{
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-
-    return chip_info->noise_sta;
-
-}
-
-
-static int  himax_apk_tp_info_get(void *chip_data, char *buf, int len)
-{
-    int ret;
-    struct chip_data_hx83112f *chip_info;
-    chip_info = (struct chip_data_hx83112f *)chip_data;
-    ret = snprintf(buf, len, "IC:HIMAX%06X\nFW_VER:0x%04X\nCH:%dX%d\n",
-                   0x83112F,
-                   chip_info->fw_ver,
-                   chip_info->hw_res->TX_NUM,
-                   chip_info->hw_res->RX_NUM);
-    if (ret > len) {
-        ret = len;
-    }
-
-    return ret;
-}
-
-static void himax_init_oplus_apk_op(struct touchpanel_data *ts)
-{
-    ts->apk_op = kzalloc(sizeof(APK_OPERATION), GFP_KERNEL);
-    if(ts->apk_op) {
-        ts->apk_op->apk_game_set = himax_apk_game_set;
-        ts->apk_op->apk_game_get = himax_apk_game_get;
-        ts->apk_op->apk_debug_set = himax_apk_debug_set;
-        ts->apk_op->apk_debug_get = himax_apk_debug_get;
-        //apk_op->apk_proximity_set = ili_apk_proximity_set;
-        //apk_op->apk_proximity_dis = ili_apk_proximity_dis;
-        ts->apk_op->apk_noise_set = himax_apk_noise_set;
-        ts->apk_op->apk_noise_get = himax_apk_noise_get;
-        ts->apk_op->apk_gesture_debug = himax_apk_gesture_debug;
-        ts->apk_op->apk_gesture_get = himax_apk_gesture_get;
-        ts->apk_op->apk_gesture_info = himax_apk_gesture_info;
-        ts->apk_op->apk_earphone_set = himax_apk_earphone_set;
-        ts->apk_op->apk_earphone_get = himax_apk_earphone_get;
-        ts->apk_op->apk_charger_set = himax_apk_charger_set;
-        ts->apk_op->apk_charger_get = himax_apk_charger_get;
-        ts->apk_op->apk_tp_info_get = himax_apk_tp_info_get;
-        //apk_op->apk_data_type_set = ili_apk_data_type_set;
-        //apk_op->apk_rawdata_get = ili_apk_rawdata_get;
-        //apk_op->apk_diffdata_get = ili_apk_diffdata_get;
-        //apk_op->apk_basedata_get = ili_apk_basedata_get;
-        //ts->apk_op->apk_backdata_get = nova_apk_backdata_get;
-        //apk_op->apk_debug_info = ili_apk_debug_info;
-
-    } else {
-        TPD_INFO("Can not kzalloc apk op.\n");
-    }
-}
-#endif // end of CONFIG_OPLUS_TP_APK
-
 #if 1
 static int
 #else
@@ -7127,10 +6553,6 @@ hx83112f_tp_probe(struct spi_device *spi)
     ts->ts_ops = &hx83112f_ops;
 
     private_ts = ts;
-
-#ifdef CONFIG_OPLUS_TP_APK
-    himax_init_oplus_apk_op(ts);
-#endif // end of CONFIG_OPLUS_TP_APK
 
     //step5:register common touch
     ret = register_common_touch_device(ts);

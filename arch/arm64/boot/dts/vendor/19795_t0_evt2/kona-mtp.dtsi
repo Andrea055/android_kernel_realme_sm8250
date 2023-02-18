@@ -1076,12 +1076,7 @@
 	pinctrl-1 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &storage_cd>;
 
 	cd-gpios = <&tlmm 77 GPIO_ACTIVE_LOW>;
-
-//#ifndef OPLUS_FEATURE_EMMC_DRIVER
-//	status = "ok";
-//#else
-	status = "disabled";
-//#endif
+	status = "ok";
 };
 
 &usb1 {

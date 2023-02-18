@@ -269,17 +269,6 @@ struct chip_data_nt36525b {
     bool g_fw_sta;
     u8 *fw_buf_dma;
     bool need_judge_irq_throw;
-#ifdef CONFIG_OPLUS_TP_APK
-
-    bool lock_point_status;
-    bool plug_status;
-    bool debug_mode_sta;
-    bool debug_gesture_sta;
-    bool earphone_sta;
-    bool charger_sta;
-    bool noise_sta;
-    int water_sta;
-#endif //end of CONFIG_OPLUS_TP_APK
 };
 
 

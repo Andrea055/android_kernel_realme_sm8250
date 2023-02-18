@@ -314,18 +314,6 @@ struct chip_data_s6sy792 {
     int                             *fp_enable;
     int                             kernel_grip_para;
     bool                            auto_test_need_cal_support;
-#ifdef CONFIG_OPLUS_TP_APK
-
-    bool lock_point_status;
-    bool plug_status;
-    bool debug_gesture_sta;
-    bool earphone_sta;
-    u8 *gesture_buf;
-    int geture_points_count;
-    bool in_gesture;
-    u32 debug_gesture_type;
-    //bool water_sta;
-#endif //end of CONFIG_OPLUS_TP_APK
 };
 
 struct sec_support_grip_zone {

@@ -1269,56 +1269,6 @@ static void device_restart_work_hdlr(struct work_struct *work)
 							dev->desc->name);
 }
 
-#ifdef OPLUS_FEATURE_WIFI_DCS_SWITCH
-#define WCNSS_CRASH_REASON_SMEM		422
-#include <linux/soc/qcom/smem.h>
-#include <linux/soc/qcom/smem_state.h>
-void __wlan_subsystem_send_uevent(struct device *dev, char *reason, const char *name)
-{
-	int ret_val;
-	char event[] = "WLAN_SWITCH_EVENT=Subsystem";
-	char fw_Reason[300] = {0};
-	char sub_name[300] = {0};
-	char *envp[4];
-
-	if (name) {
-		snprintf(sub_name, sizeof(sub_name), "subsystem_name=%s", name);
-	} else {
-		snprintf(sub_name, sizeof(sub_name), "subsystem_name=unkown");
-	}
-
-	if (reason) {
-		snprintf(fw_Reason, sizeof(fw_Reason), "WLAN_MONITER_REASON=%s", reason);
-	} else {
-		snprintf(fw_Reason, sizeof(fw_Reason), "WLAN_MONITER_REASON=unkown");
-	}
-
-	envp[0] = (char *)&event;
-
-	fw_Reason[299] = 0;
-	envp[1] = (char *)&fw_Reason;
-	envp[2] = (char *)&sub_name;
-	envp[3] = 0;
-
-	if (dev) {
-		ret_val = kobject_uevent_env(&(dev->kobj), KOBJ_CHANGE, envp);
-		if (!ret_val) {
-			pr_info("wlan crash:kobject_uevent_env success!\n");
-		} else {
-			pr_info("wlan crash:kobject_uevent_env fail,error=%d!\n", ret_val);
-		}
-	}
-}
-EXPORT_SYMBOL(__wlan_subsystem_send_uevent);
-
-void wlan_subsystem_send_uevent(struct subsys_device *dev, char *reason, const char *name)
-{
-	__wlan_subsystem_send_uevent(&(dev->dev), reason, name);
-	return;
-}
-EXPORT_SYMBOL(wlan_subsystem_send_uevent);
-#endif /* OPLUS_FEATURE_WIFI_DCS_SWITCH */
-
 int subsystem_restart_dev(struct subsys_device *dev)
 {
 	const char *name;
@@ -1343,12 +1293,7 @@ int subsystem_restart_dev(struct subsys_device *dev)
 		}
 	}
 #endif
-#ifdef OPLUS_FEATURE_WIFI_DCS_SWITCH
-	if (subsys_get_crash_status(dev) == CRASH_STATUS_ERR_FATAL) {
-		pr_info("subsystem_restart_dev wlan send uevent");
-		__wlan_subsystem_send_uevent(&(dev->dev), "", dev->desc->name);
-	}
-#endif /* OPLUS_FEATURE_WIFI_DCS_SWITCH */
+
 	send_early_notifications(dev->early_notify);
 
 	/*

@@ -1089,19 +1089,6 @@ out:
     ili_ic_get_fw_ver();
     ili_ic_get_tp_info();
     ili_ic_get_panel_info();
-#ifdef CONFIG_OPLUS_TP_APK
-
-    if (ilits->debug_mode_sta
-        && ilits->actual_tp_mode !=
-        P5_X_FW_GESTURE_MODE) {
-        if (ilits->ts->apk_op
-            && ilits->ts->apk_op->apk_debug_set) {
-            ilits->ts->apk_op->apk_debug_set((void *)ilits,
-                                             true);
-        }
-    }
-
-#endif // end of CONFIG_OPLUS_TP_APK
 
     if (set_esd_check) {
         set_esd_check = false;

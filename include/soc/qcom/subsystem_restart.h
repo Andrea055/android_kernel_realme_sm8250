@@ -153,11 +153,6 @@ extern bool oplus_get_ssr_state(void);
 extern int subsys_get_restart_level(struct subsys_device *dev);
 extern int subsystem_restart_dev(struct subsys_device *dev);
 
-#ifdef OPLUS_FEATURE_WIFI_DCS_SWITCH
-extern void __wlan_subsystem_send_uevent(struct device *dev, char *reason, const char *name);
-extern void wlan_subsystem_send_uevent(struct subsys_device *dev, char *reason, const char *name);
-#endif /*OPLUS_FEATURE_WIFI_DCS_SWITCH*/
-
 extern int subsystem_restart(const char *name);
 extern int subsystem_crashed(const char *name);
 

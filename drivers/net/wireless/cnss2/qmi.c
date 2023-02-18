@@ -783,15 +783,6 @@ request_bdf:
 	remaining = fw_entry->size;
 
 bypass_bdf:
-    #ifdef OPLUS_FEATURE_WIFI_DCS_SWITCH
-    //Add for wifi switch monitor
-	if (bdf_type == CNSS_BDF_REGDB) {
-		set_bit(CNSS_LOAD_REGDB_SUCCESS, &plat_priv->loadRegdbState);
-	} else if (bdf_type == CNSS_BDF_ELF){
-		set_bit(CNSS_LOAD_BDF_SUCCESS, &plat_priv->loadBdfState);
-	}
-    #endif /* OPLUS_FEATURE_WIFI_DCS_SWITCH */
-
 	cnss_pr_dbg("Downloading BDF: %s, size: %u\n", filename, remaining);
 
 #ifdef OPLUS_FEATURE_WIFI_BDF
@@ -880,14 +871,6 @@ err_send:
 	if (bdf_type != CNSS_BDF_DUMMY)
 		release_firmware(fw_entry);
 err_req_fw:
-#ifdef OPLUS_FEATURE_WIFI_DCS_SWITCH
-    //Add for wifi switch monitor
-	if (bdf_type == CNSS_BDF_REGDB) {
-		set_bit(CNSS_LOAD_REGDB_FAIL, &plat_priv->loadRegdbState);
-	} else if (bdf_type == CNSS_BDF_ELF){
-		set_bit(CNSS_LOAD_BDF_FAIL, &plat_priv->loadBdfState);
-	}
-#endif /* OPLUS_FEATURE_WIFI_DCS_SWITCH */
 	if (bdf_type != CNSS_BDF_REGDB)
 		CNSS_QMI_ASSERT();
 

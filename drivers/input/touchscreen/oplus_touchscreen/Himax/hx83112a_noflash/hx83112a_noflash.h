@@ -487,16 +487,6 @@ struct chip_data_hx83112a_nf {
     u8 *g_fw_buf;
     size_t g_fw_len;
     bool g_fw_sta;
-
-#ifdef CONFIG_OPLUS_TP_APK
-    bool lock_point_status;
-    bool plug_status;
-    bool debug_mode_sta;
-    bool debug_gesture_sta;
-    bool earphone_sta;
-    bool charger_sta;
-    bool noise_sta;
-#endif //end of CONFIG_OPLUS_TP_APK
 };
 
 /*********PART4:ZERO FLASH**********************/

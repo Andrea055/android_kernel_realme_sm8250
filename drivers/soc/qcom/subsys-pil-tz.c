@@ -824,23 +824,10 @@ static void log_failure_reason(const struct pil_tz_data *d)
 	strlcpy(reason, smem_reason, min(size, (size_t)MAX_SSR_REASON_LEN));
 	if (!smem_reason[0]) {
 		pr_err("%s SFR: (unknown, empty string found).\n", name);
-        #ifdef OPLUS_FEATURE_WIFI_DCS_SWITCH
-		if (subsys_get_crash_status(d->subsys) == CRASH_STATUS_ERR_FATAL) {
-			pr_info("log_failure_reason wlan send uevent");
-			wlan_subsystem_send_uevent(d->subsys, reason, name);
-		}
-		#endif /* OPLUS_FEATURE_WIFI_DCS_SWITCH */
 		return;
 	}
 
 	pr_info("Restart sequence requested  test");
-
-	#ifdef OPLUS_FEATURE_WIFI_DCS_SWITCH
-	if (subsys_get_crash_status(d->subsys) == CRASH_STATUS_ERR_FATAL) {
-		pr_info("log_failure_reason wlan send uevent");
-		wlan_subsystem_send_uevent(d->subsys, reason, name);
-	}
-	#endif /* OPLUS_FEATURE_WIFI_DCS_SWITCH */
 
 	//#ifdef OPLUS_FEATURE_SENSOR
 	set_subsys_crash_cause(reason);

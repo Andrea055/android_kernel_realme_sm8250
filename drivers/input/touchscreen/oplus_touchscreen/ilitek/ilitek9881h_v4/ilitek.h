@@ -472,15 +472,6 @@ struct ilitek_tddi_dev {
     u8 *fw_buf_dma;
     bool need_judge_irq_throw;
     bool irq_wake_up_state;
-#ifdef CONFIG_OPLUS_TP_APK
-    bool plug_status;
-    bool lock_point_status;
-    bool debug_mode_sta;
-    bool debug_gesture_sta;
-    bool earphone_sta;
-    bool charger_sta;
-    bool noise_sta;
-#endif //end of CONFIG_OPLUS_TP_APK
 };
 
 struct ilitek_protocol_info {
