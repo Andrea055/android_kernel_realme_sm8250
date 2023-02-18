@@ -880,18 +880,14 @@
 
 			pcie1_clkreq_default: pcie1_clkreq_default {
 				mux {
-					//#ifndef OPLUS_BUG_STABILITY
-					//pins = "gpio83";
-					//function = "pci_e1";
-					// endif /* OPLUS_BUG_STABILITY */
+					pins = "gpio83";
+					function = "pci_e1";
 				};
 
 				config {
-					//#ifndef OPLUS_BUG_STABILITY
-					//pins = "gpio83";
-					//drive-strength = <2>;
-					//bias-pull-up;
-					// endif /* OPLUS_BUG_STABILITY */
+					pins = "gpio83";
+					drive-strength = <2>;
+					bias-pull-up;
 				};
 			};
 
@@ -3403,48 +3399,16 @@
 				};
 			};
 
-			//#ifndef OPLUS_BUG_STABILITY
-			//nfc_enable_active: nfc_enable_active {
-			//	/* active state */
-			//	mux {
-			//		/* 6: Enable 110: Firmware */
-			//		pins = "gpio6", "gpio110";
-			//		function = "gpio";
-			//	};
-
-			//	config {
-			//		pins = "gpio6", "gpio110";
-			//		drive-strength = <2>; /* 2 MA */
-			//		bias-pull-up;
-			//	};
-			//};
-
-			//nfc_enable_suspend: nfc_enable_suspend {
-			//	/* sleep state */
-			//	mux {
-			//		/* 6: Enable 110: Firmware */
-			//		pins = "gpio6", "gpio110";
-			//		function = "gpio";
-			//	};
-
-			//	config {
-			//		pins = "gpio6", "gpio110";
-			//		drive-strength = <2>; /* 2 MA */
-			//		bias-disable;
-			//	};
-			//};
-
-			//#else /* OPLUS_BUG_STABILITY */
 			nfc_enable_active: nfc_enable_active {
 				/* active state */
 				mux {
 					/* 6: Enable 110: Firmware */
-					pins = "gpio83", "gpio110";
+					pins = "gpio6", "gpio110";
 					function = "gpio";
 				};
 
 				config {
-					pins = "gpio83", "gpio110";
+					pins = "gpio6", "gpio110";
 					drive-strength = <2>; /* 2 MA */
 					bias-pull-up;
 				};
@@ -3454,17 +3418,16 @@
 				/* sleep state */
 				mux {
 					/* 6: Enable 110: Firmware */
-					pins = "gpio83", "gpio110";
+					pins = "gpio6", "gpio110";
 					function = "gpio";
 				};
 
 				config {
-					pins = "gpio83", "gpio110";
+					pins = "gpio6", "gpio110";
 					drive-strength = <2>; /* 2 MA */
 					bias-disable;
 				};
 			};
-			//#endif /* OPLUS_BUG_STABILITY */
 
 			nfc_clk_req_active: nfc_clk_req_active {
 				/* active state */

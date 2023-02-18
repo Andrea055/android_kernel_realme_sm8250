@@ -358,11 +358,7 @@
 			compatible = "android,firmware";
 			vbmeta {
 				compatible = "android,vbmeta";
-				//#ifndef OPLUS_BUG_STABILITY
-				//parts = "vbmeta,boot,system,vendor,dtbo";
-				//#else
-				parts = "vbmeta,boot,system,vendor,dtbo,recovery";
-				//#endif /* OPLUS_BUG_STABILITY */
+				parts = "vbmeta,boot,system,vendor,dtbo";
 			};
 
 			fstab {
@@ -372,11 +368,7 @@
 					dev = "/dev/block/platform/soc/1d84000.ufshc/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					//#ifndef OPLUS_BUG_STABILITY
-					//fsmgr_flags = "wait,slotselect,avb";
-					//#else
-					fsmgr_flags = "wait,avb";
-					//#endif /* OPLUS_BUG_STABILITY */
+					fsmgr_flags = "wait,slotselect,avb";
 					status = "ok";
 				};
 			};
@@ -397,7 +389,6 @@
 			no-map;
 			reg = <0x0 0x80700000 0x0 0x160000>;
 		};
-// #ifdef OPLUS_BUG_STABILITY
 /* Add for get current xlb_uefi log, add reserved size 2M for kernelboot xbl uefis*/
 // xbl_uefi_mem address get from boot_images Core.dsc.inc file: PcdEmbeddedFdBaseAddress + SERIAL_BUFFER_OFFSET,0x9FE00000+0x1F7000=0x9FFF7000
 // kernel boot log: 0x9FE00000~ 0x9FFF7000
@@ -407,7 +398,6 @@
 			xbluefi-offset = <0x1F7000>;
 			no-map;
 		};
-// #endif
 		cmd_db: reserved-memory@80860000 {
 			reg = <0x0 0x80860000 0x0 0x20000>;
 			compatible = "qcom,cmd-db";
@@ -745,12 +735,7 @@
 		reg-names = "wdt-base";
 		interrupts = <0 0 IRQ_TYPE_LEVEL_HIGH>,
 				 <0 1 IRQ_TYPE_LEVEL_HIGH>;
-		//#ifndef OPLUS_BUG_STABILITY
-		//add for raising bark-time
-		//qcom,bark-time = <11000>;
-		//#else
-		qcom,bark-time = <22000>;
-		//#endif
+		qcom,bark-time = <11000>;
 		qcom,pet-time = <9360>;
 		qcom,wakeup-enable;
 		qcom,ipi-ping;

@@ -842,18 +842,14 @@
 
 			pcie1_clkreq_default: pcie1_clkreq_default {
 				mux {
-					//#ifndef OPLUS_BUG_STABILITY
-					//pins = "gpio83";
-					//function = "pci_e1";
-					// endif /* OPLUS_BUG_STABILITY */
+					pins = "gpio83";
+					function = "pci_e1";
 				};
 
 				config {
-					//#ifndef OPLUS_BUG_STABILITY
-					//pins = "gpio83";
-					//drive-strength = <2>;
-					//bias-pull-up;
-					// endif /* OPLUS_BUG_STABILITY */
+					pins = "gpio83";
+					drive-strength = <2>;
+					bias-pull-up;
 				};
 			};
 
