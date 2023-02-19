@@ -2122,8 +2122,10 @@ static int syna_get_touch_points(void *chip_data, struct point_info *points, int
 	struct touch_hcd *touch_hcd = NULL;
     static unsigned int obj_attention = 0x00;
 
-    if (points == NULL || tcm_info == NULL)
+    if (points == NULL || tcm_info == NULL){
         return obj_attention;
+    }
+        
 
 	touch_hcd = tcm_info->touch_hcd;
 
@@ -2176,8 +2178,8 @@ static int syna_tcm_set_gesture_mode(struct syna_tcm_data *tcm_info, bool enable
 			SET_GESTURE_BIT(state, DouTap, config, 0)
 			SET_GESTURE_BIT(state, UpVee, config, 2)
 			SET_GESTURE_BIT(state, DownVee, config, 1)
-			SET_GESTURE_BIT(state, LeftVee, config, 3)
-			SET_GESTURE_BIT(state, RightVee, config, 4)
+			SET_GESTURE_BIT(state, LeftVee, config, 4)
+			SET_GESTURE_BIT(state, RightVee, config, 3)
 			SET_GESTURE_BIT(state, Circle, config, 5)
 			SET_GESTURE_BIT(state, DouSwip, config, 6)
 			SET_GESTURE_BIT(state, Left2RightSwip, config, 7)
@@ -3003,6 +3005,9 @@ static int syna_get_gesture_info(void *chip_data, struct gesture_info *gesture)
     case DTAP_DETECT:
         gesture->gesture_type = DouTap;
         break;
+    case STAP_DETECT:
+        gesture->gesture_type = SingleTap;
+        break;
     case CIRCLE_DETECT:
         gesture->gesture_type = Circle;
         if (touch_data->extra_gesture_info[2] == 0x10)
@@ -3031,6 +3036,9 @@ static int syna_get_gesture_info(void *chip_data, struct gesture_info *gesture)
         break;
     case M_UNICODE:
         gesture->gesture_type = Mgestrue;
+        break;
+    case S_UNICODE:
+        gesture->gesture_type = SGESTRUE;
         break;
     case W_UNICODE:
         gesture->gesture_type = Wgestrue;
