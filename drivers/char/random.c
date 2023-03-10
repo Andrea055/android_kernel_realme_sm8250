@@ -481,7 +481,13 @@ static int ratelimit_disable __read_mostly;
 module_param_named(ratelimit_disable, ratelimit_disable, int, 0644);
 MODULE_PARM_DESC(ratelimit_disable, "Disable random ratelimit suppression");
 
-/**********************************************************************
+#define warn_unseeded_randomness() \
+	if (IS_ENABLED(CONFIG_WARN_ALL_UNSEEDED_RANDOM) && !crng_ready()) \
+		printk_deferred(KERN_NOTICE "random: %s called from %pS with crng_init=%d\n", \
+				__func__, (void *)_RET_IP_, crng_init)
+
+
+/*********************************************************************
  *
  * OS independent entropy store.   Here are the functions which handle
  * storing entropy in an entropy pool.
