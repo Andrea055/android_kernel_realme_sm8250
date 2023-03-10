@@ -143,3 +143,6 @@ include/soc/oplus/oplus_wakelock_profiler.h
 # Ignore toolchain and out
 toolchain/
 out/
+
+# Kali Nethunter
+kali-nethunter-kernel
