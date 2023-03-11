@@ -56,7 +56,7 @@ static struct fp_data *fp_data_ptr = NULL;
 char g_engineermode_menu_config[ENGINEER_MENU_SELECT_MAXLENTH] = ENGINEER_MENU_DEFAULT;
 
 static DEFINE_MUTEX(opticalfp_handler_lock);
-static opticalfp_handler g_opticalfp_irq_handler = NULL;
+static opticalfp_handler g_opticalfp_irq_handlers[5 /* lazy */] = {0};
 
 
 static int get_manufacture_id_value(struct fp_data *fp_data)
@@ -249,9 +249,15 @@ static struct file_operations fp_id_node_ctrl = {
 };
 
 void opticalfp_irq_handler_register(opticalfp_handler handler) {
+    int i;
     if (handler) {
         mutex_lock(&opticalfp_handler_lock);
-        g_opticalfp_irq_handler = handler;
+        for (i = 0; i < ARRAY_SIZE(g_opticalfp_irq_handlers); i++) {
+            if (!g_opticalfp_irq_handlers[i]) {
+                g_opticalfp_irq_handlers[i] = handler;
+                break;
+            }
+        }
         mutex_unlock(&opticalfp_handler_lock);
     } else {
         pr_err("%s handler is NULL", __func__);
@@ -259,11 +265,12 @@ void opticalfp_irq_handler_register(opticalfp_handler handler) {
 }
 
 int opticalfp_irq_handler(struct fp_underscreen_info* tp_info) {
-    if (g_opticalfp_irq_handler) {
-        return g_opticalfp_irq_handler(tp_info);
-    } else {
-        return FP_UNKNOWN;
+    int i, ret = FP_UNKNOWN;
+    for (i = 0; i < ARRAY_SIZE(g_opticalfp_irq_handlers); i++) {
+        if (g_opticalfp_irq_handlers[i])
+            ret = g_opticalfp_irq_handlers[i](tp_info);
     }
+    return ret;
 }
 EXPORT_SYMBOL(opticalfp_irq_handler);
 
@@ -421,12 +428,7 @@ static struct file_operations lcd_type_node_ctrl = {
 static ssize_t fp_tee_node_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
 {
     char fp_state[32] = {'\0'};
-    size_t local_count;
-    if (count <= 0) {
-        return 0;
-    }
-    local_count = (sizeof(fp_state) - 1) < count ? (sizeof(fp_state) - 1) : count;
-    if (copy_from_user(fp_state, buf, local_count) != 0) {
+    if (copy_from_user(fp_state, buf, count) != 0) {
         dev_err(fp_data_ptr->dev, "write fp manu value fail\n");
         return -EFAULT;
     }

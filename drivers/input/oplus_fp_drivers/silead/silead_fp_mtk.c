@@ -528,10 +528,10 @@ static int silfp_resource_init(struct silfp_data *fp_dev, struct fp_dev_init_t *
     silfp_hw_poweron(fp_dev);
     mdelay(5);
 
-    /*ä¸Šç”µä¹‹åæ‹‰é«˜RSTï¼Œä½¿èƒ½æ¨¡ç»„*/
+    /*ÉÏµçÖ®ºóÀ­¸ßRST£¬Ê¹ÄÜÄ£×é*/
     pinctrl_select_state(fp_dev->pin.pinctrl, fp_dev->pin.pins_rst_h);
 
-    /*é…ç½®spi çš„ä¸Šç”µåçš„é»˜è®¤çŠ¶æ€ï¼ŒCSæ¨¡å¼æ‹‰é«˜è¾“å‡º*/
+    /*ÅäÖÃspi µÄÉÏµçºóµÄÄ¬ÈÏ×´Ì¬£¬CSÄ£Ê½À­¸ßÊä³ö*/
     silfp_set_spi_default_status(fp_dev);
 
     if (!ret) {

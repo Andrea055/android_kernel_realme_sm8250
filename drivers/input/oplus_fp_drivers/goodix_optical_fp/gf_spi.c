@@ -555,21 +555,22 @@ static int gf_open(struct inode *inode, struct file *filp)
             if (gf_dev->users == 1) {
                 status = gf_parse_dts(gf_dev);
                 if (status)
-                    goto out;
+                    goto err_parse_dt;
 
                 status = irq_setup(gf_dev);
-                if (status) {
-                    gf_cleanup(gf_dev);
-                    goto out;
-                }
+                if (status)
+                    goto err_irq;
             }
         }
     } else {
         pr_info("No device for minor %d\n", iminor(inode));
     }
-
-out:
     mutex_unlock(&device_list_lock);
+
+    return status;
+err_irq:
+    gf_cleanup(gf_dev);
+err_parse_dt:
     return status;
 }
 
@@ -951,7 +952,6 @@ static int __init gf_init(void)
      */
 
     if ((FP_GOODIX_3268 != get_fpsensor_type())
-            && (FP_GOODIX_3688 != get_fpsensor_type())
             && (FP_GOODIX_5288 != get_fpsensor_type())
             && (FP_GOODIX_5228 != get_fpsensor_type())
             && (FP_GOODIX_5658 != get_fpsensor_type())

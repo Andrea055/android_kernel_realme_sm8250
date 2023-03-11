@@ -2,11 +2,8 @@ obj-$(CONFIG_OPLUS_FINGERPRINT) += oplus_fp_common/
 
 ### Capacitive fingerprint sensor
 obj-$(CONFIG_OPLUS_FINGERPRINT_FPC) += fpc/
-obj-$(CONFIG_OPLUS_FINGERPRINT_CDFPS) += cdfingerfp/
-obj-$(CONFIG_OPLUS_FINGERPRINT_JIIOV_CAPACITIVE) += anc_capacitive_driver/
-obj-$(CONFIG_OPLUS_FINGERPRINT_EGIS) += egis/
 
-obj-$(CONFIG_OPLUS_FINGERPRINT_CHIPONE) +=chipone/
+obj-$(CONFIG_OPLUS_FINGERPRINT_EGIS) += egis/
 
 ### Optical fingerprint sensor
 ifneq ($(CONFIG_OPLUS_FINGERPRINT_GOODIX)_$(CONFIG_OPLUS_FINGERPRINT_GOODIX_OPTICAL), _)

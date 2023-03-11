@@ -44,18 +44,6 @@ config OPLUS_FINGERPRINT_JIIOV_OPTICAL
        default n
        tristate "Fingerprint base on jiiov optical chip"
 
-config OPLUS_FINGERPRINT_JIIOV_CAPACITIVE
-       default n
-       tristate "Fingerprint base on jiiov capacitive chip"
-
-config OPLUS_FINGERPRINT_CHIPONE
-       default n
-       tristate "Fingerprint base on chipone chip"
-
-config OPLUS_FINGERPRINT_CDFPS
-       default n
-       tristate "Fingerprint base on cdfinger chip"
-
 ### fingerprint feature config
 config OPLUS_FINGERPRINT_NAVIGATION_ENABLE
        default n

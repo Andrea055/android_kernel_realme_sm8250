@@ -222,9 +222,9 @@ static nav_keymap_t keymap[] = {
     { NAV_KEY_DOWN,     KEY_DOWN,       },
     { NAV_KEY_RIGHT,    KEY_RIGHT,      },
     { NAV_KEY_LEFT,     KEY_LEFT,       },
-    { NAV_KEY_CLICK,    KEY_CAMERA,   },
-    { NAV_KEY_DCLICK,   KEY_CAMERA,   },
-    { NAV_KEY_LONGPRESS,KEY_CAMERA,   },
+    { NAV_KEY_CLICK,    KEY_PRINT,   },
+    { NAV_KEY_DCLICK,   KEY_HOMEPAGE,   },
+    { NAV_KEY_LONGPRESS,KEY_PRINT,   },
 };
 
 static LIST_HEAD(device_list);
