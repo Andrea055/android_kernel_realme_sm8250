@@ -94,7 +94,6 @@ static noinline ml_depot_stack_handle_t _save_vmalloc_stack(gfp_t flags)
 			trace.entries[trace.nr_entries-1] == ULONG_MAX)
 		trace.nr_entries--;
 
-	handle = ml_depot_save_stack(&trace, flags);
 	if (handle) {
 		delay = (sched_clock() - start) / 1000;
 		if (delay > hash_cal_max_us)
@@ -141,7 +140,6 @@ static ssize_t vmalloc_debug_enable_write(struct file *file,
 		return -EINVAL;
 
 	if (val) {
-		ret = ml_depot_init();
 		if (ret)
 			return  -ENOMEM;
 		vmalloc_debug_enable = 1;
@@ -201,8 +199,6 @@ static ssize_t hash_cal_time_read(struct file *file,
 void enable_vmalloc_debug(void)
 {
 	int ret;
-
-	ret = ml_depot_init();
 	if (ret) {
 		pr_err("init depot failed, oom.\n");
 		return;
@@ -361,7 +357,6 @@ static inline char *dump_vmalloc_debug_info(unsigned int inlen, unsigned int *ou
 
 		if (record.data[i].hash) {
 			memset(&trace, 0, sizeof(trace));
-			ml_depot_fetch_stack(record.data[i].hash, &trace);
 			for (j = 0; j < trace.nr_entries; j++) {
 				len += scnprintf(kbuf+len, inlen-len,
 						"%pS\n", (void *)trace.entries[j]);
@@ -444,7 +439,6 @@ static inline void dump_vmalloc_dmesg(unsigned long used_size, char *dump_buff,
 
 		if (record.data[i].hash) {
 			memset(&trace, 0, sizeof(trace));
-			ml_depot_fetch_stack(record.data[i].hash, &trace);
 			for (j = 0; j < trace.nr_entries; j++)
 				dump_buff_len += scnprintf(dump_buff + dump_buff_len,
 						BUFLEN(len, dump_buff_len),
