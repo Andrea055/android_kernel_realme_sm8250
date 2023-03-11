@@ -570,6 +570,14 @@ static __poll_t f_hidg_poll(struct file *file, poll_table *wait)
 #undef WRITE_COND
 #undef READ_COND_SSREPORT
 #undef READ_COND_INTOUT
+ 
+static void hidg_destroy(struct kref *kref)
+{
+	struct f_hidg *hidg = container_of(kref, struct f_hidg, kref);
+
+	kfree(hidg->report_desc);
+	kfree(hidg);
+}
 
 static int f_hidg_release(struct inode *inode, struct file *fd)
 {
