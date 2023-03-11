@@ -245,8 +245,6 @@ void panic(const char *fmt, ...)
 #ifdef CONFIG_OPLUS_FEATURE_PANIC_FLUSH
 	panic_flush_device_cache(2000);
 #endif
-	if (vendor_panic_cb)
-		vendor_panic_cb(0);
 	pr_emerg("Kernel panic - not syncing: %s\n", buf);
 
 #ifdef CONFIG_DEBUG_BUGVERBOSE
