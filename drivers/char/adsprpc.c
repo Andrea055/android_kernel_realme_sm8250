@@ -4240,6 +4240,7 @@ static int fastrpc_device_open(struct inode *inode, struct file *filp)
 	hlist_add_head(&fl->hn, &me->drivers);
 	spin_unlock(&me->hlock);
 	mutex_init(&fl->perf_mutex);
+	mutex_init(&fl->pm_qos_mutex);
 	init_completion(&fl->shutdown);
 	return 0;
 }
@@ -4366,6 +4367,7 @@ static int fastrpc_internal_control(struct fastrpc_file *fl,
 			cpumask_set_cpu(me->silvercores.coreno[i], &mask);
 		fl->pm_qos_req.type = PM_QOS_REQ_AFFINE_CORES;
 		cpumask_copy(&fl->pm_qos_req.cpus_affine, &mask);
+
 		mutex_lock(&fl->pm_qos_mutex);
 		if (!fl->qos_request) {
 			pm_qos_add_request(&fl->pm_qos_req,
@@ -4374,6 +4376,7 @@ static int fastrpc_internal_control(struct fastrpc_file *fl,
 		} else
 			pm_qos_update_request(&fl->pm_qos_req, latency);
 		mutex_unlock(&fl->pm_qos_mutex);
+
 		/* Ensure CPU feature map updated to DSP for early WakeUp */
 		fastrpc_send_cpuinfo_to_dsp(fl);
 		break;
