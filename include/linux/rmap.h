@@ -49,6 +49,14 @@ struct anon_vma {
 	atomic_t refcount;
 
 	/*
+	 * Count of child anon_vmas and VMAs which points to this anon_vma.
+	 *
+	 * This counter is used for making decision about reusing anon_vma
+	 * instead of forking new one. See comments in function anon_vma_clone.
+	 */
+	unsigned degree;
+	
+	/*
 	 * Count of child anon_vmas. Equals to the count of all anon_vmas that
 	 * have ->parent pointing to this one, including itself.
 	 *
